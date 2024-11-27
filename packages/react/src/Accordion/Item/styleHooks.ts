@@ -7,12 +7,12 @@ export const accordionStyleHookMapping: CustomStyleHookMapping<AccordionItem.Sta
   index: (value) => {
     return Number.isInteger(value) ? { 'data-index': String(value) } : null;
   },
-  transitionStatus: (value) => {
+  transitionStatus(value): Record<string, string> | null {
     if (value === 'entering') {
-      return { 'data-entering': '' } as Record<string, string>;
+      return { 'data-starting-style': '' };
     }
     if (value === 'exiting') {
-      return { 'data-exiting': '' };
+      return { 'data-ending-style': '' };
     }
     return null;
   },
