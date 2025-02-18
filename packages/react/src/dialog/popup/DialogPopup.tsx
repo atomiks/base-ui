@@ -17,6 +17,7 @@ import { DialogPopupCssVars } from './DialogPopupCssVars';
 import { DialogPopupDataAttributes } from './DialogPopupDataAttributes';
 import { InternalBackdrop } from '../../utils/InternalBackdrop';
 import { useDialogPortalContext } from '../portal/DialogPortalContext';
+import { useOpenChangeComplete } from '../../utils/useOpenChangeComplete';
 
 const customStyleHookMapping: CustomStyleHookMapping<DialogPopup.State> = {
   ...baseMapping,
@@ -55,22 +56,32 @@ const DialogPopup = React.forwardRef(function DialogPopup(
     setPopupElementId,
     titleElementId,
     transitionStatus,
+    onOpenChangeComplete,
+    internalBackdropRef,
   } = useDialogRootContext();
 
   useDialogPortalContext();
 
+  useOpenChangeComplete({
+    open,
+    ref: popupRef,
+    onComplete() {
+      if (open) {
+        onOpenChangeComplete?.(true);
+      }
+    },
+  });
+
   const mergedRef = useForkRef(forwardedRef, popupRef);
 
-  const { getRootProps, floatingContext, resolvedInitialFocus } = useDialogPopup({
+  const { getRootProps, resolvedInitialFocus } = useDialogPopup({
     descriptionElementId,
-    floatingRootContext,
     getPopupProps,
     id,
     initialFocus,
     modal,
     mounted,
     setOpen,
-    open,
     openMethod,
     ref: mergedRef,
     setPopupElement,
@@ -99,15 +110,13 @@ const DialogPopup = React.forwardRef(function DialogPopup(
 
   return (
     <React.Fragment>
-      {mounted && modal && <InternalBackdrop />}
+      {mounted && modal && <InternalBackdrop ref={internalBackdropRef} inert={!open} />}
       <FloatingFocusManager
-        context={floatingContext}
-        modal={open}
+        context={floatingRootContext}
         disabled={!mounted}
         closeOnFocusOut={dismissible}
         initialFocus={resolvedInitialFocus}
         returnFocus={finalFocus}
-        outsideElementsInert={modal}
       >
         {renderElement()}
       </FloatingFocusManager>

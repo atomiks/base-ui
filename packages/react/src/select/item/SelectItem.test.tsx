@@ -1,10 +1,8 @@
 import * as React from 'react';
 import { Select } from '@base-ui-components/react/select';
-import { fireEvent, flushMicrotasks, screen, waitFor } from '@mui/internal-test-utils';
-import { createRenderer, describeConformance } from '#test-utils';
+import { act, fireEvent, flushMicrotasks, screen, waitFor } from '@mui/internal-test-utils';
+import { createRenderer, describeConformance, isJSDOM } from '#test-utils';
 import { expect } from 'chai';
-
-const isJSDOM = /jsdom/.test(window.navigator.userAgent);
 
 describe('<Select.Item />', () => {
   const { render } = createRenderer();
@@ -82,11 +80,9 @@ describe('<Select.Item />', () => {
     });
   });
 
-  it('should select item when Enter key is pressed', async function test(t = {}) {
+  it('should select item when Enter key is pressed', async ({ skip }) => {
     if (!isJSDOM) {
-      // @ts-expect-error to support mocha and vitest
-      // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-      this?.skip?.() || t?.skip();
+      skip();
     }
 
     const { user } = await render(
@@ -119,6 +115,29 @@ describe('<Select.Item />', () => {
     await waitFor(() => {
       expect(value.textContent).to.equal('two');
     });
+  });
+
+  it('should focus disabled items', async () => {
+    await render(
+      <Select.Root open>
+        <Select.Trigger data-testid="trigger">
+          <Select.Value data-testid="value" />
+        </Select.Trigger>
+        <Select.Portal>
+          <Select.Positioner>
+            <Select.Popup>
+              <Select.Item value="two" disabled>
+                two
+              </Select.Item>
+            </Select.Popup>
+          </Select.Positioner>
+        </Select.Portal>
+      </Select.Root>,
+    );
+
+    const item = screen.getByText('two');
+    await act(() => item.focus());
+    expect(item).toHaveFocus();
   });
 
   it('should not select disabled item', async () => {
@@ -187,11 +206,9 @@ describe('<Select.Item />', () => {
   });
 
   describe('style hooks', () => {
-    it('should apply data-highlighted attribute when item is highlighted', async function test(t = {}) {
+    it('should apply data-highlighted attribute when item is highlighted', async ({ skip }) => {
       if (!isJSDOM) {
-        // @ts-expect-error to support mocha and vitest
-        // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-        this?.skip?.() || t?.skip();
+        skip();
       }
 
       const { user } = await render(

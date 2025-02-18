@@ -16,6 +16,7 @@ import { transitionStatusMapping } from '../../utils/styleHookMapping';
 import { AlertDialogPopupDataAttributes } from './AlertDialogPopupDataAttributes';
 import { InternalBackdrop } from '../../utils/InternalBackdrop';
 import { useAlertDialogPortalContext } from '../portal/AlertDialogPortalContext';
+import { useOpenChangeComplete } from '../../utils/useOpenChangeComplete';
 
 const customStyleHookMapping: CustomStyleHookMapping<AlertDialogPopup.State> = {
   ...baseMapping,
@@ -53,22 +54,32 @@ const AlertDialogPopup = React.forwardRef(function AlertDialogPopup(
     titleElementId,
     transitionStatus,
     modal,
+    onOpenChangeComplete,
+    internalBackdropRef,
   } = useAlertDialogRootContext();
 
   useAlertDialogPortalContext();
 
+  useOpenChangeComplete({
+    open,
+    ref: popupRef,
+    onComplete() {
+      if (open) {
+        onOpenChangeComplete?.(true);
+      }
+    },
+  });
+
   const mergedRef = useForkRef(forwardedRef, popupRef);
 
-  const { getRootProps, floatingContext, resolvedInitialFocus } = useDialogPopup({
+  const { getRootProps, resolvedInitialFocus } = useDialogPopup({
     descriptionElementId,
-    floatingRootContext,
     getPopupProps,
     id,
     initialFocus,
     modal: true,
     mounted,
     setOpen,
-    open,
     openMethod,
     ref: mergedRef,
     setPopupElement,
@@ -103,14 +114,12 @@ const AlertDialogPopup = React.forwardRef(function AlertDialogPopup(
 
   return (
     <React.Fragment>
-      {mounted && modal && <InternalBackdrop />}
+      {mounted && modal && <InternalBackdrop ref={internalBackdropRef} inert={!open} />}
       <FloatingFocusManager
-        context={floatingContext}
-        modal={open}
+        context={floatingRootContext}
         disabled={!mounted}
         initialFocus={resolvedInitialFocus}
         returnFocus={finalFocus}
-        outsideElementsInert
       >
         {renderElement()}
       </FloatingFocusManager>

@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { Menu } from '@base-ui-components/react/menu';
-import { createRenderer, describeConformance } from '#test-utils';
+import { createRenderer, describeConformance, isJSDOM } from '#test-utils';
 import { screen, waitFor } from '@mui/internal-test-utils';
 import { expect } from 'chai';
 
@@ -26,11 +26,9 @@ describe('<Menu.RadioItemIndicator />', () => {
     },
   }));
 
-  it('should remove the indicator when there is no exit animation defined', async function test(t = {}) {
-    if (/jsdom/.test(window.navigator.userAgent)) {
-      // @ts-expect-error to support mocha and vitest
-      // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-      this?.skip?.() || t?.skip();
+  it('should remove the indicator when there is no exit animation defined', async ({ skip }) => {
+    if (isJSDOM) {
+      skip();
     }
 
     function Test() {
@@ -45,7 +43,7 @@ describe('<Menu.RadioItemIndicator />', () => {
                   <Menu.Popup>
                     <Menu.RadioGroup value={value}>
                       <Menu.RadioItem value="a">
-                        <Menu.RadioItemIndicator data-testid="indicator" keepMounted />
+                        <Menu.RadioItemIndicator data-testid="indicator" />
                       </Menu.RadioItem>
                       <Menu.RadioItem value="b">
                         <Menu.RadioItemIndicator keepMounted />
@@ -62,25 +60,23 @@ describe('<Menu.RadioItemIndicator />', () => {
 
     const { user } = await render(<Test />);
 
-    expect(screen.getByTestId('indicator')).not.to.have.attribute('hidden');
+    expect(screen.queryByTestId('indicator')).not.to.equal(null);
 
     const closeButton = screen.getByText('Close');
 
     await user.click(closeButton);
 
     await waitFor(() => {
-      expect(screen.getByTestId('indicator')).to.have.attribute('hidden');
+      expect(screen.queryByTestId('indicator')).to.equal(null);
     });
   });
 
-  it('should remove the indicator when the animation finishes', async function test(t = {}) {
-    if (/jsdom/.test(window.navigator.userAgent)) {
-      // @ts-expect-error to support mocha and vitest
-      // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-      this?.skip?.() || t?.skip();
+  it('should remove the indicator when the animation finishes', async ({ skip }) => {
+    if (isJSDOM) {
+      skip();
     }
 
-    (globalThis as any).BASE_UI_ANIMATIONS_DISABLED = false;
+    globalThis.BASE_UI_ANIMATIONS_DISABLED = false;
 
     let animationFinished = false;
     const notifyAnimationFinished = () => {
@@ -95,7 +91,7 @@ describe('<Menu.RadioItemIndicator />', () => {
           }
         }
         .animation-test-indicator[data-ending-style] {
-          animation: test-anim 50ms;
+          animation: test-anim 1ms;
         }
       `;
 
@@ -133,15 +129,13 @@ describe('<Menu.RadioItemIndicator />', () => {
 
     const { user } = await render(<Test />);
 
-    expect(screen.getByTestId('indicator')).not.to.have.attribute('hidden');
+    expect(screen.getByTestId('indicator')).not.to.equal(null);
 
     const closeButton = screen.getByText('Close');
     await user.click(closeButton);
 
     await waitFor(() => {
-      expect(screen.getByTestId('indicator')).to.have.attribute('hidden');
+      expect(animationFinished).to.equal(true);
     });
-
-    expect(animationFinished).to.equal(true);
   });
 });
