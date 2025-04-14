@@ -67,11 +67,11 @@ export function useAnchorPositioning(
     collisionPadding = 5,
     sticky = false,
     arrowPadding = 5,
+    trackAnchor = true,
     // Private parameters
     keepMounted = false,
     floatingRootContext,
     mounted,
-    trackAnchor = true,
     nodeId,
   } = params;
 

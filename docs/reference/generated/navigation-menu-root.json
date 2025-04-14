@@ -1,0 +1,37 @@
+{
+  "name": "NavigationMenuRoot",
+  "description": "",
+  "props": {
+    "defaultOpen": {
+      "type": "boolean",
+      "default": "false",
+      "description": "Whether the menu is initially open.\n\nTo render a controlled menu, use the `open` prop instead."
+    },
+    "open": {
+      "type": "boolean",
+      "description": "Whether the menu is currently open."
+    },
+    "onOpenChange": {
+      "type": "function",
+      "description": "Event handler called when the menu is opened or closed."
+    },
+    "actionsRef": {
+      "type": "{ current: { unmount: func } }",
+      "description": "A ref to imperative actions."
+    },
+    "onOpenChangeComplete": {
+      "type": "(open) => void",
+      "description": "Event handler called after any animations complete when the menu is closed."
+    },
+    "className": {
+      "type": "string | (state) => string",
+      "description": "CSS class applied to the element, or a function that\nreturns a class based on the component’s state."
+    },
+    "render": {
+      "type": "React.ReactElement | (props, state) => React.ReactElement",
+      "description": "Allows you to replace the component’s HTML element\nwith a different tag, or compose it with another component.\n\nAccepts a `ReactElement` or a function that returns the element to render."
+    }
+  },
+  "dataAttributes": {},
+  "cssVariables": {}
+}
