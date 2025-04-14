@@ -1,3 +1,9 @@
+.Positioner {
+  transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+  width: var(--positioner-width);
+  height: var(--positioner-height);
+}
+
 .Popup {
   box-sizing: border-box;
   padding: 1rem 1.5rem;
@@ -5,9 +11,12 @@
   background-color: canvas;
   color: var(--color-gray-900);
   transform-origin: var(--transform-origin);
-  transition:
-    transform 150ms,
-    opacity 150ms;
+  transition-duration: 0.3s;
+  transition-property: transform, opacity, width, height;
+  transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+  min-width: 250px;
+  width: var(--popup-width);
+  height: var(--popup-height);
 
   &[data-starting-style],
   &[data-ending-style] {

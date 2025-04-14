@@ -6,6 +6,7 @@ import type { BaseUIComponentProps } from '../../utils/types';
 import { useRenderElement } from '../../utils/useRenderElement';
 import { useNavigationMenuRootContext } from '../root/NavigationMenuRootContext';
 import { useNavigationMenuItemContext } from '../item/NavigationMenuItemContext';
+import { mergeProps } from '../../merge-props';
 
 /**
  *
@@ -22,7 +23,7 @@ const NavigationMenuContent = React.forwardRef(function NavigationMenuContent(
 
   const renderElement = useRenderElement('div', componentProps, {
     ref: forwardedRef,
-    props: elementProps,
+    props: mergeProps<'div'>(elementProps),
   });
 
   if (!popupElement || value !== itemValue) {

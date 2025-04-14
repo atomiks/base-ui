@@ -4,6 +4,8 @@ import PropTypes from 'prop-types';
 import type { BaseUIComponentProps } from '../../utils/types';
 import { useRenderElement } from '../../utils/useRenderElement';
 import { useNavigationMenuRootContext } from '../root/NavigationMenuRootContext';
+import { useEnhancedEffect } from '../../utils';
+import { mergeProps } from '../../merge-props';
 /**
  *
  * Documentation: [Base UI Navigation Menu](https://base-ui.com/react/components/navigation-menu)
@@ -14,11 +16,45 @@ const NavigationMenuPopup = React.forwardRef(function NavigationMenuPopup(
 ) {
   const { className, render, ...elementProps } = componentProps;
 
-  const { setPopupElement } = useNavigationMenuRootContext();
+  const { popupElement, positionerElement, setPopupElement, value } =
+    useNavigationMenuRootContext();
+
+  const prevRectRef = React.useRef<DOMRect | null>(null);
+
+  useEnhancedEffect(() => {
+    if (!popupElement || !positionerElement || !value) {
+      return;
+    }
+
+    const nextRect = popupElement.getBoundingClientRect();
+    const prevRect = prevRectRef.current || nextRect;
+    prevRectRef.current = nextRect;
+
+    popupElement.style.setProperty('--popup-width', `${prevRect.width}px`);
+    popupElement.style.setProperty('--popup-height', `${prevRect.height}px`);
+    positionerElement.style.setProperty('--positioner-width', `${nextRect.width}px`);
+    positionerElement.style.setProperty('--positioner-height', `${nextRect.height}px`);
+
+    requestAnimationFrame(() => {
+      popupElement.style.setProperty('--popup-width', `${nextRect.width}px`);
+      popupElement.style.setProperty('--popup-height', `${nextRect.height}px`);
+    });
+  }, [positionerElement, popupElement, value]);
 
   const renderElement = useRenderElement('div', componentProps, {
     ref: [forwardedRef, setPopupElement],
-    props: elementProps,
+    props: mergeProps<'div'>(
+      {
+        style: {
+          // position: 'absolute',
+          // zIndex: 1,
+          // top: 0,
+          // left: 0,
+          overflow: 'hidden',
+        },
+      },
+      elementProps,
+    ),
   });
 
   return renderElement();

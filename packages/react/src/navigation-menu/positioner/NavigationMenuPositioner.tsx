@@ -38,6 +38,7 @@ const NavigationMenuPositioner = React.forwardRef(function NavigationMenuPositio
     mounted,
     setPositionerElement,
     anchor: triggerAnchor,
+    transitionStatus,
   } = useNavigationMenuRootContext();
   const keepMounted = useNavigationMenuPortalContext();
 
@@ -60,7 +61,9 @@ const NavigationMenuPositioner = React.forwardRef(function NavigationMenuPositio
 
   const renderElement = useRenderElement('div', componentProps, {
     ref: [forwardedRef, setPositionerElement, positioning.refs.setFloating],
-    props: mergeProps<'div'>(positioning.props, elementProps),
+    props: mergeProps<'div'>(positioning.props, elementProps, {
+      style: transitionStatus === 'starting' ? { transition: 'none' } : {},
+    }),
   });
 
   return renderElement();

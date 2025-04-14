@@ -7,18 +7,25 @@ export default function ExampleNavigationMenu() {
     <NavigationMenu.Root>
       <NavigationMenu.List style={{ display: 'flex' }}>
         <NavigationMenu.Item>
-          <NavigationMenu.Trigger>About</NavigationMenu.Trigger>
-          <NavigationMenu.Content>Content 1</NavigationMenu.Content>
+          <NavigationMenu.Trigger>Link A</NavigationMenu.Trigger>
+          <NavigationMenu.Content>Content A</NavigationMenu.Content>
         </NavigationMenu.Item>
 
         <NavigationMenu.Item>
-          <NavigationMenu.Trigger>Contact</NavigationMenu.Trigger>
-          <NavigationMenu.Content>Content 2</NavigationMenu.Content>
+          <NavigationMenu.Trigger>Link B</NavigationMenu.Trigger>
+          <NavigationMenu.Content>Content B</NavigationMenu.Content>
+        </NavigationMenu.Item>
+
+        <NavigationMenu.Item>
+          <NavigationMenu.Trigger>Link C</NavigationMenu.Trigger>
+          <NavigationMenu.Content style={{ width: 500 }}>
+            {`Content C `.repeat(20)}
+          </NavigationMenu.Content>
         </NavigationMenu.Item>
       </NavigationMenu.List>
 
       <NavigationMenu.Portal>
-        <NavigationMenu.Positioner sideOffset={5}>
+        <NavigationMenu.Positioner className={styles.Positioner} sideOffset={5}>
           <NavigationMenu.Popup className={styles.Popup} />
         </NavigationMenu.Positioner>
       </NavigationMenu.Portal>

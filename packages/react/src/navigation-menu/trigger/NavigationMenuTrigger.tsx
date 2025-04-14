@@ -1,7 +1,8 @@
 'use client';
 import * as React from 'react';
+import * as ReactDOM from 'react-dom';
 import PropTypes from 'prop-types';
-import { useFloating, useHover, useInteractions } from '@floating-ui/react';
+import { safePolygon, useFloating, useHover, useInteractions } from '@floating-ui/react';
 import type { BaseUIComponentProps } from '../../utils/types';
 import { useRenderElement } from '../../utils/useRenderElement';
 import { useNavigationMenuItemContext } from '../item/NavigationMenuItemContext';
@@ -18,14 +19,34 @@ const NavigationMenuTrigger = React.forwardRef(function NavigationMenuTrigger(
 ) {
   const { className, render, ...elementProps } = componentProps;
 
-  const { setValue, open, setOpen, setAnchor, positionerElement } = useNavigationMenuRootContext();
+  const {
+    value: contextValue,
+    setValue,
+    open,
+    setOpen,
+    setAnchor,
+    positionerElement,
+    popupElement,
+    anchor,
+  } = useNavigationMenuRootContext();
   const value = useNavigationMenuItemContext();
 
-  const { context, refs } = useFloating({
+  const timeoutRef = React.useRef(-1);
+
+  React.useEffect(() => {
+    clearTimeout(timeoutRef.current);
+  }, [contextValue]);
+
+  const { context, refs } = useFloating<HTMLElement>({
     open,
-    onOpenChange(nextOpen, event) {
+    onOpenChange(nextOpen) {
+      if (!nextOpen && anchor && anchor !== refs.domReference.current) {
+        return;
+      }
+
       setOpen(nextOpen);
       setValue(value);
+
       if (refs.domReference.current) {
         setAnchor(refs.domReference.current);
       }
@@ -35,13 +56,36 @@ const NavigationMenuTrigger = React.forwardRef(function NavigationMenuTrigger(
     },
   });
 
-  const hover = useHover(context, { restMs: 100, move: false });
+  const hover = useHover(context, {
+    restMs: open ? 0 : 100,
+    move: false,
+    handleClose: safePolygon(),
+  });
 
   const { getReferenceProps } = useInteractions([hover]);
 
   const renderElement = useRenderElement('button', componentProps, {
     ref: [forwardedRef, refs.setReference],
-    props: mergeProps<'button'>(getReferenceProps, elementProps),
+    props: mergeProps<'button'>(
+      getReferenceProps,
+      {
+        onMouseEnter() {
+          if (open) {
+            popupElement?.style.removeProperty('--popup-width');
+            popupElement?.style.removeProperty('--popup-height');
+            positionerElement?.style.removeProperty('--positioner-width');
+            positionerElement?.style.removeProperty('--positioner-height');
+
+            ReactDOM.flushSync(() => {
+              setValue(value);
+              setOpen(true);
+              setAnchor(refs.domReference.current);
+            });
+          }
+        },
+      },
+      elementProps,
+    ),
   });
 
   return renderElement();
