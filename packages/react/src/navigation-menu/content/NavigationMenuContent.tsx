@@ -7,6 +7,9 @@ import { useRenderElement } from '../../utils/useRenderElement';
 import { useNavigationMenuRootContext } from '../root/NavigationMenuRootContext';
 import { useNavigationMenuItemContext } from '../item/NavigationMenuItemContext';
 import { mergeProps } from '../../merge-props';
+import { TransitionStatus, useTransitionStatus } from '../../utils/useTransitionStatus';
+import { useOpenChangeComplete } from '../../utils/useOpenChangeComplete';
+import { transitionStatusMapping } from '../../utils/styleHookMapping';
 
 /**
  *
@@ -18,20 +21,80 @@ const NavigationMenuContent = React.forwardRef(function NavigationMenuContent(
 ) {
   const { className, render, ...elementProps } = componentProps;
 
-  const { popupElement, value } = useNavigationMenuRootContext();
+  const { popupElement, value, activationDirection } = useNavigationMenuRootContext();
   const itemValue = useNavigationMenuItemContext();
 
-  const renderElement = useRenderElement('div', componentProps, {
-    ref: forwardedRef,
-    props: mergeProps<'div'>(elementProps),
+  const open = value === itemValue;
+
+  const ref = React.useRef<HTMLDivElement | null>(null);
+
+  const { mounted, setMounted, transitionStatus } = useTransitionStatus(open);
+
+  useOpenChangeComplete({
+    ref,
+    open,
+    onComplete() {
+      if (!open) {
+        setMounted(false);
+      }
+    },
   });
 
-  if (!popupElement || value !== itemValue) {
+  const state: NavigationMenuContent.State = React.useMemo(
+    () => ({
+      open,
+      transitionStatus,
+      activationDirection,
+    }),
+    [open, transitionStatus, activationDirection],
+  );
+
+  const renderElement = useRenderElement('div', componentProps, {
+    state,
+    ref: [forwardedRef, ref],
+    props: mergeProps<'div'>(
+      !open && mounted
+        ? {
+            style: { position: 'absolute', top: 0, left: 0 },
+          }
+        : {},
+      elementProps,
+    ),
+    customStyleHookMapping: {
+      ...transitionStatusMapping,
+      activationDirection(value) {
+        if (value === 'left') {
+          return { 'data-activation-direction': 'left' };
+        }
+        if (value === 'right') {
+          return { 'data-activation-direction': 'right' };
+        }
+        return null;
+      },
+    },
+  });
+
+  if (!popupElement || !mounted) {
     return null;
   }
 
   return ReactDOM.createPortal(renderElement(), popupElement);
 });
+
+namespace NavigationMenuContent {
+  export interface State {
+    /**
+     * If `true`, the component is open.
+     */
+    open: boolean;
+    /**
+     * The transition status of the component.
+     */
+    transitionStatus: TransitionStatus;
+  }
+
+  export interface Props extends BaseUIComponentProps<'div', State> {}
+}
 
 NavigationMenuContent.propTypes /* remove-proptypes */ = {
   // ┌────────────────────────────── Warning ──────────────────────────────┐
@@ -55,11 +118,5 @@ NavigationMenuContent.propTypes /* remove-proptypes */ = {
    */
   render: PropTypes.oneOfType([PropTypes.element, PropTypes.func]),
 } as any;
-
-namespace NavigationMenuContent {
-  export interface State {}
-
-  export interface Props extends BaseUIComponentProps<'div', State> {}
-}
 
 export { NavigationMenuContent };

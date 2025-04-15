@@ -4,8 +4,11 @@ import PropTypes from 'prop-types';
 import type { BaseUIComponentProps } from '../../utils/types';
 import { useRenderElement } from '../../utils/useRenderElement';
 import { useNavigationMenuRootContext } from '../root/NavigationMenuRootContext';
-import { useEnhancedEffect } from '../../utils';
+import { useEnhancedEffect } from '../../utils/useEnhancedEffect';
+import type { TransitionStatus } from '../../utils/useTransitionStatus';
 import { mergeProps } from '../../merge-props';
+import { transitionStatusMapping } from '../../utils/styleHookMapping';
+
 /**
  *
  * Documentation: [Base UI Navigation Menu](https://base-ui.com/react/components/navigation-menu)
@@ -16,49 +19,73 @@ const NavigationMenuPopup = React.forwardRef(function NavigationMenuPopup(
 ) {
   const { className, render, ...elementProps } = componentProps;
 
-  const { popupElement, positionerElement, setPopupElement, value } =
+  const { open, transitionStatus, popupElement, positionerElement, setPopupElement, value } =
     useNavigationMenuRootContext();
 
-  const prevRectRef = React.useRef<DOMRect | null>(null);
+  const state: NavigationMenuPopup.State = React.useMemo(
+    () => ({
+      open,
+      transitionStatus,
+    }),
+    [open, transitionStatus],
+  );
 
   useEnhancedEffect(() => {
     if (!popupElement || !positionerElement || !value) {
-      return;
+      return undefined;
     }
 
-    const nextRect = popupElement.getBoundingClientRect();
-    const prevRect = prevRectRef.current || nextRect;
-    prevRectRef.current = nextRect;
+    const currentWidth = popupElement.offsetWidth;
+    const currentHeight = popupElement.offsetHeight;
+    popupElement.style.removeProperty('--popup-width');
+    popupElement.style.removeProperty('--popup-height');
+    const nextWidth = popupElement.offsetWidth;
+    const nextHeight = popupElement.offsetHeight;
+    popupElement.style.setProperty('--popup-width', `${currentWidth}px`);
+    popupElement.style.setProperty('--popup-height', `${currentHeight}px`);
+    positionerElement.style.setProperty('--positioner-width', `${nextWidth}px`);
+    positionerElement.style.setProperty('--positioner-height', `${nextHeight}px`);
 
-    popupElement.style.setProperty('--popup-width', `${prevRect.width}px`);
-    popupElement.style.setProperty('--popup-height', `${prevRect.height}px`);
-    positionerElement.style.setProperty('--positioner-width', `${nextRect.width}px`);
-    positionerElement.style.setProperty('--positioner-height', `${nextRect.height}px`);
-
-    requestAnimationFrame(() => {
-      popupElement.style.setProperty('--popup-width', `${nextRect.width}px`);
-      popupElement.style.setProperty('--popup-height', `${nextRect.height}px`);
+    const frame = requestAnimationFrame(() => {
+      popupElement.style.setProperty('--popup-width', `${nextWidth}px`);
+      popupElement.style.setProperty('--popup-height', `${nextHeight}px`);
     });
+    return () => {
+      cancelAnimationFrame(frame);
+    };
   }, [positionerElement, popupElement, value]);
 
   const renderElement = useRenderElement('div', componentProps, {
+    state,
     ref: [forwardedRef, setPopupElement],
     props: mergeProps<'div'>(
       {
         style: {
-          // position: 'absolute',
-          // zIndex: 1,
-          // top: 0,
-          // left: 0,
           overflow: 'hidden',
         },
       },
       elementProps,
     ),
+    customStyleHookMapping: transitionStatusMapping,
   });
 
   return renderElement();
 });
+
+namespace NavigationMenuPopup {
+  export interface State {
+    /**
+     * If `true`, the popup is open.
+     */
+    open: boolean;
+    /**
+     * The transition status of the popup.
+     */
+    transitionStatus: TransitionStatus;
+  }
+
+  export interface Props extends BaseUIComponentProps<'div', State> {}
+}
 
 NavigationMenuPopup.propTypes /* remove-proptypes */ = {
   // ┌────────────────────────────── Warning ──────────────────────────────┐
@@ -82,11 +109,5 @@ NavigationMenuPopup.propTypes /* remove-proptypes */ = {
    */
   render: PropTypes.oneOfType([PropTypes.element, PropTypes.func]),
 } as any;
-
-namespace NavigationMenuPopup {
-  export interface State {}
-
-  export interface Props extends BaseUIComponentProps<'div', State> {}
-}
 
 export { NavigationMenuPopup };

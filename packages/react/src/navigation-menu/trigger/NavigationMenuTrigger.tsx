@@ -22,12 +22,13 @@ const NavigationMenuTrigger = React.forwardRef(function NavigationMenuTrigger(
   const {
     value: contextValue,
     setValue,
+    mounted,
     open,
     setOpen,
     setAnchor,
     positionerElement,
-    popupElement,
     anchor,
+    setActivationDirection,
   } = useNavigationMenuRootContext();
   const value = useNavigationMenuItemContext();
 
@@ -45,10 +46,12 @@ const NavigationMenuTrigger = React.forwardRef(function NavigationMenuTrigger(
       }
 
       setOpen(nextOpen);
-      setValue(value);
 
-      if (refs.domReference.current) {
-        setAnchor(refs.domReference.current);
+      if (nextOpen) {
+        setValue(value);
+      } else if (!nextOpen) {
+        setActivationDirection(null);
+        setValue(null);
       }
     },
     elements: {
@@ -57,7 +60,7 @@ const NavigationMenuTrigger = React.forwardRef(function NavigationMenuTrigger(
   });
 
   const hover = useHover(context, {
-    restMs: open ? 0 : 100,
+    restMs: open ? 0 : 1,
     move: false,
     handleClose: safePolygon(),
   });
@@ -70,18 +73,21 @@ const NavigationMenuTrigger = React.forwardRef(function NavigationMenuTrigger(
       getReferenceProps,
       {
         onMouseEnter() {
-          if (open) {
-            popupElement?.style.removeProperty('--popup-width');
-            popupElement?.style.removeProperty('--popup-height');
-            positionerElement?.style.removeProperty('--positioner-width');
-            positionerElement?.style.removeProperty('--positioner-height');
+          positionerElement?.style.removeProperty('--positioner-width');
+          positionerElement?.style.removeProperty('--positioner-height');
 
-            ReactDOM.flushSync(() => {
-              setValue(value);
-              setOpen(true);
-              setAnchor(refs.domReference.current);
-            });
-          }
+          ReactDOM.flushSync(() => {
+            const prevAnchorRect = anchor?.getBoundingClientRect();
+
+            if (mounted && prevAnchorRect && refs.domReference.current) {
+              const nextAnchorRect = refs.domReference.current.getBoundingClientRect();
+              const isMovingRight = nextAnchorRect.left > prevAnchorRect.left;
+              setActivationDirection(isMovingRight ? 'right' : 'left');
+            }
+
+            setValue(value);
+            setAnchor(refs.domReference.current);
+          });
         },
       },
       elementProps,

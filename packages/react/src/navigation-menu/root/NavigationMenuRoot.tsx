@@ -59,8 +59,15 @@ const NavigationMenuRoot = React.forwardRef(function NavigationMenuRoot(
   const [anchor, setAnchor] = React.useState<HTMLElement | null>(null);
   const [positionerElement, setPositionerElement] = React.useState<HTMLElement | null>(null);
   const [popupElement, setPopupElement] = React.useState<HTMLElement | null>(null);
+  const [activationDirection, setActivationDirection] = React.useState<'left' | 'right' | null>(
+    null,
+  );
 
   const { mounted, setMounted, transitionStatus } = useTransitionStatus(open);
+
+  if (!mounted && activationDirection !== null) {
+    setActivationDirection(null);
+  }
 
   const handleUnmount = useEventCallback(() => {
     setMounted(false);
@@ -97,6 +104,8 @@ const NavigationMenuRoot = React.forwardRef(function NavigationMenuRoot(
       setPopupElement,
       anchor,
       setAnchor,
+      activationDirection,
+      setActivationDirection,
     }),
     [
       open,
@@ -109,6 +118,8 @@ const NavigationMenuRoot = React.forwardRef(function NavigationMenuRoot(
       setPositionerElement,
       popupElement,
       anchor,
+      activationDirection,
+      setActivationDirection,
     ],
   );
 

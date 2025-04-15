@@ -15,6 +15,8 @@ export interface NavigationMenuRootContext {
   setPositionerElement: React.Dispatch<React.SetStateAction<HTMLElement | null>>;
   anchor: HTMLElement | null;
   setAnchor: React.Dispatch<React.SetStateAction<HTMLElement | null>>;
+  activationDirection: 'left' | 'right' | null;
+  setActivationDirection: React.Dispatch<React.SetStateAction<'left' | 'right' | null>>;
 }
 
 export const NavigationMenuRootContext = React.createContext<NavigationMenuRootContext | undefined>(
