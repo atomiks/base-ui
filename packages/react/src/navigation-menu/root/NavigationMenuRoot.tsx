@@ -2,6 +2,7 @@
 import * as React from 'react';
 import PropTypes from 'prop-types';
 import type { FloatingRootContext } from '@floating-ui/react';
+import { contains } from '@floating-ui/react/utils';
 import type { BaseUIComponentProps } from '../../utils/types';
 import { useRenderElement } from '../../utils/useRenderElement';
 import { NavigationMenuRootContext } from './NavigationMenuRootContext';
@@ -66,6 +67,7 @@ const NavigationMenuRoot = React.forwardRef(function NavigationMenuRoot(
   const [floatingRootContext, setFloatingRootContext] = React.useState<
     FloatingRootContext | undefined
   >(undefined);
+  const currentContentRef = React.useRef<HTMLDivElement | null>(null);
 
   const { mounted, setMounted, transitionStatus } = useTransitionStatus(open);
 
@@ -81,6 +83,7 @@ const NavigationMenuRoot = React.forwardRef(function NavigationMenuRoot(
   const handleUnmount = useEventCallback(() => {
     setMounted(false);
     onOpenChangeComplete?.(false);
+    currentContentRef.current = null;
   });
 
   useOpenChangeComplete({
@@ -96,7 +99,22 @@ const NavigationMenuRoot = React.forwardRef(function NavigationMenuRoot(
 
   const renderElement = useRenderElement('div', componentProps, {
     ref: forwardedRef,
-    props: elementProps,
+    props: [
+      {
+        onBlur(event) {
+          if (
+            contains(event.currentTarget, event.relatedTarget) ||
+            contains(popupElement, event.relatedTarget) ||
+            event.relatedTarget?.hasAttribute('data-base-ui-focus-guard')
+          ) {
+            return;
+          }
+
+          setOpen(false);
+        },
+      },
+      elementProps,
+    ],
   });
 
   const contextValue: NavigationMenuRootContext = React.useMemo(
@@ -117,6 +135,7 @@ const NavigationMenuRoot = React.forwardRef(function NavigationMenuRoot(
       setActivationDirection,
       floatingRootContext,
       setFloatingRootContext,
+      currentContentRef,
     }),
     [
       open,

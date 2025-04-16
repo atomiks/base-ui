@@ -20,6 +20,7 @@ export interface NavigationMenuRootContext {
   setActivationDirection: React.Dispatch<React.SetStateAction<'left' | 'right' | null>>;
   floatingRootContext: FloatingRootContext | undefined;
   setFloatingRootContext: React.Dispatch<React.SetStateAction<FloatingRootContext | undefined>>;
+  currentContentRef: React.RefObject<HTMLDivElement | null>;
 }
 
 export const NavigationMenuRootContext = React.createContext<NavigationMenuRootContext | undefined>(

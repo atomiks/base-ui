@@ -2,12 +2,17 @@
 import * as React from 'react';
 import PropTypes from 'prop-types';
 import type { BaseUIComponentProps } from '../../utils/types';
+import { tabbable as tabbableUtils } from '@floating-ui/react/utils';
 import { useRenderElement } from '../../utils/useRenderElement';
 import { useNavigationMenuRootContext } from '../root/NavigationMenuRootContext';
 import { useEnhancedEffect } from '../../utils/useEnhancedEffect';
 import type { TransitionStatus } from '../../utils/useTransitionStatus';
 import { mergeProps } from '../../merge-props';
 import { transitionStatusMapping } from '../../utils/styleHookMapping';
+import { useBaseUiId } from '../../utils/useBaseUiId';
+import { FocusGuard } from '../../toast/viewport/FocusGuard';
+import { FocusableElement, tabbable } from 'tabbable';
+import { ownerDocument } from '../../utils/owner';
 
 /**
  *
@@ -17,10 +22,19 @@ const NavigationMenuPopup = React.forwardRef(function NavigationMenuPopup(
   componentProps: NavigationMenuPopup.Props,
   forwardedRef: React.ForwardedRef<HTMLDivElement>,
 ) {
-  const { className, render, ...elementProps } = componentProps;
+  const { className, render, id: idProp, ...elementProps } = componentProps;
 
-  const { open, transitionStatus, popupElement, positionerElement, setPopupElement, value } =
-    useNavigationMenuRootContext();
+  const {
+    anchor,
+    open,
+    transitionStatus,
+    popupElement,
+    positionerElement,
+    setPopupElement,
+    value,
+  } = useNavigationMenuRootContext();
+
+  const id = useBaseUiId(idProp);
 
   const state: NavigationMenuPopup.State = React.useMemo(
     () => ({
@@ -58,11 +72,45 @@ const NavigationMenuPopup = React.forwardRef(function NavigationMenuPopup(
   const renderElement = useRenderElement('div', componentProps, {
     state,
     ref: [forwardedRef, setPopupElement],
-    props: mergeProps<'div'>(elementProps),
+    props: mergeProps<'div'>(
+      {
+        id,
+        tabIndex: -1,
+        onFocus(event) {
+          if (event.currentTarget !== event.target || !popupElement) {
+            return;
+          }
+          const tabbableElements = tabbable(popupElement).reverse();
+          const popupTabbable = tabbableElements[0] || popupElement;
+          popupTabbable?.focus();
+        },
+      },
+      elementProps,
+    ),
     customStyleHookMapping: transitionStatusMapping,
   });
 
-  return renderElement();
+  return (
+    <React.Fragment>
+      <FocusGuard
+        onFocus={() => {
+          anchor?.focus({ preventScroll: true });
+          if (popupElement) {
+            tabbableUtils.enableFocusInside(popupElement);
+          }
+        }}
+      />
+      {renderElement()}
+      <FocusGuard
+        onFocus={() => {
+          const tabbableElements = tabbable(ownerDocument(anchor).body);
+          const index = tabbableElements.indexOf(anchor as FocusableElement);
+          const nextElement = tabbableElements[index + 2] || anchor;
+          nextElement?.focus({ preventScroll: true });
+        }}
+      />
+    </React.Fragment>
+  );
 });
 
 namespace NavigationMenuPopup {

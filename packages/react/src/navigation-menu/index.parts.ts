@@ -7,3 +7,4 @@ export { NavigationMenuPortal as Portal } from './portal/NavigationMenuPortal';
 export { NavigationMenuPositioner as Positioner } from './positioner/NavigationMenuPositioner';
 export { NavigationMenuBackdrop as Backdrop } from './backdrop/NavigationMenuBackdrop';
 export { NavigationMenuPopup as Popup } from './popup/NavigationMenuPopup';
+export { NavigationMenuLink as Link } from './link/NavigationMenuLink';

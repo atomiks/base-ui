@@ -24,6 +24,7 @@
   line-height: 1.5rem;
   color: var(--color-gray-900);
   user-select: none;
+  text-decoration: none;
 
   @media (hover: hover) {
     &:hover {
@@ -46,7 +47,7 @@
 }
 
 .Positioner {
-  --duration: 0.5s;
+  --duration: 0.4s;
   box-sizing: border-box;
   transition-property: transform;
   transition-duration: var(--duration);
@@ -90,7 +91,7 @@
 
 .Content {
   transition:
-    opacity 0.25s,
+    opacity 0.15s,
     transform var(--duration) cubic-bezier(0.22, 1, 0.36, 1);
   min-width: max-content;
 

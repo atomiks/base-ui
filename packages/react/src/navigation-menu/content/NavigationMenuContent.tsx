@@ -10,6 +10,20 @@ import { mergeProps } from '../../merge-props';
 import { TransitionStatus, useTransitionStatus } from '../../utils/useTransitionStatus';
 import { useOpenChangeComplete } from '../../utils/useOpenChangeComplete';
 import { transitionStatusMapping } from '../../utils/styleHookMapping';
+import { CustomStyleHookMapping } from '../../utils/getStyleHookProps';
+
+const customStyleHookMapping: CustomStyleHookMapping<NavigationMenuContent.State> = {
+  ...transitionStatusMapping,
+  activationDirection(value) {
+    if (value === 'left') {
+      return { 'data-activation-direction': 'left' };
+    }
+    if (value === 'right') {
+      return { 'data-activation-direction': 'right' };
+    }
+    return null;
+  },
+};
 
 /**
  *
@@ -21,7 +35,8 @@ const NavigationMenuContent = React.forwardRef(function NavigationMenuContent(
 ) {
   const { className, render, ...elementProps } = componentProps;
 
-  const { popupElement, value, activationDirection } = useNavigationMenuRootContext();
+  const { popupElement, value, activationDirection, currentContentRef } =
+    useNavigationMenuRootContext();
   const itemValue = useNavigationMenuItemContext();
 
   const open = value === itemValue;
@@ -49,9 +64,15 @@ const NavigationMenuContent = React.forwardRef(function NavigationMenuContent(
     [open, transitionStatus, activationDirection],
   );
 
+  const handleCurrentContentRef = React.useCallback((node: HTMLDivElement | null) => {
+    if (node) {
+      currentContentRef.current = node;
+    }
+  }, []);
+
   const renderElement = useRenderElement('div', componentProps, {
     state,
-    ref: [forwardedRef, ref],
+    ref: [forwardedRef, ref, handleCurrentContentRef],
     props: mergeProps<'div'>(
       !open && mounted
         ? {
@@ -60,18 +81,7 @@ const NavigationMenuContent = React.forwardRef(function NavigationMenuContent(
         : {},
       elementProps,
     ),
-    customStyleHookMapping: {
-      ...transitionStatusMapping,
-      activationDirection(value) {
-        if (value === 'left') {
-          return { 'data-activation-direction': 'left' };
-        }
-        if (value === 'right') {
-          return { 'data-activation-direction': 'right' };
-        }
-        return null;
-      },
-    },
+    customStyleHookMapping,
   });
 
   if (!popupElement || !mounted) {
@@ -91,6 +101,10 @@ namespace NavigationMenuContent {
      * The transition status of the component.
      */
     transitionStatus: TransitionStatus;
+    /**
+     * The direction of the activation.
+     */
+    activationDirection: 'left' | 'right' | null;
   }
 
   export interface Props extends BaseUIComponentProps<'div', State> {}

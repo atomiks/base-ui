@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { NavigationMenu } from '@base-ui-components/react/navigation-menu';
 import styles from './index.module.css';
+import Link from 'next/link';
 
 export default function ExampleNavigationMenu() {
   return (
@@ -9,6 +10,7 @@ export default function ExampleNavigationMenu() {
         <NavigationMenu.Item>
           <NavigationMenu.Trigger className={styles.Trigger}>
             Overview
+            <ChevronDownIcon className={styles.Icon} />
           </NavigationMenu.Trigger>
           <NavigationMenu.Content className={styles.Content}>
             <div
@@ -49,6 +51,7 @@ export default function ExampleNavigationMenu() {
         <NavigationMenu.Item>
           <NavigationMenu.Trigger className={styles.Trigger}>
             Handbook
+            <ChevronDownIcon className={styles.Icon} />
           </NavigationMenu.Trigger>
           <NavigationMenu.Content className={styles.Content}>
             <div
@@ -84,9 +87,12 @@ export default function ExampleNavigationMenu() {
         </NavigationMenu.Item>
 
         <NavigationMenu.Item>
-          <button type="button" className={styles.Trigger}>
+          <NavigationMenu.Link
+            className={styles.Trigger}
+            render={<Link href="/careers/design-engineer" />}
+          >
             Careers
-          </button>
+          </NavigationMenu.Link>
         </NavigationMenu.Item>
       </NavigationMenu.List>
 
@@ -96,5 +102,13 @@ export default function ExampleNavigationMenu() {
         </NavigationMenu.Positioner>
       </NavigationMenu.Portal>
     </NavigationMenu.Root>
+  );
+}
+
+function ChevronDownIcon(props: React.ComponentProps<'svg'>) {
+  return (
+    <svg width="10" height="10" viewBox="0 0 10 10" fill="none" {...props}>
+      <path d="M1 3.5L5 7.5L9 3.5" stroke="currentcolor" strokeWidth="1.5" />
+    </svg>
   );
 }
