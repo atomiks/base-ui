@@ -1,6 +1,7 @@
 'use client';
 import * as React from 'react';
 import PropTypes from 'prop-types';
+import type { FloatingRootContext } from '@floating-ui/react';
 import type { BaseUIComponentProps } from '../../utils/types';
 import { useRenderElement } from '../../utils/useRenderElement';
 import { NavigationMenuRootContext } from './NavigationMenuRootContext';
@@ -62,11 +63,19 @@ const NavigationMenuRoot = React.forwardRef(function NavigationMenuRoot(
   const [activationDirection, setActivationDirection] = React.useState<'left' | 'right' | null>(
     null,
   );
+  const [floatingRootContext, setFloatingRootContext] = React.useState<
+    FloatingRootContext | undefined
+  >(undefined);
 
   const { mounted, setMounted, transitionStatus } = useTransitionStatus(open);
 
-  if (!mounted && activationDirection !== null) {
-    setActivationDirection(null);
+  if (!mounted) {
+    if (activationDirection !== null) {
+      setActivationDirection(null);
+    }
+    if (floatingRootContext !== undefined) {
+      setFloatingRootContext(undefined);
+    }
   }
 
   const handleUnmount = useEventCallback(() => {
@@ -106,6 +115,8 @@ const NavigationMenuRoot = React.forwardRef(function NavigationMenuRoot(
       setAnchor,
       activationDirection,
       setActivationDirection,
+      floatingRootContext,
+      setFloatingRootContext,
     }),
     [
       open,
@@ -115,11 +126,10 @@ const NavigationMenuRoot = React.forwardRef(function NavigationMenuRoot(
       mounted,
       transitionStatus,
       positionerElement,
-      setPositionerElement,
       popupElement,
       anchor,
       activationDirection,
-      setActivationDirection,
+      floatingRootContext,
     ],
   );
 

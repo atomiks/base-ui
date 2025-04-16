@@ -36,9 +36,10 @@ const NavigationMenuPositioner = React.forwardRef(function NavigationMenuPositio
   const {
     open,
     mounted,
+    positionerElement,
     setPositionerElement,
     anchor: triggerAnchor,
-    transitionStatus,
+    floatingRootContext,
   } = useNavigationMenuRootContext();
   const keepMounted = useNavigationMenuPortalContext();
 
@@ -57,13 +58,31 @@ const NavigationMenuPositioner = React.forwardRef(function NavigationMenuPositio
     sticky,
     trackAnchor,
     keepMounted,
+    floatingRootContext,
   });
+
+  React.useEffect(() => {
+    if (!positionerElement) {
+      return undefined;
+    }
+
+    positionerElement.style.transition = 'none';
+
+    if (!positioning.isPositioned) {
+      return undefined;
+    }
+
+    const frame = requestAnimationFrame(() => {
+      positionerElement.style.transition = '';
+    });
+    return () => {
+      cancelAnimationFrame(frame);
+    };
+  }, [positioning.isPositioned, positionerElement]);
 
   const renderElement = useRenderElement('div', componentProps, {
     ref: [forwardedRef, setPositionerElement, positioning.refs.setFloating],
-    props: mergeProps<'div'>(positioning.props, elementProps, {
-      style: transitionStatus === 'starting' ? { transition: 'none' } : {},
-    }),
+    props: mergeProps<'div'>(positioning.props, elementProps),
   });
 
   return renderElement();

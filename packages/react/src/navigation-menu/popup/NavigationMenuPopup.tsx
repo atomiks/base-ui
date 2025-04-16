@@ -58,14 +58,7 @@ const NavigationMenuPopup = React.forwardRef(function NavigationMenuPopup(
   const renderElement = useRenderElement('div', componentProps, {
     state,
     ref: [forwardedRef, setPopupElement],
-    props: mergeProps<'div'>(
-      {
-        style: {
-          overflow: 'hidden',
-        },
-      },
-      elementProps,
-    ),
+    props: mergeProps<'div'>(elementProps),
     customStyleHookMapping: transitionStatusMapping,
   });
 

@@ -4,15 +4,17 @@ import styles from './index.module.css';
 
 export default function ExampleNavigationMenu() {
   return (
-    <NavigationMenu.Root>
+    <NavigationMenu.Root className={styles.Root}>
       <NavigationMenu.List style={{ display: 'flex' }}>
         <NavigationMenu.Item>
-          <NavigationMenu.Trigger>Overview</NavigationMenu.Trigger>
-          <NavigationMenu.Content className={styles.Content} style={{ width: 350 }}>
+          <NavigationMenu.Trigger className={styles.Trigger}>
+            Overview
+          </NavigationMenu.Trigger>
+          <NavigationMenu.Content className={styles.Content}>
             <div
               style={{
                 display: 'grid',
-                gridTemplateColumns: '1fr 10rem',
+                gridTemplateColumns: '125px 1fr',
                 gap: 20,
                 padding: 20,
               }}
@@ -45,12 +47,14 @@ export default function ExampleNavigationMenu() {
         </NavigationMenu.Item>
 
         <NavigationMenu.Item>
-          <NavigationMenu.Trigger>Links</NavigationMenu.Trigger>
+          <NavigationMenu.Trigger className={styles.Trigger}>
+            Handbook
+          </NavigationMenu.Trigger>
           <NavigationMenu.Content className={styles.Content}>
             <div
               style={{
                 display: 'grid',
-                gridTemplateColumns: '6rem 1fr',
+                gridTemplateColumns: '1fr 125px',
                 gap: 20,
                 padding: 20,
               }}
@@ -58,22 +62,19 @@ export default function ExampleNavigationMenu() {
               <div>
                 <ul style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                   <li>
-                    <a href="/react/overview/quick-start">X/Twitter</a>
+                    <a href="/react/overview/quick-start">Styling</a>
                   </li>
                   <li>
-                    <a href="/react/overview/accessibility">BlueSky</a>
+                    <a href="/react/overview/accessibility">Animation</a>
                   </li>
                   <li>
-                    <a href="/react/overview/releases">GitHub</a>
-                  </li>
-                  <li>
-                    <a href="/react/overview/about">npm</a>
+                    <a href="/react/overview/about">Composition</a>
                   </li>
                 </ul>
               </div>
               <img
                 alt=""
-                src="https://cdn.pixabay.com/photo/2022/01/30/13/33/github-6980894_960_720.png"
+                src="https://i.pinimg.com/736x/c6/13/1e/c6131e0206d37d4f4146d53c6e3d16f3.jpg"
                 width={125}
                 height={125}
                 style={{ borderRadius: 6 }}
@@ -82,12 +83,16 @@ export default function ExampleNavigationMenu() {
           </NavigationMenu.Content>
         </NavigationMenu.Item>
 
-        <NavigationMenu.Item>Hello</NavigationMenu.Item>
+        <NavigationMenu.Item>
+          <button type="button" className={styles.Trigger}>
+            Careers
+          </button>
+        </NavigationMenu.Item>
       </NavigationMenu.List>
 
       <NavigationMenu.Portal>
         <NavigationMenu.Positioner className={styles.Positioner} sideOffset={5}>
-          <NavigationMenu.Popup className={styles.Popup}>Hello</NavigationMenu.Popup>
+          <NavigationMenu.Popup className={styles.Popup} />
         </NavigationMenu.Positioner>
       </NavigationMenu.Portal>
     </NavigationMenu.Root>

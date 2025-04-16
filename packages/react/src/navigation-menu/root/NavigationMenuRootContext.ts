@@ -1,4 +1,5 @@
 import * as React from 'react';
+import type { FloatingRootContext } from '@floating-ui/react';
 import type { OpenChangeReason } from '../../utils/translateOpenChangeReason';
 import type { TransitionStatus } from '../../utils';
 
@@ -17,6 +18,8 @@ export interface NavigationMenuRootContext {
   setAnchor: React.Dispatch<React.SetStateAction<HTMLElement | null>>;
   activationDirection: 'left' | 'right' | null;
   setActivationDirection: React.Dispatch<React.SetStateAction<'left' | 'right' | null>>;
+  floatingRootContext: FloatingRootContext | undefined;
+  setFloatingRootContext: React.Dispatch<React.SetStateAction<FloatingRootContext | undefined>>;
 }
 
 export const NavigationMenuRootContext = React.createContext<NavigationMenuRootContext | undefined>(

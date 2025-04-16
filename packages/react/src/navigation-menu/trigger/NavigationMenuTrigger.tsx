@@ -2,7 +2,7 @@
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import PropTypes from 'prop-types';
-import { safePolygon, useFloating, useHover, useInteractions } from '@floating-ui/react';
+import { safePolygon, useFloatingRootContext, useHover, useInteractions } from '@floating-ui/react';
 import type { BaseUIComponentProps } from '../../utils/types';
 import { useRenderElement } from '../../utils/useRenderElement';
 import { useNavigationMenuItemContext } from '../item/NavigationMenuItemContext';
@@ -29,19 +29,22 @@ const NavigationMenuTrigger = React.forwardRef(function NavigationMenuTrigger(
     positionerElement,
     anchor,
     setActivationDirection,
+    setFloatingRootContext,
   } = useNavigationMenuRootContext();
   const value = useNavigationMenuItemContext();
 
   const timeoutRef = React.useRef(-1);
 
+  const [triggerElement, setTriggerElement] = React.useState<HTMLElement | null>(null);
+
   React.useEffect(() => {
     clearTimeout(timeoutRef.current);
   }, [contextValue]);
 
-  const { context, refs } = useFloating<HTMLElement>({
+  const context = useFloatingRootContext({
     open,
     onOpenChange(nextOpen) {
-      if (!nextOpen && anchor && anchor !== refs.domReference.current) {
+      if (!nextOpen && anchor && anchor !== triggerElement) {
         return;
       }
 
@@ -55,20 +58,21 @@ const NavigationMenuTrigger = React.forwardRef(function NavigationMenuTrigger(
       }
     },
     elements: {
+      reference: triggerElement,
       floating: positionerElement,
     },
   });
 
   const hover = useHover(context, {
-    restMs: open ? 0 : 1,
     move: false,
     handleClose: safePolygon(),
+    restMs: 50,
   });
 
   const { getReferenceProps } = useInteractions([hover]);
 
   const renderElement = useRenderElement('button', componentProps, {
-    ref: [forwardedRef, refs.setReference],
+    ref: [forwardedRef, setTriggerElement],
     props: mergeProps<'button'>(
       getReferenceProps,
       {
@@ -76,17 +80,20 @@ const NavigationMenuTrigger = React.forwardRef(function NavigationMenuTrigger(
           positionerElement?.style.removeProperty('--positioner-width');
           positionerElement?.style.removeProperty('--positioner-height');
 
-          ReactDOM.flushSync(() => {
-            const prevAnchorRect = anchor?.getBoundingClientRect();
+          const prevAnchorRect = anchor?.getBoundingClientRect();
 
-            if (mounted && prevAnchorRect && refs.domReference.current) {
-              const nextAnchorRect = refs.domReference.current.getBoundingClientRect();
+          ReactDOM.flushSync(() => {
+            if (mounted && prevAnchorRect && triggerElement) {
+              const nextAnchorRect = triggerElement.getBoundingClientRect();
               const isMovingRight = nextAnchorRect.left > prevAnchorRect.left;
-              setActivationDirection(isMovingRight ? 'right' : 'left');
+              if (nextAnchorRect.left !== prevAnchorRect.left) {
+                setActivationDirection(isMovingRight ? 'right' : 'left');
+              }
             }
 
+            setFloatingRootContext(context);
             setValue(value);
-            setAnchor(refs.domReference.current);
+            setAnchor(triggerElement);
           });
         },
       },
