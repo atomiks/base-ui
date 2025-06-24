@@ -56,6 +56,9 @@ export const RadioGroup = React.forwardRef(function RadioGroup(
     name: fieldName,
     disabled: fieldDisabled,
     state: fieldState,
+    setDirty,
+    setFilled,
+    validityData,
   } = useFieldRootContext();
   const fieldControlValidation = useFieldControlValidation();
   const { clearErrors } = useFormContext();
@@ -142,6 +145,25 @@ export const RadioGroup = React.forwardRef(function RadioGroup(
 
   const mergedInputRef = useForkRef(fieldControlValidation.inputRef, inputRefProp);
 
+  function handleInputInteraction(event: React.SyntheticEvent<HTMLInputElement>) {
+    // Workaround for https://github.com/facebook/react/issues/9023
+    if (event.nativeEvent.defaultPrevented) {
+      return;
+    }
+
+    if (disabled || readOnly) {
+      return;
+    }
+
+    const newValue = event.currentTarget.value;
+
+    setFieldTouched(true);
+    setDirty(newValue !== validityData.initialValue);
+    setCheckedValue(newValue);
+    setFilled(true);
+    onValueChange?.(newValue, (event as any).nativeEvent ?? (event as any));
+  }
+
   const inputProps = mergeProps<'input'>(
     {
       value: serializedCheckedValue,
@@ -154,6 +176,8 @@ export const RadioGroup = React.forwardRef(function RadioGroup(
       'aria-hidden': true,
       tabIndex: -1,
       style: visuallyHidden,
+      onClick: handleInputInteraction,
+      onChange: handleInputInteraction,
     },
     fieldControlValidation.getInputValidationProps,
   );

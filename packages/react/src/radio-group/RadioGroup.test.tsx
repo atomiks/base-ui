@@ -119,7 +119,7 @@ describe('<RadioGroup />', () => {
     const group = screen.getByTestId('root');
     const item = screen.getByTestId('item');
 
-    const input = group.querySelector<HTMLInputElement>('input')!;
+    const input = group.nextElementSibling as HTMLInputElement;
 
     fireEvent.click(input);
 
