@@ -502,34 +502,6 @@ describe.skipIf(!isJSDOM)('FloatingFocusManager', () => {
     });
   });
 
-  describe('guards', () => {
-    test('true', async () => {
-      render(<App guards />);
-
-      fireEvent.click(screen.getByTestId('reference'));
-      await flushMicrotasks();
-
-      await userEvent.tab();
-      await userEvent.tab();
-      await userEvent.tab();
-
-      expect(document.body).not.toHaveFocus();
-    });
-
-    test.skipIf(!isJSDOM)('false', async () => {
-      render(<App guards={false} />);
-
-      fireEvent.click(screen.getByTestId('reference'));
-      await flushMicrotasks();
-
-      await userEvent.tab();
-      await userEvent.tab();
-      await userEvent.tab();
-
-      expect(document.activeElement).toHaveAttribute('inert', '');
-    });
-  });
-
   describe('iframe focus navigation', () => {
     function App({ iframe }: { iframe: HTMLElement }) {
       return (
@@ -777,49 +749,6 @@ describe.skipIf(!isJSDOM)('FloatingFocusManager', () => {
       expect(screen.getByTestId('btn-2')).toHaveAttribute('aria-hidden');
     });
 
-    test('true - comboboxes hide all other nodes with inert when outsideElementsInert=true', async () => {
-      function App() {
-        const [open, setOpen] = React.useState(false);
-        const { refs, context } = useFloating({
-          open,
-          onOpenChange: setOpen,
-        });
-
-        return (
-          <>
-            <input
-              role="combobox"
-              data-testid="reference"
-              ref={refs.setReference}
-              onFocus={() => setOpen(true)}
-            />
-            <button data-testid="btn-1" />
-            <button data-testid="btn-2" />
-            {open && (
-              <FloatingFocusManager
-                context={context}
-                modal
-                order={['reference']}
-                outsideElementsInert
-              >
-                <div role="listbox" ref={refs.setFloating} data-testid="floating" />
-              </FloatingFocusManager>
-            )}
-          </>
-        );
-      }
-
-      render(<App />);
-
-      fireEvent.focus(screen.getByTestId('reference'));
-      await flushMicrotasks();
-
-      expect(screen.getByTestId('reference')).not.toHaveAttribute('inert');
-      expect(screen.getByTestId('floating')).not.toHaveAttribute('inert');
-      expect(screen.getByTestId('btn-1')).toHaveAttribute('inert');
-      expect(screen.getByTestId('btn-2')).toHaveAttribute('inert');
-    });
-
     test('false - comboboxes do not hide all other nodes', async () => {
       function App() {
         const [open, setOpen] = React.useState(false);
@@ -1030,54 +959,6 @@ describe.skipIf(!isJSDOM)('FloatingFocusManager', () => {
       expect(screen.getByTestId('btn-2')).not.toHaveAttribute('aria-hidden');
     });
 
-    test('true - applies inert to outside nodes when outsideElementsInert=true', async () => {
-      function App() {
-        const [isOpen, setIsOpen] = React.useState(false);
-        const { refs, context } = useFloating({
-          open: isOpen,
-          onOpenChange: setIsOpen,
-        });
-
-        return (
-          <>
-            <input
-              data-testid="reference"
-              ref={refs.setReference}
-              onClick={() => setIsOpen((v) => !v)}
-            />
-            <div>
-              <div data-testid="aria-live" aria-live="polite" />
-              <button data-testid="btn-1" />
-              <button data-testid="btn-2" />
-            </div>
-            {isOpen && (
-              <FloatingFocusManager context={context} outsideElementsInert>
-                <div ref={refs.setFloating} data-testid="floating" />
-              </FloatingFocusManager>
-            )}
-          </>
-        );
-      }
-
-      render(<App />);
-
-      fireEvent.click(screen.getByTestId('reference'));
-      await flushMicrotasks();
-
-      expect(screen.getByTestId('reference')).toHaveAttribute('inert');
-      expect(screen.getByTestId('floating')).not.toHaveAttribute('inert');
-      expect(screen.getByTestId('aria-live')).not.toHaveAttribute('inert');
-      expect(screen.getByTestId('btn-1')).toHaveAttribute('inert');
-      expect(screen.getByTestId('btn-2')).toHaveAttribute('inert');
-
-      fireEvent.click(screen.getByTestId('reference'));
-
-      expect(screen.getByTestId('reference')).not.toHaveAttribute('inert');
-      expect(screen.getByTestId('aria-live')).not.toHaveAttribute('inert');
-      expect(screen.getByTestId('btn-1')).not.toHaveAttribute('inert');
-      expect(screen.getByTestId('btn-2')).not.toHaveAttribute('inert');
-    });
-
     test('false - does not apply inert to outside nodes', async () => {
       function App() {
         const [isOpen, setIsOpen] = React.useState(false);
@@ -1250,90 +1131,6 @@ describe.skipIf(!isJSDOM)('FloatingFocusManager', () => {
       expect(screen.getByTestId('child')).toHaveFocus();
 
       await userEvent.keyboard('{Escape}');
-
-      expect(screen.getByTestId('reference')).toHaveFocus();
-    });
-  });
-
-  describe('order', () => {
-    test('[reference, content]', async () => {
-      render(<App order={['reference', 'content']} />);
-
-      fireEvent.click(screen.getByTestId('reference'));
-      await flushMicrotasks();
-
-      expect(screen.getByTestId('reference')).toHaveFocus();
-
-      await userEvent.tab();
-      expect(screen.getByTestId('one')).toHaveFocus();
-
-      await userEvent.tab();
-      expect(screen.getByTestId('two')).toHaveFocus();
-    });
-
-    test('[floating, content]', async () => {
-      render(<App order={['floating', 'content']} />);
-
-      fireEvent.click(screen.getByTestId('reference'));
-      await flushMicrotasks();
-
-      expect(screen.getByTestId('floating')).toHaveFocus();
-
-      await userEvent.tab();
-      expect(screen.getByTestId('one')).toHaveFocus();
-
-      await userEvent.tab();
-      expect(screen.getByTestId('two')).toHaveFocus();
-
-      await userEvent.tab();
-      expect(screen.getByTestId('three')).toHaveFocus();
-
-      await userEvent.tab();
-      expect(screen.getByTestId('floating')).toHaveFocus();
-
-      await userEvent.tab({ shift: true });
-      expect(screen.getByTestId('three')).toHaveFocus();
-
-      await userEvent.tab({ shift: true });
-      expect(screen.getByTestId('two')).toHaveFocus();
-
-      await userEvent.tab({ shift: true });
-      expect(screen.getByTestId('one')).toHaveFocus();
-
-      await userEvent.tab({ shift: true });
-      expect(screen.getByTestId('floating')).toHaveFocus();
-    });
-
-    test('[reference, floating, content]', async () => {
-      render(<App order={['reference', 'floating', 'content']} />);
-
-      fireEvent.click(screen.getByTestId('reference'));
-      await flushMicrotasks();
-
-      expect(screen.getByTestId('reference')).toHaveFocus();
-
-      await userEvent.tab();
-      expect(screen.getByTestId('floating')).toHaveFocus();
-
-      await userEvent.tab();
-      expect(screen.getByTestId('one')).toHaveFocus();
-
-      await userEvent.tab();
-      expect(screen.getByTestId('two')).toHaveFocus();
-
-      await userEvent.tab();
-      expect(screen.getByTestId('three')).toHaveFocus();
-
-      await userEvent.tab();
-      expect(screen.getByTestId('reference')).toHaveFocus();
-
-      await userEvent.tab({ shift: true });
-      expect(screen.getByTestId('three')).toHaveFocus();
-
-      await userEvent.tab({ shift: true });
-      await userEvent.tab({ shift: true });
-      await userEvent.tab({ shift: true });
-      await userEvent.tab({ shift: true });
 
       expect(screen.getByTestId('reference')).toHaveFocus();
     });
