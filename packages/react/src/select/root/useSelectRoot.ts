@@ -375,8 +375,16 @@ export function useSelectRoot<Value, Multiple extends boolean | undefined>(
       return;
     }
 
-    const firstItemTop = firstItem.offsetTop;
-    const lastItemBottom = lastItem.offsetTop + lastItem.offsetHeight;
+    // Derive effective visual padding from first/last item offsets.
+    const containerTop = 0; // offsetTop of children is relative to the scroll container
+    const topPadding = Math.max(0, firstItem.offsetTop - containerTop);
+    const bottomPadding = Math.max(
+      0,
+      popupElement.scrollHeight - (lastItem.offsetTop + lastItem.offsetHeight),
+    );
+
+    const firstItemTop = firstItem.offsetTop - topPadding;
+    const lastItemBottom = lastItem.offsetTop + lastItem.offsetHeight + bottomPadding;
 
     const viewportTop = popupElement.scrollTop;
     const viewportBottom = popupElement.scrollTop + popupElement.clientHeight;

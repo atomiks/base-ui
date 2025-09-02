@@ -105,10 +105,28 @@ export const SelectScrollArrow = React.forwardRef(function SelectScrollArrow(
         if (popupRef.current && listRef.current && listRef.current.length > 0) {
           const items = listRef.current;
           const scrollArrowHeight = scrollArrowRef.current?.offsetHeight || 0;
+          // Derive effective top/bottom padding from the first/last item's offsets within the container.
+          // This captures visual padding.
+          const firstNonNull = items.find((n) => n != null);
+          let lastNonNull: HTMLElement | null = null;
+          for (let i = items.length - 1; i >= 0; i -= 1) {
+            if (items[i]) {
+              lastNonNull = items[i];
+              break;
+            }
+          }
+          const containerTop = 0;
+          const topPadding = firstNonNull ? Math.max(0, firstNonNull.offsetTop - containerTop) : 0;
+          const bottomPadding = lastNonNull
+            ? Math.max(
+                0,
+                popupElement.scrollHeight - (lastNonNull.offsetTop + lastNonNull.offsetHeight),
+              )
+            : 0;
 
           if (direction === 'up') {
             let firstVisibleIndex = 0;
-            const scrollTop = popupElement.scrollTop + scrollArrowHeight;
+            const scrollTop = popupElement.scrollTop + scrollArrowHeight + topPadding;
 
             for (let i = 0; i < items.length; i += 1) {
               const item = items[i];
@@ -125,7 +143,10 @@ export const SelectScrollArrow = React.forwardRef(function SelectScrollArrow(
             if (targetIndex < firstVisibleIndex) {
               const targetItem = items[targetIndex];
               if (targetItem) {
-                popupElement.scrollTop = Math.max(0, targetItem.offsetTop - scrollArrowHeight);
+                popupElement.scrollTop = Math.max(
+                  0,
+                  targetItem.offsetTop - scrollArrowHeight - topPadding,
+                );
               }
             } else {
               // Already at the first item; ensure we reach the absolute top to account for group labels.
@@ -134,7 +155,10 @@ export const SelectScrollArrow = React.forwardRef(function SelectScrollArrow(
           } else {
             let lastVisibleIndex = items.length - 1;
             const scrollBottom =
-              popupElement.scrollTop + popupElement.clientHeight - scrollArrowHeight;
+              popupElement.scrollTop +
+              popupElement.clientHeight -
+              scrollArrowHeight -
+              bottomPadding;
 
             for (let i = 0; i < items.length; i += 1) {
               const item = items[i];
@@ -154,8 +178,7 @@ export const SelectScrollArrow = React.forwardRef(function SelectScrollArrow(
                 popupElement.scrollTop =
                   targetItem.offsetTop +
                   targetItem.offsetHeight -
-                  popupElement.clientHeight +
-                  scrollArrowHeight;
+                  (popupElement.clientHeight - scrollArrowHeight - bottomPadding);
               }
             } else {
               // Already at the last item; ensure we reach the true bottom.
