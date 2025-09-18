@@ -13,6 +13,7 @@ import { MIN_THUMB_SIZE } from '../constants';
 import { clamp } from '../../utils/clamp';
 import { styleDisableScrollbar } from '../../utils/styles';
 import { onVisible } from '../utils/onVisible';
+import { getRtlScrollOffset } from '../utils/rtl';
 
 /**
  * The actual scrollable container of the scroll area.
@@ -123,16 +124,25 @@ export const ScrollAreaViewport = React.forwardRef(function ScrollAreaViewport(
     if (scrollbarXEl && thumbXEl) {
       const maxThumbOffsetX =
         scrollbarXEl.offsetWidth - clampedNextWidth - scrollbarXOffset - thumbXOffset;
-      const scrollRatioX = scrollLeft / (scrollableContentWidth - viewportWidth);
+      const maxScrollLeft = scrollableContentWidth - viewportWidth;
 
-      // In Safari, don't allow it to go negative or too far as `scrollLeft` considers the rubber
-      // band effect.
-      const thumbOffsetX =
-        direction === 'rtl'
-          ? clamp(scrollRatioX * maxThumbOffsetX, -maxThumbOffsetX, 0)
-          : clamp(scrollRatioX * maxThumbOffsetX, 0, maxThumbOffsetX);
+      if (maxScrollLeft > 0) {
+        const scrollOffset =
+          direction === 'rtl'
+            ? getRtlScrollOffset(viewportEl, maxScrollLeft)
+            : clamp(scrollLeft, 0, maxScrollLeft);
 
-      thumbXEl.style.transform = `translate3d(${thumbOffsetX}px,0,0)`;
+        const scrollRatioX = scrollOffset / maxScrollLeft;
+
+        const thumbOffsetX =
+          direction === 'rtl'
+            ? clamp(-scrollRatioX * maxThumbOffsetX, -maxThumbOffsetX, 0)
+            : clamp(scrollRatioX * maxThumbOffsetX, 0, maxThumbOffsetX);
+
+        thumbXEl.style.transform = `translate3d(${thumbOffsetX}px,0,0)`;
+      } else {
+        thumbXEl.style.transform = 'translate3d(0,0,0)';
+      }
     }
 
     if (cornerEl) {

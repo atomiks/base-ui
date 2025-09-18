@@ -8,6 +8,8 @@ import { getOffset } from '../utils/getOffset';
 import { ScrollAreaRootCssVars } from '../root/ScrollAreaRootCssVars';
 import { ScrollAreaScrollbarCssVars } from './ScrollAreaScrollbarCssVars';
 import { useDirection } from '../../direction-provider/DirectionContext';
+import { clamp } from '../../utils/clamp';
+import { setRtlScrollLeft } from '../utils/rtl';
 
 /**
  * A vertical or horizontal scrollbar for the scroll area.
@@ -157,22 +159,19 @@ export const ScrollAreaScrollbar = React.forwardRef(function ScrollAreaScrollbar
 
         const maxThumbOffsetX =
           scrollbarXRef.current.offsetWidth - thumbWidth - scrollbarXOffset - thumbXOffset;
-        const scrollRatioX = clickX / maxThumbOffsetX;
+        const maxScrollLeft = scrollableContentWidth - viewportWidth;
 
-        let newScrollLeft: number;
-        if (direction === 'rtl') {
-          // In RTL, invert the scroll direction
-          newScrollLeft = (1 - scrollRatioX) * (scrollableContentWidth - viewportWidth);
+        if (maxThumbOffsetX > 0 && maxScrollLeft > 0) {
+          const scrollRatioX = clamp(clickX / maxThumbOffsetX, 0, 1);
+          const distanceFromLeft = scrollRatioX * maxScrollLeft;
 
-          // Adjust for browsers that use negative scrollLeft in RTL
-          if (viewportRef.current.scrollLeft <= 0) {
-            newScrollLeft = -newScrollLeft;
+          if (direction === 'rtl') {
+            const offsetFromRight = maxScrollLeft - distanceFromLeft;
+            setRtlScrollLeft(viewportRef.current, offsetFromRight, maxScrollLeft);
+          } else {
+            viewportRef.current.scrollLeft = distanceFromLeft;
           }
-        } else {
-          newScrollLeft = scrollRatioX * (scrollableContentWidth - viewportWidth);
         }
-
-        viewportRef.current.scrollLeft = newScrollLeft;
       }
 
       handlePointerDown(event);
