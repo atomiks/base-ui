@@ -47,10 +47,7 @@ export function getRtlScrollAxisType(): RtlScrollAxisType {
   return rtlScrollAxisType;
 }
 
-export function getRtlScrollOffset(
-  viewport: HTMLElement,
-  maxScrollLeft: number,
-): number {
+export function getRtlScrollOffset(viewport: HTMLElement, maxScrollLeft: number): number {
   const axisType = getRtlScrollAxisType();
   const safeMax = Math.max(0, maxScrollLeft);
 
