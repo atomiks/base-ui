@@ -488,6 +488,8 @@ export function FloatingFocusManager(props: FloatingFocusManagerProps): React.JS
       });
     }
 
+    const shouldHandleBlurCapture = Boolean(!tree && portalContext);
+
     function markInsideReactTree() {
       dataRef.current.insideReactTree = true;
       blurTimeout.start(0, () => {
@@ -500,7 +502,7 @@ export function FloatingFocusManager(props: FloatingFocusManagerProps): React.JS
       domReference.addEventListener('pointerdown', handlePointerDown);
       floating.addEventListener('focusout', handleFocusOutside);
 
-      if (portalContext) {
+      if (shouldHandleBlurCapture) {
         floating.addEventListener('focusout', markInsideReactTree, true);
       }
 
@@ -509,7 +511,7 @@ export function FloatingFocusManager(props: FloatingFocusManagerProps): React.JS
         domReference.removeEventListener('pointerdown', handlePointerDown);
         floating.removeEventListener('focusout', handleFocusOutside);
 
-        if (portalContext) {
+        if (shouldHandleBlurCapture) {
           floating.removeEventListener('focusout', markInsideReactTree, true);
         }
       };
