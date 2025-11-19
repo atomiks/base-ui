@@ -91,7 +91,7 @@ export function useTypeahead(context: FloatingRootContext, props: UseTypeaheadPr
 
   useIsoLayoutEffect(() => {
     // Sync arrow key navigation but not typeahead navigation.
-    if (open && stringRef.current === '') {
+    if (stringRef.current === '') {
       prevIndexRef.current = selectedIndex ?? activeIndex ?? -1;
     }
   }, [open, selectedIndex, activeIndex]);
@@ -188,7 +188,19 @@ export function useTypeahead(context: FloatingRootContext, props: UseTypeaheadPr
     }
   });
 
-  const reference: ElementProps['reference'] = React.useMemo(() => ({ onKeyDown }), [onKeyDown]);
+  const onBlur = useStableCallback(() => {
+    stringRef.current = '';
+    matchIndexRef.current = null;
+    setTypingChange(false);
+  });
+
+  const reference: ElementProps['reference'] = React.useMemo(
+    () => ({
+      onKeyDown,
+      onBlur,
+    }),
+    [onKeyDown, onBlur],
+  );
 
   const floating: ElementProps['floating'] = React.useMemo(() => {
     return {

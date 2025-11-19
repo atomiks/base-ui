@@ -2583,4 +2583,71 @@ describe('<Select.Root />', () => {
       });
     });
   });
+
+  describe('typeahead', () => {
+    it('should reset typeahead string on blur', async () => {
+      function App() {
+        const [value, setValue] = React.useState<string | null>(null);
+        // Keep it open to ensure items are mounted and typeahead works
+        return (
+          <div>
+            <button onClick={() => setValue(null)}>Reset</button>
+            <Select.Root value={value} onValueChange={setValue} open modal={false}>
+              <Select.Trigger data-testid="trigger">
+                <Select.Value />
+              </Select.Trigger>
+              <Select.Portal>
+                <Select.Positioner>
+                  <Select.Popup>
+                    <Select.Item value="A1">A1</Select.Item>
+                    <Select.Item value="A2">A2</Select.Item>
+                  </Select.Popup>
+                </Select.Positioner>
+              </Select.Portal>
+            </Select.Root>
+          </div>
+        );
+      }
+
+      await render(<App />);
+      const trigger = screen.getByTestId('trigger');
+      const resetButton = screen.getByText('Reset');
+
+      // 1. Focus the trigger (Popup is already open)
+      act(() => {
+        trigger.focus();
+      });
+      await flushMicrotasks();
+
+      // 2. Press A
+      fireEvent.keyDown(trigger, { key: 'A' });
+
+      // Check A1 is highlighted
+      expect(screen.getByRole('option', { name: 'A1' })).to.have.attribute('data-highlighted');
+
+      // 3. Select A1 (Simulate selection by clicking)
+      fireEvent.click(screen.getByRole('option', { name: 'A1' }));
+      await flushMicrotasks();
+
+      // Trigger should have text A1
+      expect(trigger).to.have.text('A1');
+
+      // 4. Press Reset
+      fireEvent.click(resetButton);
+      await flushMicrotasks();
+      expect(trigger).to.have.text('');
+
+      // 5. Focus Trigger again
+      act(() => {
+        trigger.focus();
+      });
+
+      // 6. Press A
+      fireEvent.keyDown(trigger, { key: 'A' });
+
+      // Should highlight "A1" again, not "A2"
+      expect(screen.getByRole('option', { name: 'A1' })).to.have.attribute('data-highlighted');
+      expect(screen.getByRole('option', { name: 'A2' })).not.to.have.attribute('data-highlighted');
+    });
+  });
 });
