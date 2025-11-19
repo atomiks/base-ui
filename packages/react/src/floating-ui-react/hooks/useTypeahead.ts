@@ -91,7 +91,7 @@ export function useTypeahead(context: FloatingRootContext, props: UseTypeaheadPr
 
   useIsoLayoutEffect(() => {
     // Sync arrow key navigation but not typeahead navigation.
-    if (stringRef.current === '') {
+    if (open && stringRef.current === '') {
       prevIndexRef.current = selectedIndex ?? activeIndex ?? -1;
     }
   }, [open, selectedIndex, activeIndex]);
