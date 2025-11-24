@@ -479,10 +479,25 @@ describe('<Select.Value />', () => {
         </Select.Root>,
       );
 
-      expect(screen.getByTestId('value')).to.have.text('sans, serif');
+      expect(screen.getByTestId('value')).to.have.text('Sans-serif, Serif');
     });
 
-    it('displays comma-separated values for multiple values with items array', async () => {
+    it('displays comma-separated labels for multiple values with items array', async () => {
+      const items = [
+        { value: 'serif', label: 'Serif' },
+        { value: 'mono', label: 'Monospace' },
+      ];
+
+      await render(
+        <Select.Root value={['serif', 'mono']} items={items} multiple>
+          <Select.Value data-testid="value" />
+        </Select.Root>,
+      );
+
+      expect(screen.getByTestId('value')).to.have.text('Serif, Monospace');
+    });
+
+    it('falls back to raw values when items are not provided in multiple mode', async () => {
       await render(
         <Select.Root value={['serif', 'mono']} multiple>
           <Select.Value data-testid="value" />
@@ -559,6 +574,17 @@ describe('<Select.Value />', () => {
       );
 
       expect(renderValue.firstCall.firstArg).to.deep.equal([]);
+    });
+
+    it('treats array values as a single value when not in multiple mode', async () => {
+      await render(
+        // @ts-expect-error
+        <Select.Root value={['apple', 'banana']}>
+          <Select.Value data-testid="value" />
+        </Select.Root>,
+      );
+
+      expect(screen.getByTestId('value')).to.have.text('["apple","banana"]');
     });
   });
 });

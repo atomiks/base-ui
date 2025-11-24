@@ -2,7 +2,7 @@
 import * as React from 'react';
 import { useStore } from '@base-ui-components/utils/store';
 import { useComboboxRootContext } from '../root/ComboboxRootContext';
-import { resolveSelectedLabel } from '../../utils/resolveValueLabel';
+import { resolveMultipleLabels, resolveSelectedLabel } from '../../utils/resolveValueLabel';
 import { selectors } from '../store';
 
 /**
@@ -19,17 +19,21 @@ export function ComboboxValue(props: ComboboxValue.Props): React.ReactElement {
   const itemToStringLabel = useStore(store, selectors.itemToStringLabel);
   const selectedValue = useStore(store, selectors.selectedValue);
   const items = useStore(store, selectors.items);
+  const selectionMode = useStore(store, selectors.selectionMode);
+  const multiple = selectionMode === 'multiple';
 
-  let returnValue = null;
+  let children: React.ReactNode;
   if (typeof childrenProp === 'function') {
-    returnValue = childrenProp(selectedValue);
+    children = childrenProp(selectedValue);
   } else if (childrenProp != null) {
-    returnValue = childrenProp;
+    children = childrenProp;
+  } else if (multiple && Array.isArray(selectedValue)) {
+    children = resolveMultipleLabels(selectedValue, items, itemToStringLabel);
   } else {
-    returnValue = resolveSelectedLabel(selectedValue, items, itemToStringLabel);
+    children = resolveSelectedLabel(selectedValue, items, itemToStringLabel);
   }
 
-  return <React.Fragment>{returnValue}</React.Fragment>;
+  return <React.Fragment>{children}</React.Fragment>;
 }
 
 export interface ComboboxValueState {}

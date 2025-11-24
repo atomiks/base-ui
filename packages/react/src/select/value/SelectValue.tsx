@@ -30,6 +30,7 @@ export const SelectValue = React.forwardRef(function SelectValue(
   const items = useStore(store, selectors.items);
   const itemToStringLabel = useStore(store, selectors.itemToStringLabel);
   const serializedValue = useStore(store, selectors.serializedValue);
+  const multiple = useStore(store, selectors.multiple);
 
   const state: SelectValue.State = React.useMemo(
     () => ({
@@ -39,13 +40,16 @@ export const SelectValue = React.forwardRef(function SelectValue(
     [value, serializedValue],
   );
 
-  const children =
-    typeof childrenProp === 'function'
-      ? childrenProp(value)
-      : (childrenProp ??
-        (Array.isArray(value)
-          ? resolveMultipleLabels(value, itemToStringLabel)
-          : resolveSelectedLabel(value, items, itemToStringLabel)));
+  let children: React.ReactNode;
+  if (typeof childrenProp === 'function') {
+    children = childrenProp(value);
+  } else if (childrenProp != null) {
+    children = childrenProp;
+  } else if (multiple && Array.isArray(value)) {
+    children = resolveMultipleLabels(value, items, itemToStringLabel);
+  } else {
+    children = resolveSelectedLabel(value, items, itemToStringLabel);
+  }
 
   const element = useRenderElement('span', componentProps, {
     state,

@@ -113,10 +113,48 @@ export function resolveSelectedLabel(
 
 export function resolveMultipleLabels(
   values: any[] | undefined,
+  items: ItemsInput,
   itemToStringLabel?: (item: any) => string,
 ): string {
   if (!Array.isArray(values) || values.length === 0) {
     return '';
   }
-  return values.map((v) => stringifyAsLabel(v, itemToStringLabel)).join(', ');
+
+  const flatItems: LabeledItem[] | null = Array.isArray(items)
+    ? isGroupedItems(items)
+      ? (items as Group<LabeledItem>[]).flatMap((group) => group.items)
+      : (items as LabeledItem[])
+    : null;
+
+  return values
+    .map((value) => {
+      if (itemToStringLabel && value != null) {
+        return itemToStringLabel(value) ?? '';
+      }
+
+      if (value && typeof value === 'object' && 'label' in value && value.label != null) {
+        return String(value.label);
+      }
+
+      if (items && !Array.isArray(items)) {
+        const label = (items as any)[value];
+        if (label != null) {
+          return String(label);
+        }
+        return stringifyAsLabel(value, itemToStringLabel);
+      }
+
+      if (flatItems) {
+        const comparableValue =
+          value && typeof value === 'object' && 'value' in value ? value.value : value;
+        const match = flatItems.find((item) => item && item.value === comparableValue);
+
+        if (match && match.label != null) {
+          return String(match.label);
+        }
+      }
+
+      return stringifyAsLabel(value, itemToStringLabel);
+    })
+    .join(', ');
 }
