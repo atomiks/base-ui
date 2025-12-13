@@ -293,6 +293,89 @@ describe('<Combobox.Root />', () => {
         expect(cherryOption).to.have.attribute('data-selected', '');
       });
 
+      it('supports {value,label} items with primitive selected values', async () => {
+        const items = [
+          { value: 'apple', label: 'Apple' },
+          { value: 'banana', label: 'Banana' },
+          { value: 'cherry', label: 'Cherry' },
+        ];
+
+        const { user } = await render(
+          <Combobox.Root items={items}>
+            <Combobox.Trigger data-testid="trigger">
+              <Combobox.Value />
+            </Combobox.Trigger>
+            <Combobox.Portal>
+              <Combobox.Positioner>
+                <Combobox.Popup>
+                  <Combobox.List>
+                    {(item: (typeof items)[number]) => (
+                      <Combobox.Item key={item.value} value={item.value}>
+                        {item.label}
+                      </Combobox.Item>
+                    )}
+                  </Combobox.List>
+                </Combobox.Popup>
+              </Combobox.Positioner>
+            </Combobox.Portal>
+          </Combobox.Root>,
+        );
+
+        const trigger = screen.getByTestId('trigger');
+        await user.click(trigger);
+        await waitFor(() => expect(screen.getByRole('listbox')).not.to.equal(null));
+
+        await user.click(screen.getByRole('option', { name: 'Cherry' }));
+        await waitFor(() => expect(screen.queryByRole('listbox')).to.equal(null));
+
+        expect(trigger).to.have.text('Cherry');
+
+        await user.click(trigger);
+        await waitFor(() => expect(screen.getByRole('listbox')).not.to.equal(null));
+
+        const cherryOption = screen.getByRole('option', { name: 'Cherry' });
+        expect(cherryOption).to.have.attribute('data-selected', '');
+      });
+
+      it('uses itemToStringLabel to fill the input for primitive selected values', async () => {
+        const items = [
+          { value: 'apple', label: 'Apple' },
+          { value: 'banana', label: 'Banana' },
+          { value: 'cherry', label: 'Cherry' },
+        ];
+
+        const { user } = await render(
+          <Combobox.Root
+            items={items}
+            itemToStringLabel={(value: string) => items.find((i) => i.value === value)?.label ?? ''}
+          >
+            <Combobox.Input data-testid="input" />
+            <Combobox.Portal>
+              <Combobox.Positioner>
+                <Combobox.Popup>
+                  <Combobox.List>
+                    {(item: (typeof items)[number]) => (
+                      <Combobox.Item key={item.value} value={item.value}>
+                        {item.label}
+                      </Combobox.Item>
+                    )}
+                  </Combobox.List>
+                </Combobox.Popup>
+              </Combobox.Positioner>
+            </Combobox.Portal>
+          </Combobox.Root>,
+        );
+
+        const input = screen.getByTestId('input');
+        await user.click(input);
+        await waitFor(() => expect(screen.getByRole('listbox')).not.to.equal(null));
+
+        await user.click(screen.getByRole('option', { name: 'Banana' }));
+        await waitFor(() => expect(screen.queryByRole('listbox')).to.equal(null));
+
+        expect(input).to.have.value('Banana');
+      });
+
       it('should not auto-close popup when open state is controlled', async () => {
         const items = ['apple', 'banana', 'cherry'];
 

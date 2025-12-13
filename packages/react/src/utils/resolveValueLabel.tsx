@@ -19,6 +19,10 @@ export interface Group<Item = any> {
   items: Item[];
 }
 
+export function isValueLabelItem(item: any): item is { value: any; label: React.ReactNode } {
+  return item != null && typeof item === 'object' && 'value' in item && 'label' in item;
+}
+
 export function isGroupedItems(
   items: ReadonlyArray<any | Group<any>> | undefined,
 ): items is Group<any>[] {
