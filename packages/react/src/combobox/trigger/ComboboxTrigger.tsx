@@ -4,7 +4,12 @@ import { useStore } from '@base-ui/utils/store';
 import { useStableCallback } from '@base-ui/utils/useStableCallback';
 import { useTimeout } from '@base-ui/utils/useTimeout';
 import { ownerDocument } from '@base-ui/utils/owner';
-import { BaseUIComponentProps, NativeButtonProps } from '../../utils/types';
+import {
+  BaseUIComponentProps,
+  GenericHTMLProps,
+  NativeButtonProps,
+  NonNativeButtonProps,
+} from '../../utils/types';
 import { useRenderElement } from '../../utils/useRenderElement';
 import { useButton } from '../../use-button';
 import {
@@ -33,7 +38,7 @@ const BOUNDARY_OFFSET = 2;
  */
 export const ComboboxTrigger = React.forwardRef(function ComboboxTrigger(
   componentProps: ComboboxTrigger.Props,
-  forwardedRef: React.ForwardedRef<HTMLButtonElement>,
+  forwardedRef: React.ForwardedRef<HTMLElement>,
 ) {
   const {
     render,
@@ -251,7 +256,9 @@ export const ComboboxTrigger = React.forwardRef(function ComboboxTrigger(
           }
         },
       },
-      validation ? validation.getValidationProps(elementProps) : elementProps,
+      validation
+        ? validation.getValidationProps(elementProps as React.ComponentPropsWithoutRef<'button'>)
+        : (elementProps as React.ComponentPropsWithoutRef<'button'>),
       getButtonProps,
     ],
     stateAttributesMapping: triggerStateAttributesMapping,
@@ -279,14 +286,31 @@ export interface ComboboxTriggerState extends FieldRoot.State {
   listEmpty: boolean;
 }
 
-export interface ComboboxTriggerProps
-  extends NativeButtonProps, BaseUIComponentProps<'button', ComboboxTrigger.State> {
+interface ComboboxTriggerCommonProps {
   /**
    * Whether the component should ignore user interaction.
    * @default false
    */
   disabled?: boolean;
 }
+
+interface ComboboxTriggerNativeProps
+  extends
+    NativeButtonProps,
+    BaseUIComponentProps<'button', ComboboxTrigger.State>,
+    ComboboxTriggerCommonProps {
+  nativeButton?: true;
+}
+
+interface ComboboxTriggerNonNativeProps
+  extends
+    NonNativeButtonProps,
+    GenericHTMLProps<ComboboxTrigger.State>,
+    ComboboxTriggerCommonProps {
+  nativeButton: false;
+}
+
+export type ComboboxTriggerProps = ComboboxTriggerNativeProps | ComboboxTriggerNonNativeProps;
 
 export namespace ComboboxTrigger {
   export type State = ComboboxTriggerState;

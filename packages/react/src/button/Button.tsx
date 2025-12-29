@@ -2,7 +2,12 @@
 import * as React from 'react';
 import { useButton } from '../use-button/useButton';
 import { useRenderElement } from '../utils/useRenderElement';
-import type { BaseUIComponentProps, NativeButtonProps, NonNativeButtonProps } from '../utils/types';
+import type {
+  BaseUIComponentProps,
+  GenericHTMLProps,
+  NativeButtonProps,
+  NonNativeButtonProps,
+} from '../utils/types';
 
 /**
  * A button component that can be used to trigger actions.
@@ -41,7 +46,7 @@ export const Button = React.forwardRef(function Button(
   return useRenderElement('button', componentProps, {
     state,
     ref: [forwardedRef, buttonRef],
-    props: [elementProps, getButtonProps],
+    props: [elementProps as React.ComponentPropsWithoutRef<'button'>, getButtonProps],
   });
 });
 
@@ -64,17 +69,6 @@ interface ButtonCommonProps {
   focusableWhenDisabled?: boolean;
 }
 
-type NonNativeAttributeKeys =
-  | 'form'
-  | 'formAction'
-  | 'formEncType'
-  | 'formMethod'
-  | 'formNoValidate'
-  | 'formTarget'
-  | 'name'
-  | 'type'
-  | 'value';
-
 interface ButtonNativeProps
   extends
     NativeButtonProps,
@@ -84,10 +78,7 @@ interface ButtonNativeProps
 }
 
 interface ButtonNonNativeProps
-  extends
-    NonNativeButtonProps,
-    ButtonCommonProps,
-    Omit<BaseUIComponentProps<'button', ButtonState>, NonNativeAttributeKeys | 'disabled'> {
+  extends NonNativeButtonProps, ButtonCommonProps, Omit<GenericHTMLProps<ButtonState>, 'disabled'> {
   nativeButton: false;
 }
 

@@ -12,6 +12,11 @@
       "description": "A payload to pass to the tooltip when it is opened.",
       "detailedType": "Payload | undefined"
     },
+    "disabled": {
+      "type": "boolean",
+      "description": "Whether the tooltip trigger should ignore user interaction.",
+      "detailedType": "boolean | undefined"
+    },
     "delay": {
       "type": "number",
       "default": "600",

@@ -74,6 +74,33 @@ export type BaseUIComponentProps<
   style?: React.CSSProperties | ((state: State) => React.CSSProperties | undefined);
 };
 
+/**
+ * Props for a generic HTML element with BaseUIEvent-wrapped event handlers.
+ * Used for non-native button variants where the element type is not a button.
+ */
+export type GenericHTMLProps<State> = Omit<
+  WithBaseUIEvent<React.HTMLAttributes<HTMLElement> & React.RefAttributes<HTMLElement>>,
+  'className' | 'color' | 'defaultValue' | 'defaultChecked'
+> & {
+  /**
+   * CSS class applied to the element, or a function that
+   * returns a class based on the component’s state.
+   */
+  className?: string | ((state: State) => string | undefined);
+  /**
+   * Allows you to replace the component’s HTML element
+   * with a different tag, or compose it with another component.
+   *
+   * Accepts a `ReactElement` or a function that returns the element to render.
+   */
+  render?: ComponentRenderFn<HTMLProps, State> | React.ReactElement;
+  /**
+   * Style applied to the element, or a function that
+   * returns a style object based on the component’s state.
+   */
+  style?: React.CSSProperties | ((state: State) => React.CSSProperties | undefined);
+};
+
 export interface NativeButtonProps {
   /**
    * Whether the component renders a native `<button>` element when replacing it

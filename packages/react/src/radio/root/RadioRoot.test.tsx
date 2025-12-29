@@ -39,4 +39,22 @@ describe('<Radio.Root />', () => {
     fireEvent.click(radioA);
     expect(radioNull).to.have.attribute('aria-checked', 'false');
   });
+
+  it('forwards `id` to the button when `nativeButton` is enabled', async () => {
+    await render(
+      <RadioGroup>
+        <Radio.Root id="radio-id" value="a" nativeButton render={<button />} />
+      </RadioGroup>,
+    );
+
+    const radio = screen.getByRole('radio');
+    const input = screen
+      .getAllByRole('radio', { hidden: true })
+      .find((el) => el.tagName === 'INPUT');
+
+    expect(input).not.to.equal(undefined);
+
+    expect(radio).to.have.attribute('id', 'radio-id');
+    expect(input).to.not.have.attribute('id', 'radio-id');
+  });
 });

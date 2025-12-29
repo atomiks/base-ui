@@ -65,7 +65,7 @@ A set of collapsible panels with headings.
     - Props: className, render, style
     - Data Attributes: data-disabled, data-index, data-open
   - Accordion - Trigger
-    - Props: className, nativeButton, render, style
+    - Props: className, disabled, nativeButton, render, style
     - Data Attributes: data-disabled, data-panel-open
   - Accordion - Panel
     - Props: className, hiddenUntilFound, keepMounted, render, style
@@ -101,7 +101,7 @@ A dialog that requires a user response to proceed.
     - Props: className, forceRender, render, style
     - Data Attributes: data-closed, data-ending-style, data-open, data-starting-style
   - Alert Dialog - Close
-    - Props: className, nativeButton, render, style
+    - Props: className, disabled, nativeButton, render, style
     - Data Attributes: data-disabled
   - Alert Dialog - Description
     - Props: className, render, style
@@ -114,7 +114,7 @@ A dialog that requires a user response to proceed.
   - Alert Dialog - Title
     - Props: className, render, style
   - Alert Dialog - Trigger
-    - Props: className, handle, id, nativeButton, payload, render, style
+    - Props: className, disabled, handle, nativeButton, payload, render, style
     - Data Attributes: data-disabled, data-popup-open
   - Alert Dialog - Viewport
     - Props: className, render, style
@@ -276,7 +276,7 @@ A collapsible panel controlled by a button.
   - Collapsible - Root
     - Props: className, defaultOpen, disabled, onOpenChange, open, render, style
   - Collapsible - Trigger
-    - Props: className, nativeButton, render, style
+    - Props: className, disabled, nativeButton, render, style
     - Data Attributes: data-panel-open
   - Collapsible - Panel
     - Props: className, hiddenUntilFound, keepMounted, render, style
@@ -425,7 +425,7 @@ A popup that opens on top of the entire page.
   - Dialog - Root
     - Props: actionsRef, children, defaultOpen, defaultTriggerId, disablePointerDismissal, handle, modal, onOpenChange, onOpenChangeComplete, open, triggerId
   - Dialog - Trigger
-    - Props: className, handle, id, nativeButton, payload, render, style
+    - Props: className, disabled, handle, nativeButton, payload, render, style
     - Data Attributes: data-disabled, data-popup-open
   - Dialog - Portal
     - Props: className, container, keepMounted, render, style
@@ -441,7 +441,7 @@ A popup that opens on top of the entire page.
   - Dialog - Description
     - Props: className, render, style
   - Dialog - Close
-    - Props: className, nativeButton, render, style
+    - Props: className, disabled, nativeButton, render, style
     - Data Attributes: data-disabled
   - Dialog - Viewport
     - Props: className, render, style
@@ -622,7 +622,7 @@ A list of actions in a dropdown, enhanced with keyboard navigation.
   - Menu - SubmenuRoot
     - Props: actionsRef, children, closeParentOnEsc, defaultOpen, defaultTriggerId, disabled, handle, highlightItemOnHover, loopFocus, onOpenChange, onOpenChangeComplete, open, orientation, triggerId
   - Menu - Trigger
-    - Props: children, className, closeDelay, delay, disabled, handle, nativeButton, openOnHover, payload, render, style
+    - Props: className, closeDelay, delay, disabled, handle, nativeButton, openOnHover, payload, render, style
     - Data Attributes: data-popup-open, data-pressed
   - Menu - SubmenuTrigger
     - Props: className, closeDelay, delay, disabled, label, nativeButton, onClick, openOnHover, render, style
@@ -700,7 +700,7 @@ A collection of links and menus for website navigation.
   - Navigation Menu - Root
     - Props: actionsRef, className, closeDelay, defaultValue, delay, onOpenChangeComplete, onValueChange, orientation, render, style, value
   - Navigation Menu - Trigger
-    - Props: className, nativeButton, render, style
+    - Props: className, disabled, nativeButton, render, style
     - Data Attributes: data-popup-open, data-pressed
   - Navigation Menu - Portal
     - Props: className, container, keepMounted, render, style
@@ -758,10 +758,10 @@ A numeric input element with increment and decrement buttons, and a scrub area.
     - Props: className, render, style
     - Data Attributes: data-dirty, data-disabled, data-filled, data-focused, data-invalid, data-readonly, data-required, data-scrubbing, data-touched, data-valid
   - Number Field - Increment
-    - Props: className, nativeButton, render, style
+    - Props: className, disabled, nativeButton, render, style
     - Data Attributes: data-dirty, data-disabled, data-filled, data-focused, data-invalid, data-readonly, data-required, data-scrubbing, data-touched, data-valid
   - Number Field - Decrement
-    - Props: className, nativeButton, render, style
+    - Props: className, disabled, nativeButton, render, style
     - Data Attributes: data-dirty, data-disabled, data-filled, data-focused, data-invalid, data-readonly, data-required, data-scrubbing, data-touched, data-valid
   - Number Field - Input
     - Props: aria-roledescription, className, render, style
@@ -801,7 +801,7 @@ An accessible popup anchored to a button.
   - Popover - Root
     - Props: actionsRef, children, defaultOpen, defaultTriggerId, handle, modal, onOpenChange, onOpenChangeComplete, open, triggerId
   - Popover - Trigger
-    - Props: className, closeDelay, delay, handle, id, nativeButton, openOnHover, payload, render, style
+    - Props: className, closeDelay, delay, disabled, handle, nativeButton, openOnHover, payload, render, style
     - Data Attributes: data-popup-open, data-pressed
   - Popover - Portal
     - Props: className, container, keepMounted, render, style
@@ -824,7 +824,7 @@ An accessible popup anchored to a button.
   - Popover - Description
     - Props: className, render, style
   - Popover - Close
-    - Props: className, nativeButton, render, style
+    - Props: className, disabled, nativeButton, render, style
   - Popover - Viewport
     - Props: children, className, render, style
     - Data Attributes: data-activation-direction, data-current, data-previous, data-transitioning
@@ -994,7 +994,7 @@ A common form component for choosing a predefined value in a dropdown menu.
   - Select - Root
     - Props: actionsRef, children, defaultOpen, defaultValue, disabled, highlightItemOnHover, id, inputRef, isItemEqualToValue, itemToStringLabel, itemToStringValue, items, modal, multiple, name, onOpenChange, onOpenChangeComplete, onValueChange, open, readOnly, required, value
   - Select - Trigger
-    - Props: children, className, disabled, nativeButton, render, style
+    - Props: className, disabled, nativeButton, render, style
     - Data Attributes: data-dirty, data-disabled, data-filled, data-focused, data-invalid, data-placeholder, data-popup-open, data-pressed, data-readonly, data-required, data-touched, data-valid
   - Select - Value
     - Props: children, className, render, style
@@ -1210,10 +1210,10 @@ Generates toast notifications.
     - Props: className, render, style
     - Data Attributes: data-type
   - Toast - Close
-    - Props: className, nativeButton, render, style
+    - Props: className, disabled, nativeButton, render, style
     - Data Attributes: data-type
   - Toast - Action
-    - Props: className, nativeButton, render, style
+    - Props: className, disabled, nativeButton, render, style
     - Data Attributes: data-type
   - Toast - Portal
     - Props: className, container, render, style
@@ -1338,7 +1338,7 @@ A popup that appears when an element is hovered or focused, showing a hint for s
   - Tooltip - Root
     - Props: actionsRef, children, defaultOpen, defaultTriggerId, disableHoverablePopup, disabled, handle, onOpenChange, onOpenChangeComplete, open, trackCursorAxis, triggerId
   - Tooltip - Trigger
-    - Props: className, closeDelay, delay, handle, payload, render, style
+    - Props: className, closeDelay, delay, disabled, handle, payload, render, style
     - Data Attributes: data-popup-open
   - Tooltip - Portal
     - Props: className, container, keepMounted, render, style

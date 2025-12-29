@@ -28,7 +28,12 @@ import {
 import { useMenuRootContext } from '../root/MenuRootContext';
 import { pressableTriggerOpenStateMapping } from '../../utils/popupStateMapping';
 import { useRenderElement } from '../../utils/useRenderElement';
-import { BaseUIComponentProps, NativeButtonProps } from '../../utils/types';
+import {
+  BaseUIComponentProps,
+  GenericHTMLProps,
+  NativeButtonProps,
+  NonNativeButtonProps,
+} from '../../utils/types';
 import { useButton } from '../../use-button/useButton';
 import { getPseudoElementBounds } from '../../utils/getPseudoElementBounds';
 import { CompositeItem } from '../../composite/item/CompositeItem';
@@ -255,7 +260,7 @@ export const MenuTrigger = React.forwardRef(function MenuTrigger(
     },
     isInMenubar ? { role: 'menuitem' } : {},
     mixedToggleHandlers,
-    elementProps,
+    elementProps as React.ComponentPropsWithoutRef<'button'>,
     getButtonProps,
   ];
 
@@ -364,8 +369,7 @@ export interface MenuTrigger {
   ): React.JSX.Element;
 }
 
-export interface MenuTriggerProps<Payload = unknown>
-  extends NativeButtonProps, BaseUIComponentProps<'button', MenuTrigger.State> {
+interface MenuTriggerCommonProps<Payload = unknown> {
   children?: React.ReactNode;
   /**
    * Whether the component should ignore user interaction.
@@ -400,6 +404,26 @@ export interface MenuTriggerProps<Payload = unknown>
    */
   openOnHover?: boolean;
 }
+
+interface MenuTriggerNativeProps<Payload = unknown>
+  extends
+    NativeButtonProps,
+    BaseUIComponentProps<'button', MenuTrigger.State>,
+    MenuTriggerCommonProps<Payload> {
+  nativeButton?: true;
+}
+
+interface MenuTriggerNonNativeProps<Payload = unknown>
+  extends
+    NonNativeButtonProps,
+    GenericHTMLProps<MenuTrigger.State>,
+    MenuTriggerCommonProps<Payload> {
+  nativeButton: false;
+}
+
+export type MenuTriggerProps<Payload = unknown> =
+  | MenuTriggerNativeProps<Payload>
+  | MenuTriggerNonNativeProps<Payload>;
 
 export type MenuTriggerState = {
   /**

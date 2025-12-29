@@ -1,6 +1,11 @@
 'use client';
 import * as React from 'react';
-import type { BaseUIComponentProps, NativeButtonProps } from '../../utils/types';
+import type {
+  BaseUIComponentProps,
+  GenericHTMLProps,
+  NativeButtonProps,
+  NonNativeButtonProps,
+} from '../../utils/types';
 import { useToastRootContext } from '../root/ToastRootContext';
 import { useToastContext } from '../provider/ToastProviderContext';
 import { useButton } from '../../use-button/useButton';
@@ -14,7 +19,7 @@ import { useRenderElement } from '../../utils/useRenderElement';
  */
 export const ToastClose = React.forwardRef(function ToastClose(
   componentProps: ToastClose.Props,
-  forwardedRef: React.ForwardedRef<HTMLButtonElement>,
+  forwardedRef: React.ForwardedRef<HTMLElement>,
 ) {
   const { render, className, disabled, nativeButton = true, ...elementProps } = componentProps;
 
@@ -51,7 +56,7 @@ export const ToastClose = React.forwardRef(function ToastClose(
           setHasFocus(false);
         },
       },
-      elementProps,
+      elementProps as React.ComponentPropsWithoutRef<'button'>,
       getButtonProps,
     ],
   });
@@ -66,8 +71,21 @@ export interface ToastCloseState {
   type: string | undefined;
 }
 
-export interface ToastCloseProps
-  extends NativeButtonProps, BaseUIComponentProps<'button', ToastClose.State> {}
+interface ToastCloseNativeProps
+  extends NativeButtonProps, BaseUIComponentProps<'button', ToastClose.State> {
+  nativeButton?: true;
+}
+
+interface ToastCloseNonNativeProps
+  extends NonNativeButtonProps, GenericHTMLProps<ToastClose.State> {
+  nativeButton: false;
+  /**
+   * Whether the component should ignore user interaction.
+   */
+  disabled?: boolean;
+}
+
+export type ToastCloseProps = ToastCloseNativeProps | ToastCloseNonNativeProps;
 
 export namespace ToastClose {
   export type State = ToastCloseState;

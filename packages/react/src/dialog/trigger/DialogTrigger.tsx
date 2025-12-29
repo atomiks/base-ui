@@ -3,7 +3,12 @@ import * as React from 'react';
 import { useDialogRootContext } from '../root/DialogRootContext';
 import { useButton } from '../../use-button/useButton';
 import { useRenderElement } from '../../utils/useRenderElement';
-import type { BaseUIComponentProps, NativeButtonProps } from '../../utils/types';
+import type {
+  BaseUIComponentProps,
+  GenericHTMLProps,
+  NativeButtonProps,
+  NonNativeButtonProps,
+} from '../../utils/types';
 import { triggerOpenStateMapping } from '../../utils/popupStateMapping';
 import { CLICK_TRIGGER_IDENTIFIER } from '../../utils/constants';
 import { DialogHandle } from '../store/DialogHandle';
@@ -19,7 +24,7 @@ import { useClick, useInteractions } from '../../floating-ui-react';
  */
 export const DialogTrigger = React.forwardRef(function DialogTrigger(
   componentProps: DialogTrigger.Props,
-  forwardedRef: React.ForwardedRef<HTMLButtonElement>,
+  forwardedRef: React.ForwardedRef<HTMLElement>,
 ) {
   const {
     render,
@@ -81,7 +86,7 @@ export const DialogTrigger = React.forwardRef(function DialogTrigger(
       localInteractionProps.getReferenceProps(),
       rootTriggerProps,
       { [CLICK_TRIGGER_IDENTIFIER as string]: '', id: thisTriggerId },
-      elementProps,
+      elementProps as React.ComponentPropsWithoutRef<'button'>,
       getButtonProps,
     ],
     stateAttributesMapping: triggerOpenStateMapping,
@@ -94,8 +99,7 @@ export interface DialogTrigger {
   ): React.JSX.Element;
 }
 
-export interface DialogTriggerProps<Payload = unknown>
-  extends NativeButtonProps, BaseUIComponentProps<'button', DialogTrigger.State> {
+interface DialogTriggerCommonProps<Payload = unknown> {
   /**
    * A handle to associate the trigger with a dialog.
    * Can be created with the Dialog.createHandle() method.
@@ -110,7 +114,31 @@ export interface DialogTriggerProps<Payload = unknown>
    * it is also used to specify the active trigger for the dialogs in controlled mode (with the DialogRoot `triggerId` prop).
    */
   id?: string;
+  /**
+   * Whether the component should ignore user interaction.
+   */
+  disabled?: boolean;
 }
+
+interface DialogTriggerNativeProps<Payload = unknown>
+  extends
+    NativeButtonProps,
+    BaseUIComponentProps<'button', DialogTrigger.State>,
+    DialogTriggerCommonProps<Payload> {
+  nativeButton?: true;
+}
+
+interface DialogTriggerNonNativeProps<Payload = unknown>
+  extends
+    NonNativeButtonProps,
+    GenericHTMLProps<DialogTrigger.State>,
+    DialogTriggerCommonProps<Payload> {
+  nativeButton: false;
+}
+
+export type DialogTriggerProps<Payload = unknown> =
+  | DialogTriggerNativeProps<Payload>
+  | DialogTriggerNonNativeProps<Payload>;
 
 export interface DialogTriggerState {
   /**

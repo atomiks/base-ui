@@ -4,7 +4,12 @@ import { REGULAR_ITEM, useMenuItem } from './useMenuItem';
 import { useMenuRootContext } from '../root/MenuRootContext';
 import { useRenderElement } from '../../utils/useRenderElement';
 import { useBaseUiId } from '../../utils/useBaseUiId';
-import type { BaseUIComponentProps, NonNativeButtonProps } from '../../utils/types';
+import type {
+  BaseUIComponentProps,
+  GenericHTMLProps,
+  NativeButtonProps,
+  NonNativeButtonProps,
+} from '../../utils/types';
 import { useCompositeListItem } from '../../composite/list/useCompositeListItem';
 import { useMenuPositionerContext } from '../positioner/MenuPositionerContext';
 
@@ -58,7 +63,7 @@ export const MenuItem = React.forwardRef(function MenuItem(
 
   return useRenderElement('div', componentProps, {
     state,
-    props: [itemProps, elementProps, getItemProps],
+    props: [itemProps, elementProps as React.ComponentPropsWithoutRef<'div'>, getItemProps],
     ref: [itemRef, forwardedRef, listItem.ref],
   });
 });
@@ -74,8 +79,7 @@ export interface MenuItemState {
   highlighted: boolean;
 }
 
-export interface MenuItemProps
-  extends NonNativeButtonProps, BaseUIComponentProps<'div', MenuItem.State> {
+interface MenuItemCommonProps {
   /**
    * The click handler for the menu item.
    */
@@ -100,6 +104,24 @@ export interface MenuItemProps
    */
   closeOnClick?: boolean;
 }
+
+interface MenuItemNonNativeProps
+  extends
+    NonNativeButtonProps,
+    Omit<BaseUIComponentProps<'div', MenuItem.State>, keyof MenuItemCommonProps>,
+    MenuItemCommonProps {
+  nativeButton?: false;
+}
+
+interface MenuItemNativeProps
+  extends
+    NativeButtonProps,
+    Omit<GenericHTMLProps<MenuItem.State>, keyof MenuItemCommonProps>,
+    MenuItemCommonProps {
+  nativeButton: true;
+}
+
+export type MenuItemProps = MenuItemNonNativeProps | MenuItemNativeProps;
 
 export namespace MenuItem {
   export type State = MenuItemState;

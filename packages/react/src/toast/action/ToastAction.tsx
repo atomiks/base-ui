@@ -1,6 +1,11 @@
 'use client';
 import * as React from 'react';
-import type { BaseUIComponentProps, NativeButtonProps } from '../../utils/types';
+import type {
+  BaseUIComponentProps,
+  GenericHTMLProps,
+  NativeButtonProps,
+  NonNativeButtonProps,
+} from '../../utils/types';
 import { useToastRootContext } from '../root/ToastRootContext';
 import { useButton } from '../../use-button/useButton';
 import { useRenderElement } from '../../utils/useRenderElement';
@@ -13,7 +18,7 @@ import { useRenderElement } from '../../utils/useRenderElement';
  */
 export const ToastAction = React.forwardRef(function ToastAction(
   componentProps: ToastAction.Props,
-  forwardedRef: React.ForwardedRef<HTMLButtonElement>,
+  forwardedRef: React.ForwardedRef<HTMLElement>,
 ) {
   const { render, className, disabled, nativeButton = true, ...elementProps } = componentProps;
 
@@ -38,7 +43,7 @@ export const ToastAction = React.forwardRef(function ToastAction(
     ref: [forwardedRef, buttonRef],
     state,
     props: [
-      elementProps,
+      elementProps as React.ComponentPropsWithoutRef<'button'>,
       toast.actionProps,
       getButtonProps,
       {
@@ -61,8 +66,21 @@ export interface ToastActionState {
   type: string | undefined;
 }
 
-export interface ToastActionProps
-  extends NativeButtonProps, BaseUIComponentProps<'button', ToastAction.State> {}
+interface ToastActionNativeProps
+  extends NativeButtonProps, BaseUIComponentProps<'button', ToastAction.State> {
+  nativeButton?: true;
+}
+
+interface ToastActionNonNativeProps
+  extends NonNativeButtonProps, GenericHTMLProps<ToastAction.State> {
+  nativeButton: false;
+  /**
+   * Whether the component should ignore user interaction.
+   */
+  disabled?: boolean;
+}
+
+export type ToastActionProps = ToastActionNativeProps | ToastActionNonNativeProps;
 
 export namespace ToastAction {
   export type State = ToastActionState;

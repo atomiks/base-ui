@@ -10,7 +10,13 @@ import {
   useCompositeListItem,
   IndexGuessBehavior,
 } from '../../composite/list/useCompositeListItem';
-import type { BaseUIComponentProps, HTMLProps, NonNativeButtonProps } from '../../utils/types';
+import type {
+  BaseUIComponentProps,
+  GenericHTMLProps,
+  HTMLProps,
+  NativeButtonProps,
+  NonNativeButtonProps,
+} from '../../utils/types';
 import { useRenderElement } from '../../utils/useRenderElement';
 import { SelectItemContext } from './SelectItemContext';
 import { selectors } from '../store';
@@ -236,7 +242,12 @@ export const SelectItem = React.memo(
     const element = useRenderElement('div', componentProps, {
       ref: [buttonRef, forwardedRef, listItem.ref, itemRef],
       state,
-      props: [rootProps, defaultProps, elementProps, getButtonProps],
+      props: [
+        rootProps,
+        defaultProps,
+        elementProps as React.ComponentPropsWithoutRef<'div'>,
+        getButtonProps,
+      ],
     });
 
     const contextValue: SelectItemContext = React.useMemo(
@@ -269,8 +280,7 @@ export interface SelectItemState {
   highlighted: boolean;
 }
 
-export interface SelectItemProps
-  extends NonNativeButtonProps, Omit<BaseUIComponentProps<'div', SelectItem.State>, 'id'> {
+interface SelectItemCommonProps extends Omit<BaseUIComponentProps<'div', SelectItem.State>, 'id'> {
   children?: React.ReactNode;
   /**
    * A unique value that identifies this select item.
@@ -289,6 +299,19 @@ export interface SelectItemProps
    */
   label?: string;
 }
+
+interface SelectItemNonNativeProps
+  extends
+    NonNativeButtonProps,
+    Omit<GenericHTMLProps<SelectItem.State>, keyof SelectItemCommonProps> {}
+
+interface SelectItemNativeProps
+  extends
+    NativeButtonProps,
+    Omit<BaseUIComponentProps<'div', SelectItem.State>, keyof SelectItemCommonProps | 'id'> {}
+
+export type SelectItemProps = SelectItemCommonProps &
+  (SelectItemNonNativeProps | SelectItemNativeProps);
 
 export namespace SelectItem {
   export type State = SelectItemState;

@@ -3,7 +3,12 @@ import * as React from 'react';
 import { useMergedRefs } from '@base-ui/utils/useMergedRefs';
 import { useIsoLayoutEffect } from '@base-ui/utils/useIsoLayoutEffect';
 import { visuallyHiddenInput } from '@base-ui/utils/visuallyHidden';
-import type { BaseUIComponentProps, NonNativeButtonProps } from '../../utils/types';
+import type {
+  BaseUIComponentProps,
+  GenericHTMLProps,
+  NativeButtonProps,
+  NonNativeButtonProps,
+} from '../../utils/types';
 import { createChangeEventDetails } from '../../utils/createBaseUIEventDetails';
 import { REASONS } from '../../utils/reasons';
 import { EMPTY_OBJECT } from '../../utils/constants';
@@ -86,11 +91,14 @@ export const RadioRoot = React.forwardRef(function RadioRoot(
   }, [setFilled]);
 
   const id = useBaseUiId();
-  const inputId = useLabelableId({
-    id: idProp,
+  const rootId = nativeButton ? (idProp ?? id) : id;
+  const controlId = useLabelableId({
+    id: nativeButton ? rootId : idProp,
     implicit: false,
     controlRef: radioRef,
   });
+
+  const inputId = nativeButton ? `${id}-input` : controlId;
 
   const rootProps: React.ComponentProps<'button'> = {
     role: 'radio',
@@ -100,8 +108,8 @@ export const RadioRoot = React.forwardRef(function RadioRoot(
     'aria-readonly': readOnly || undefined,
     'aria-labelledby': labelId,
     [ACTIVE_COMPOSITE_ITEM as string]: checked ? '' : undefined,
-    id,
-    disabled,
+    id: rootId,
+    disabled: nativeButton ? disabled : undefined,
     onKeyDown(event) {
       if (event.key === 'Enter') {
         event.preventDefault();
@@ -189,7 +197,7 @@ export const RadioRoot = React.forwardRef(function RadioRoot(
     rootProps,
     getDescriptionProps,
     validation?.getValidationProps ?? EMPTY_OBJECT,
-    elementProps,
+    elementProps as React.ComponentPropsWithoutRef<'span'>,
     getButtonProps,
   ];
 
@@ -232,8 +240,10 @@ export interface RadioRootState extends FieldRoot.State {
   required: boolean;
 }
 
-export interface RadioRootProps
-  extends NonNativeButtonProps, Omit<BaseUIComponentProps<'span', RadioRoot.State>, 'value'> {
+interface RadioRootCommonProps extends Omit<
+  BaseUIComponentProps<'span', RadioRoot.State>,
+  'value'
+> {
   /** The unique identifying value of the radio in a group. */
   value: any;
   /** Whether the component should ignore user interaction. */
@@ -245,6 +255,23 @@ export interface RadioRootProps
   /** A ref to access the hidden input element. */
   inputRef?: React.Ref<HTMLInputElement>;
 }
+
+interface RadioRootNonNativeProps
+  extends
+    NonNativeButtonProps,
+    Omit<GenericHTMLProps<RadioRoot.State>, keyof RadioRootCommonProps> {
+  nativeButton?: false;
+}
+
+interface RadioRootNativeProps
+  extends
+    NativeButtonProps,
+    Omit<BaseUIComponentProps<'button', RadioRoot.State>, keyof RadioRootCommonProps | 'value'> {
+  nativeButton: true;
+}
+
+export type RadioRootProps = RadioRootCommonProps &
+  (RadioRootNonNativeProps | RadioRootNativeProps);
 
 export namespace RadioRoot {
   export type State = RadioRootState;

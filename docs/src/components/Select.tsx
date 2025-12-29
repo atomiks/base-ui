@@ -5,9 +5,11 @@ import { ThickCheckIcon } from '../icons/ThickCheckIcon';
 
 export const Root = Select.Root;
 
-interface TriggerProps extends Omit<Select.Trigger.Props, 'children'> {
+type DistributiveOmit<T, K extends PropertyKey> = T extends any ? Omit<T, K> : never;
+
+type TriggerProps = DistributiveOmit<Select.Trigger.Props, 'children'> & {
   children?: Select.Value.Props['children'];
-}
+};
 
 export function Trigger({ className, children, ...props }: TriggerProps) {
   return (

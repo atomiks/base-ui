@@ -1,6 +1,11 @@
 'use client';
 import * as React from 'react';
-import { BaseUIComponentProps, NativeButtonProps } from '../../utils/types';
+import {
+  BaseUIComponentProps,
+  GenericHTMLProps,
+  NativeButtonProps,
+  NonNativeButtonProps,
+} from '../../utils/types';
 import { useButton } from '../../use-button';
 import type { ToolbarRoot } from '../root/ToolbarRoot';
 import { useToolbarRootContext } from '../root/ToolbarRootContext';
@@ -15,7 +20,7 @@ import { CompositeItem } from '../../composite/item/CompositeItem';
  */
 export const ToolbarButton = React.forwardRef(function ToolbarButton(
   componentProps: ToolbarButton.Props,
-  forwardedRef: React.ForwardedRef<HTMLButtonElement>,
+  forwardedRef: React.ForwardedRef<HTMLElement>,
 ) {
   const {
     className,
@@ -58,7 +63,7 @@ export const ToolbarButton = React.forwardRef(function ToolbarButton(
       state={state}
       refs={[forwardedRef, buttonRef]}
       props={[
-        elementProps,
+        elementProps as React.ComponentPropsWithoutRef<'button'>,
         // for integrating with Menu and Select disabled states, `disabled` is
         // intentionally duplicated even though getButtonProps includes it already
         // TODO: follow up after https://github.com/mui/base-ui/issues/1976#issuecomment-2916905663
@@ -74,8 +79,7 @@ export interface ToolbarButtonState extends ToolbarRoot.State {
   focusable: boolean;
 }
 
-export interface ToolbarButtonProps
-  extends NativeButtonProps, BaseUIComponentProps<'button', ToolbarButton.State> {
+interface ToolbarButtonCommonProps {
   /**
    * When `true` the item is disabled.
    * @default false
@@ -87,6 +91,21 @@ export interface ToolbarButtonProps
    */
   focusableWhenDisabled?: boolean;
 }
+
+interface ToolbarButtonNativeProps
+  extends
+    NativeButtonProps,
+    BaseUIComponentProps<'button', ToolbarButton.State>,
+    ToolbarButtonCommonProps {
+  nativeButton?: true;
+}
+
+interface ToolbarButtonNonNativeProps
+  extends NonNativeButtonProps, GenericHTMLProps<ToolbarButton.State>, ToolbarButtonCommonProps {
+  nativeButton: false;
+}
+
+export type ToolbarButtonProps = ToolbarButtonNativeProps | ToolbarButtonNonNativeProps;
 
 export namespace ToolbarButton {
   export type State = ToolbarButtonState;

@@ -11,7 +11,13 @@ import {
   useCompositeListItem,
   IndexGuessBehavior,
 } from '../../composite/list/useCompositeListItem';
-import type { BaseUIComponentProps, HTMLProps, NonNativeButtonProps } from '../../utils/types';
+import type {
+  BaseUIComponentProps,
+  GenericHTMLProps,
+  HTMLProps,
+  NativeButtonProps,
+  NonNativeButtonProps,
+} from '../../utils/types';
 import { useRenderElement } from '../../utils/useRenderElement';
 import { ComboboxItemContext } from './ComboboxItemContext';
 import { selectors } from '../store';
@@ -194,7 +200,12 @@ export const ComboboxItem = React.memo(
     const element = useRenderElement('div', componentProps, {
       ref: [buttonRef, forwardedRef, listItem.ref, itemRef],
       state,
-      props: [rootProps, defaultProps, elementProps, getButtonProps],
+      props: [
+        rootProps,
+        defaultProps,
+        elementProps as React.ComponentPropsWithoutRef<'div'>,
+        getButtonProps,
+      ],
     });
 
     const contextValue: ComboboxItemContext = React.useMemo(
@@ -226,8 +237,10 @@ export interface ComboboxItemState {
   highlighted: boolean;
 }
 
-export interface ComboboxItemProps
-  extends NonNativeButtonProps, Omit<BaseUIComponentProps<'div', ComboboxItem.State>, 'id'> {
+interface ComboboxItemCommonProps extends Omit<
+  BaseUIComponentProps<'div', ComboboxItem.State>,
+  'id'
+> {
   children?: React.ReactNode;
   /**
    * An optional click handler for the item when selected.
@@ -249,6 +262,19 @@ export interface ComboboxItemProps
    */
   disabled?: boolean;
 }
+
+interface ComboboxItemNonNativeProps
+  extends
+    NonNativeButtonProps,
+    Omit<GenericHTMLProps<ComboboxItem.State>, keyof ComboboxItemCommonProps> {}
+
+interface ComboboxItemNativeProps
+  extends
+    NativeButtonProps,
+    Omit<BaseUIComponentProps<'div', ComboboxItem.State>, keyof ComboboxItemCommonProps | 'id'> {}
+
+export type ComboboxItemProps = ComboboxItemCommonProps &
+  (ComboboxItemNonNativeProps | ComboboxItemNativeProps);
 
 export namespace ComboboxItem {
   export type State = ComboboxItemState;

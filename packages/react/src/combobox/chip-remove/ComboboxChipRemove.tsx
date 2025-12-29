@@ -2,7 +2,12 @@
 import * as React from 'react';
 import { useStore } from '@base-ui/utils/store';
 import { useRenderElement } from '../../utils/useRenderElement';
-import { BaseUIComponentProps, NativeButtonProps } from '../../utils/types';
+import {
+  BaseUIComponentProps,
+  GenericHTMLProps,
+  NativeButtonProps,
+  NonNativeButtonProps,
+} from '../../utils/types';
 import { useComboboxRootContext } from '../root/ComboboxRootContext';
 import { useComboboxChipContext } from '../chip/ComboboxChipContext';
 import { useButton } from '../../use-button';
@@ -18,7 +23,7 @@ import { findItemIndex } from '../../utils/itemEquality';
  */
 export const ComboboxChipRemove = React.forwardRef(function ComboboxChipRemove(
   componentProps: ComboboxChipRemove.Props,
-  forwardedRef: React.ForwardedRef<HTMLButtonElement>,
+  forwardedRef: React.ForwardedRef<HTMLElement>,
 ) {
   const { render, className, nativeButton = true, ...elementProps } = componentProps;
 
@@ -124,7 +129,7 @@ export const ComboboxChipRemove = React.forwardRef(function ComboboxChipRemove(
           }
         },
       },
-      elementProps,
+      elementProps as React.ComponentPropsWithoutRef<'button'>,
       getButtonProps,
     ],
   });
@@ -139,8 +144,19 @@ export interface ComboboxChipRemoveState {
   disabled: boolean;
 }
 
-export interface ComboboxChipRemoveProps
-  extends NativeButtonProps, BaseUIComponentProps<'button', ComboboxChipRemove.State> {}
+interface ComboboxChipRemoveNativeProps
+  extends NativeButtonProps, BaseUIComponentProps<'button', ComboboxChipRemove.State> {
+  nativeButton?: true;
+}
+
+interface ComboboxChipRemoveNonNativeProps
+  extends NonNativeButtonProps, GenericHTMLProps<ComboboxChipRemove.State> {
+  nativeButton: false;
+}
+
+export type ComboboxChipRemoveProps =
+  | ComboboxChipRemoveNativeProps
+  | ComboboxChipRemoveNonNativeProps;
 
 export namespace ComboboxChipRemove {
   export type State = ComboboxChipRemoveState;

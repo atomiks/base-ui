@@ -1,6 +1,11 @@
 'use client';
 import * as React from 'react';
-import { BaseUIComponentProps, NativeButtonProps } from '../../utils/types';
+import {
+  BaseUIComponentProps,
+  GenericHTMLProps,
+  NativeButtonProps,
+  NonNativeButtonProps,
+} from '../../utils/types';
 import { useRenderElement } from '../../utils/useRenderElement';
 import { useButton } from '../../use-button';
 import { useNumberFieldRootContext } from '../root/NumberFieldRootContext';
@@ -16,7 +21,7 @@ import { stateAttributesMapping } from '../utils/stateAttributesMapping';
  */
 export const NumberFieldDecrement = React.forwardRef(function NumberFieldDecrement(
   componentProps: NumberFieldDecrement.Props,
-  forwardedRef: React.ForwardedRef<HTMLButtonElement>,
+  forwardedRef: React.ForwardedRef<HTMLElement>,
 ) {
   const {
     render,
@@ -96,7 +101,7 @@ export const NumberFieldDecrement = React.forwardRef(function NumberFieldDecreme
   const element = useRenderElement('button', componentProps, {
     ref: [forwardedRef, buttonRef],
     state: buttonState,
-    props: [props, elementProps, getButtonProps],
+    props: [props, elementProps as React.ComponentPropsWithoutRef<'button'>, getButtonProps],
     stateAttributesMapping,
   });
 
@@ -105,8 +110,23 @@ export const NumberFieldDecrement = React.forwardRef(function NumberFieldDecreme
 
 export interface NumberFieldDecrementState extends NumberFieldRoot.State {}
 
-export interface NumberFieldDecrementProps
-  extends NativeButtonProps, BaseUIComponentProps<'button', NumberFieldDecrement.State> {}
+interface NumberFieldDecrementNativeProps
+  extends NativeButtonProps, BaseUIComponentProps<'button', NumberFieldDecrement.State> {
+  nativeButton?: true;
+}
+
+interface NumberFieldDecrementNonNativeProps
+  extends NonNativeButtonProps, GenericHTMLProps<NumberFieldDecrement.State> {
+  nativeButton: false;
+  /**
+   * Whether the component should ignore user interaction.
+   */
+  disabled?: boolean;
+}
+
+export type NumberFieldDecrementProps =
+  | NumberFieldDecrementNativeProps
+  | NumberFieldDecrementNonNativeProps;
 
 export namespace NumberFieldDecrement {
   export type State = NumberFieldDecrementState;

@@ -10,7 +10,12 @@ import { NOOP } from '../../utils/noop';
 import { useStateAttributesMapping } from '../utils/useStateAttributesMapping';
 import { useRenderElement } from '../../utils/useRenderElement';
 import { useBaseUiId } from '../../utils/useBaseUiId';
-import type { BaseUIComponentProps, NonNativeButtonProps } from '../../utils/types';
+import type {
+  BaseUIComponentProps,
+  GenericHTMLProps,
+  NativeButtonProps,
+  NonNativeButtonProps,
+} from '../../utils/types';
 import { mergeProps } from '../../merge-props';
 import { useButton } from '../../use-button/useButton';
 import type { FieldRoot } from '../../field/root/FieldRoot';
@@ -87,13 +92,17 @@ export const CheckboxRoot = React.forwardRef(function CheckboxRoot(
   const value = valueProp ?? name;
 
   const id = useBaseUiId();
+  const rootId = nativeButton ? (idProp ?? id) : id;
+  const generatedInputId = `${id}-input`;
 
   const parentId = useBaseUiId();
   let inputId = controlId;
   if (isGroupedWithParent) {
     inputId = parent ? parentId : `${parentContext.id}-${value}`;
-  } else if (idProp) {
+  } else if (!nativeButton && idProp) {
     inputId = idProp;
+  } else {
+    inputId = nativeButton ? generatedInputId : (controlId ?? generatedInputId);
   }
 
   let groupProps: Partial<Omit<CheckboxRoot.Props, 'className'>> = {};
@@ -118,7 +127,7 @@ export const CheckboxRoot = React.forwardRef(function CheckboxRoot(
   const setGroupValue = groupContext?.setValue;
   const defaultGroupValue = groupContext?.defaultValue;
 
-  const controlRef = React.useRef<HTMLButtonElement>(null);
+  const controlRef = React.useRef<HTMLElement>(null);
 
   const { getButtonProps, buttonRef } = useButton({
     disabled,
@@ -141,12 +150,12 @@ export const CheckboxRoot = React.forwardRef(function CheckboxRoot(
       return undefined;
     }
 
-    setControlId(inputId);
+    setControlId(nativeButton ? rootId : inputId);
 
     return () => {
       setControlId(undefined);
     };
-  }, [inputId, groupContext, setControlId, parent]);
+  }, [inputId, groupContext, nativeButton, rootId, setControlId, parent]);
 
   useField({
     enabled: !groupContext,
@@ -269,7 +278,7 @@ export const CheckboxRoot = React.forwardRef(function CheckboxRoot(
     ref: [buttonRef, controlRef, forwardedRef, groupContext?.registerControlRef],
     props: [
       {
-        id,
+        id: rootId,
         role: 'checkbox',
         'aria-checked': groupIndeterminate ? 'mixed' : checked,
         'aria-readonly': readOnly || undefined,
@@ -304,7 +313,7 @@ export const CheckboxRoot = React.forwardRef(function CheckboxRoot(
       },
       getDescriptionProps,
       validation.getValidationProps,
-      elementProps,
+      elementProps as React.ComponentPropsWithoutRef<'span'>,
       otherGroupProps,
       getButtonProps,
     ],
@@ -345,10 +354,10 @@ export interface CheckboxRootState extends FieldRoot.State {
   indeterminate: boolean;
 }
 
-export interface CheckboxRootProps
-  extends
-    NonNativeButtonProps,
-    Omit<BaseUIComponentProps<'span', CheckboxRoot.State>, 'onChange' | 'value'> {
+interface CheckboxRootCommonProps extends Omit<
+  BaseUIComponentProps<'span', CheckboxRoot.State>,
+  'onChange' | 'value'
+> {
   /**
    * The id of the input element.
    */
@@ -417,6 +426,26 @@ export interface CheckboxRootProps
    */
   value?: string;
 }
+
+interface CheckboxRootNonNativeProps
+  extends
+    NonNativeButtonProps,
+    Omit<GenericHTMLProps<CheckboxRoot.State>, keyof CheckboxRootCommonProps> {
+  nativeButton?: false;
+}
+
+interface CheckboxRootNativeProps
+  extends
+    NativeButtonProps,
+    Omit<
+      BaseUIComponentProps<'button', CheckboxRoot.State>,
+      keyof CheckboxRootCommonProps | 'onChange' | 'value'
+    > {
+  nativeButton: true;
+}
+
+export type CheckboxRootProps = CheckboxRootCommonProps &
+  (CheckboxRootNonNativeProps | CheckboxRootNativeProps);
 
 export type CheckboxRootChangeEventReason = typeof REASONS.none;
 export type CheckboxRootChangeEventDetails =

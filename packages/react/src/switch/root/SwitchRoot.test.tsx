@@ -824,4 +824,21 @@ describe('<Switch.Root />', () => {
     await user.click(switchEl);
     expect(switchEl).to.have.attribute('aria-checked', 'true');
   });
+
+  it('forwards `id` to the button when `nativeButton` is enabled', async () => {
+    await render(
+      <Field.Root>
+        <Field.Label data-testid="label">Label</Field.Label>
+        <Switch.Root id="switch-id" render={<button />} nativeButton />
+      </Field.Root>,
+    );
+
+    const switchEl = screen.getByRole('switch');
+    const input = screen.getByRole('checkbox', { hidden: true });
+    const label = screen.getByTestId('label');
+
+    expect(switchEl).to.have.attribute('id', 'switch-id');
+    expect(input).to.not.have.attribute('id', 'switch-id');
+    expect(label).to.have.attribute('for', 'switch-id');
+  });
 });

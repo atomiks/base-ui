@@ -4,7 +4,12 @@ import { ownerDocument } from '@base-ui/utils/owner';
 import { useIsoLayoutEffect } from '@base-ui/utils/useIsoLayoutEffect';
 import { useBaseUiId } from '../../utils/useBaseUiId';
 import { useRenderElement } from '../../utils/useRenderElement';
-import type { BaseUIComponentProps, NativeButtonProps } from '../../utils/types';
+import type {
+  BaseUIComponentProps,
+  GenericHTMLProps,
+  NativeButtonProps,
+  NonNativeButtonProps,
+} from '../../utils/types';
 import { useButton } from '../../use-button';
 import { ACTIVE_COMPOSITE_ITEM } from '../../composite/constants';
 import { useCompositeItem } from '../../composite/item/useCompositeItem';
@@ -23,7 +28,7 @@ import { activeElement, contains } from '../../floating-ui-react/utils';
  */
 export const TabsTab = React.forwardRef(function TabsTab(
   componentProps: TabsTab.Props,
-  forwardedRef: React.ForwardedRef<Element>,
+  forwardedRef: React.ForwardedRef<HTMLElement>,
 ) {
   const {
     className,
@@ -192,7 +197,7 @@ export const TabsTab = React.forwardRef(function TabsTab(
           isNavigatingRef.current = true;
         },
       },
-      elementProps,
+      elementProps as React.ComponentPropsWithoutRef<'button'>,
       getButtonProps,
     ],
   });
@@ -231,8 +236,7 @@ export interface TabsTabState {
   orientation: TabsRoot.Orientation;
 }
 
-export interface TabsTabProps
-  extends NativeButtonProps, BaseUIComponentProps<'button', TabsTab.State> {
+interface TabsTabCommonProps {
   /**
    * The value of the Tab.
    */
@@ -248,6 +252,24 @@ export interface TabsTabProps
    */
   disabled?: boolean;
 }
+
+interface TabsTabNativeProps
+  extends
+    NativeButtonProps,
+    Omit<BaseUIComponentProps<'button', TabsTab.State>, 'value'>,
+    TabsTabCommonProps {
+  nativeButton?: true;
+}
+
+interface TabsTabNonNativeProps
+  extends
+    NonNativeButtonProps,
+    Omit<GenericHTMLProps<TabsTab.State>, keyof TabsTabCommonProps>,
+    TabsTabCommonProps {
+  nativeButton: false;
+}
+
+export type TabsTabProps = TabsTabNativeProps | TabsTabNonNativeProps;
 
 export namespace TabsTab {
   export type Value = TabsTabValue;

@@ -8,7 +8,12 @@ import { useCompositeListItem } from '../../composite/list/useCompositeListItem'
 import { useMenuRootContext } from '../root/MenuRootContext';
 import { useRenderElement } from '../../utils/useRenderElement';
 import { useBaseUiId } from '../../utils/useBaseUiId';
-import type { BaseUIComponentProps, NonNativeButtonProps } from '../../utils/types';
+import type {
+  BaseUIComponentProps,
+  GenericHTMLProps,
+  NativeButtonProps,
+  NonNativeButtonProps,
+} from '../../utils/types';
 import { itemMapping } from '../utils/stateAttributesMapping';
 import { useMenuPositionerContext } from '../positioner/MenuPositionerContext';
 import { createChangeEventDetails } from '../../utils/createBaseUIEventDetails';
@@ -99,7 +104,7 @@ export const MenuCheckboxItem = React.forwardRef(function MenuCheckboxItem(
         'aria-checked': checked,
         onClick: handleClick,
       },
-      elementProps,
+      elementProps as React.ComponentPropsWithoutRef<'div'>,
       getItemProps,
     ],
     ref: [itemRef, forwardedRef, listItem.ref],
@@ -125,8 +130,7 @@ export type MenuCheckboxItemState = {
   checked: boolean;
 };
 
-export interface MenuCheckboxItemProps
-  extends NonNativeButtonProps, BaseUIComponentProps<'div', MenuCheckboxItem.State> {
+interface MenuCheckboxItemCommonProps {
   /**
    * Whether the checkbox item is currently ticked.
    *
@@ -167,6 +171,24 @@ export interface MenuCheckboxItemProps
    */
   closeOnClick?: boolean;
 }
+
+interface MenuCheckboxItemNonNativeProps
+  extends
+    NonNativeButtonProps,
+    Omit<BaseUIComponentProps<'div', MenuCheckboxItem.State>, keyof MenuCheckboxItemCommonProps>,
+    MenuCheckboxItemCommonProps {
+  nativeButton?: false;
+}
+
+interface MenuCheckboxItemNativeProps
+  extends
+    NativeButtonProps,
+    Omit<GenericHTMLProps<MenuCheckboxItem.State>, keyof MenuCheckboxItemCommonProps>,
+    MenuCheckboxItemCommonProps {
+  nativeButton: true;
+}
+
+export type MenuCheckboxItemProps = MenuCheckboxItemNonNativeProps | MenuCheckboxItemNativeProps;
 
 export type MenuCheckboxItemChangeEventReason = MenuRoot.ChangeEventReason;
 export type MenuCheckboxItemChangeEventDetails = MenuRoot.ChangeEventDetails;

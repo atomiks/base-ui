@@ -3,7 +3,12 @@ import * as React from 'react';
 import { isElementDisabled } from '@base-ui/utils/isElementDisabled';
 import { useIsoLayoutEffect } from '@base-ui/utils/useIsoLayoutEffect';
 import { triggerOpenStateMapping } from '../../utils/collapsibleOpenStateMapping';
-import { BaseUIComponentProps, NativeButtonProps } from '../../utils/types';
+import {
+  BaseUIComponentProps,
+  GenericHTMLProps,
+  NativeButtonProps,
+  NonNativeButtonProps,
+} from '../../utils/types';
 import { useButton } from '../../use-button';
 import { useCollapsibleRootContext } from '../../collapsible/root/CollapsibleRootContext';
 import {
@@ -51,7 +56,7 @@ function getActiveTriggers(accordionItemRefs: {
 
 export const AccordionTrigger = React.forwardRef(function AccordionTrigger(
   componentProps: AccordionTrigger.Props,
-  forwardedRef: React.ForwardedRef<Element>,
+  forwardedRef: React.ForwardedRef<HTMLElement>,
 ) {
   const {
     disabled: disabledProp,
@@ -177,15 +182,28 @@ export const AccordionTrigger = React.forwardRef(function AccordionTrigger(
   const element = useRenderElement('button', componentProps, {
     state,
     ref: [forwardedRef, buttonRef],
-    props: [props, elementProps, getButtonProps],
+    props: [props, elementProps as React.ComponentPropsWithoutRef<'button'>, getButtonProps],
     stateAttributesMapping: triggerOpenStateMapping,
   });
 
   return element;
 });
 
-export interface AccordionTriggerProps
-  extends NativeButtonProps, BaseUIComponentProps<'button', AccordionItem.State> {}
+interface AccordionTriggerNativeProps
+  extends NativeButtonProps, BaseUIComponentProps<'button', AccordionItem.State> {
+  nativeButton?: true;
+}
+
+interface AccordionTriggerNonNativeProps
+  extends NonNativeButtonProps, GenericHTMLProps<AccordionItem.State> {
+  nativeButton: false;
+  /**
+   * Whether the component should ignore user interaction.
+   */
+  disabled?: boolean;
+}
+
+export type AccordionTriggerProps = AccordionTriggerNativeProps | AccordionTriggerNonNativeProps;
 
 export namespace AccordionTrigger {
   export type Props = AccordionTriggerProps;

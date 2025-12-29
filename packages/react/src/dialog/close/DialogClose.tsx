@@ -2,7 +2,12 @@
 import * as React from 'react';
 import { useDialogRootContext } from '../root/DialogRootContext';
 import { useRenderElement } from '../../utils/useRenderElement';
-import type { BaseUIComponentProps, NativeButtonProps } from '../../utils/types';
+import type {
+  BaseUIComponentProps,
+  GenericHTMLProps,
+  NativeButtonProps,
+  NonNativeButtonProps,
+} from '../../utils/types';
 import { useButton } from '../../use-button';
 import { createChangeEventDetails } from '../../utils/createBaseUIEventDetails';
 import { REASONS } from '../../utils/reasons';
@@ -15,7 +20,7 @@ import { REASONS } from '../../utils/reasons';
  */
 export const DialogClose = React.forwardRef(function DialogClose(
   componentProps: DialogClose.Props,
-  forwardedRef: React.ForwardedRef<HTMLButtonElement>,
+  forwardedRef: React.ForwardedRef<HTMLElement>,
 ) {
   const {
     render,
@@ -44,12 +49,35 @@ export const DialogClose = React.forwardRef(function DialogClose(
   return useRenderElement('button', componentProps, {
     state,
     ref: [forwardedRef, buttonRef],
-    props: [{ onClick: handleClick }, elementProps, getButtonProps],
+    props: [
+      { onClick: handleClick },
+      elementProps as React.ComponentPropsWithoutRef<'button'>,
+      getButtonProps,
+    ],
   });
 });
 
-export interface DialogCloseProps
-  extends NativeButtonProps, BaseUIComponentProps<'button', DialogClose.State> {}
+interface DialogCloseNativeProps
+  extends NativeButtonProps, Omit<BaseUIComponentProps<'button', DialogClose.State>, 'disabled'> {
+  nativeButton?: true;
+  /**
+   * Whether the button is currently disabled.
+   * @default false
+   */
+  disabled?: boolean;
+}
+
+interface DialogCloseNonNativeProps
+  extends NonNativeButtonProps, Omit<GenericHTMLProps<DialogClose.State>, 'disabled'> {
+  nativeButton: false;
+  /**
+   * Whether the button is currently disabled.
+   * @default false
+   */
+  disabled?: boolean;
+}
+
+export type DialogCloseProps = DialogCloseNativeProps | DialogCloseNonNativeProps;
 
 export interface DialogCloseState {
   /**

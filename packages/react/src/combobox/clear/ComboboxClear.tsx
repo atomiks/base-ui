@@ -2,7 +2,12 @@
 import * as React from 'react';
 import { useStore } from '@base-ui/utils/store';
 import { useComboboxInputValueContext, useComboboxRootContext } from '../root/ComboboxRootContext';
-import type { BaseUIComponentProps, NativeButtonProps } from '../../utils/types';
+import type {
+  BaseUIComponentProps,
+  GenericHTMLProps,
+  NativeButtonProps,
+  NonNativeButtonProps,
+} from '../../utils/types';
 import { useRenderElement } from '../../utils/useRenderElement';
 import { selectors } from '../store';
 import { useButton } from '../../use-button';
@@ -26,7 +31,7 @@ const stateAttributesMapping: StateAttributesMapping<ComboboxClear.State> = {
  */
 export const ComboboxClear = React.forwardRef(function ComboboxClear(
   componentProps: ComboboxClear.Props,
-  forwardedRef: React.ForwardedRef<HTMLButtonElement>,
+  forwardedRef: React.ForwardedRef<HTMLElement>,
 ) {
   const {
     render,
@@ -130,7 +135,7 @@ export const ComboboxClear = React.forwardRef(function ComboboxClear(
           store.state.inputRef.current?.focus();
         },
       },
-      elementProps,
+      elementProps as React.ComponentPropsWithoutRef<'button'>,
       getButtonProps,
     ],
     stateAttributesMapping,
@@ -156,8 +161,7 @@ export interface ComboboxClearState {
   transitionStatus: TransitionStatus;
 }
 
-export interface ComboboxClearProps
-  extends NativeButtonProps, BaseUIComponentProps<'button', ComboboxClear.State> {
+interface ComboboxClearCommonProps {
   /**
    * Whether the component should ignore user interaction.
    * @default false
@@ -169,6 +173,21 @@ export interface ComboboxClearProps
    */
   keepMounted?: boolean;
 }
+
+interface ComboboxClearNativeProps
+  extends
+    NativeButtonProps,
+    BaseUIComponentProps<'button', ComboboxClear.State>,
+    ComboboxClearCommonProps {
+  nativeButton?: true;
+}
+
+interface ComboboxClearNonNativeProps
+  extends NonNativeButtonProps, GenericHTMLProps<ComboboxClear.State>, ComboboxClearCommonProps {
+  nativeButton: false;
+}
+
+export type ComboboxClearProps = ComboboxClearNativeProps | ComboboxClearNonNativeProps;
 
 export namespace ComboboxClear {
   export type State = ComboboxClearState;

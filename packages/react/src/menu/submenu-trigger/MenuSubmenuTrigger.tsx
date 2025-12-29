@@ -6,7 +6,12 @@ import {
   useHoverReferenceInteraction,
   useInteractions,
 } from '../../floating-ui-react';
-import { BaseUIComponentProps, NonNativeButtonProps } from '../../utils/types';
+import {
+  BaseUIComponentProps,
+  GenericHTMLProps,
+  NativeButtonProps,
+  NonNativeButtonProps,
+} from '../../utils/types';
 import { useMenuRootContext } from '../root/MenuRootContext';
 import { useBaseUiId } from '../../utils/useBaseUiId';
 import { triggerOpenStateMapping } from '../../utils/popupStateMapping';
@@ -159,7 +164,7 @@ export const MenuSubmenuTrigger = React.forwardRef(function SubmenuTriggerCompon
           }
         },
       },
-      elementProps,
+      elementProps as React.ComponentPropsWithoutRef<'div'>,
       getItemProps,
     ],
     ref: [forwardedRef, listItem.ref, itemRef, registerTrigger, handleTriggerElementRef],
@@ -168,8 +173,7 @@ export const MenuSubmenuTrigger = React.forwardRef(function SubmenuTriggerCompon
   return element;
 });
 
-export interface MenuSubmenuTriggerProps
-  extends NonNativeButtonProps, BaseUIComponentProps<'div', MenuSubmenuTrigger.State> {
+interface MenuSubmenuTriggerCommonProps {
   onClick?: React.MouseEventHandler<HTMLElement>;
   /**
    * Overrides the text label to use when the item is matched during keyboard text navigation.
@@ -204,6 +208,29 @@ export interface MenuSubmenuTriggerProps
    */
   openOnHover?: boolean;
 }
+
+interface MenuSubmenuTriggerNonNativeProps
+  extends
+    NonNativeButtonProps,
+    Omit<
+      BaseUIComponentProps<'div', MenuSubmenuTrigger.State>,
+      keyof MenuSubmenuTriggerCommonProps
+    >,
+    MenuSubmenuTriggerCommonProps {
+  nativeButton?: false;
+}
+
+interface MenuSubmenuTriggerNativeProps
+  extends
+    NativeButtonProps,
+    Omit<GenericHTMLProps<MenuSubmenuTrigger.State>, keyof MenuSubmenuTriggerCommonProps>,
+    MenuSubmenuTriggerCommonProps {
+  nativeButton: true;
+}
+
+export type MenuSubmenuTriggerProps =
+  | MenuSubmenuTriggerNonNativeProps
+  | MenuSubmenuTriggerNativeProps;
 
 export interface MenuSubmenuTriggerState {
   /**

@@ -1,6 +1,11 @@
 'use client';
 import * as React from 'react';
-import type { BaseUIComponentProps, NativeButtonProps } from '../../utils/types';
+import type {
+  BaseUIComponentProps,
+  GenericHTMLProps,
+  NativeButtonProps,
+  NonNativeButtonProps,
+} from '../../utils/types';
 import { usePopoverRootContext } from '../root/PopoverRootContext';
 import { useRenderElement } from '../../utils/useRenderElement';
 import { useButton } from '../../use-button';
@@ -15,7 +20,7 @@ import { REASONS } from '../../utils/reasons';
  */
 export const PopoverClose = React.forwardRef(function PopoverClose(
   props: PopoverClose.Props,
-  forwardedRef: React.ForwardedRef<HTMLButtonElement>,
+  forwardedRef: React.ForwardedRef<HTMLElement>,
 ) {
   const { render, className, disabled = false, nativeButton = true, ...elementProps } = props;
 
@@ -38,7 +43,7 @@ export const PopoverClose = React.forwardRef(function PopoverClose(
           );
         },
       },
-      elementProps,
+      elementProps as React.ComponentPropsWithoutRef<'button'>,
       getButtonProps,
     ],
   });
@@ -48,8 +53,21 @@ export const PopoverClose = React.forwardRef(function PopoverClose(
 
 export interface PopoverCloseState {}
 
-export interface PopoverCloseProps
-  extends NativeButtonProps, BaseUIComponentProps<'button', PopoverClose.State> {}
+interface PopoverCloseNativeProps
+  extends NativeButtonProps, BaseUIComponentProps<'button', PopoverClose.State> {
+  nativeButton?: true;
+}
+
+interface PopoverCloseNonNativeProps
+  extends NonNativeButtonProps, GenericHTMLProps<PopoverClose.State> {
+  nativeButton: false;
+  /**
+   * Whether the component should ignore user interaction.
+   */
+  disabled?: boolean;
+}
+
+export type PopoverCloseProps = PopoverCloseNativeProps | PopoverCloseNonNativeProps;
 
 export namespace PopoverClose {
   export type State = PopoverCloseState;

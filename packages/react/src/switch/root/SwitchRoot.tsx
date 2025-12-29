@@ -6,7 +6,12 @@ import { useMergedRefs } from '@base-ui/utils/useMergedRefs';
 import { useIsoLayoutEffect } from '@base-ui/utils/useIsoLayoutEffect';
 import { visuallyHiddenInput } from '@base-ui/utils/visuallyHidden';
 import { useRenderElement } from '../../utils/useRenderElement';
-import type { BaseUIComponentProps, NonNativeButtonProps } from '../../utils/types';
+import type {
+  BaseUIComponentProps,
+  GenericHTMLProps,
+  NativeButtonProps,
+  NonNativeButtonProps,
+} from '../../utils/types';
 import { mergeProps } from '../../merge-props';
 import { useBaseUiId } from '../../utils/useBaseUiId';
 import { useButton } from '../../use-button';
@@ -74,15 +79,19 @@ export const SwitchRoot = React.forwardRef(function SwitchRoot(
   const inputRef = React.useRef<HTMLInputElement>(null);
   const handleInputRef = useMergedRefs(inputRef, externalInputRef, validation.inputRef);
 
-  const switchRef = React.useRef<HTMLButtonElement | null>(null);
+  const switchRef = React.useRef<HTMLElement | null>(null);
 
   const id = useBaseUiId();
 
-  const inputId = useLabelableId({
-    id: idProp,
+  const rootId = nativeButton ? (idProp ?? id) : id;
+
+  const controlId = useLabelableId({
+    id: nativeButton ? rootId : idProp,
     implicit: false,
     controlRef: switchRef,
   });
+
+  const inputId = nativeButton ? `${id}-input` : controlId;
 
   const [checked, setCheckedState] = useControlled({
     controlled: checkedProp,
@@ -124,7 +133,7 @@ export const SwitchRoot = React.forwardRef(function SwitchRoot(
   });
 
   const rootProps: React.ComponentPropsWithRef<'span'> = {
-    id,
+    id: rootId,
     role: 'switch',
     'aria-checked': checked,
     'aria-readonly': readOnly || undefined,
@@ -222,7 +231,12 @@ export const SwitchRoot = React.forwardRef(function SwitchRoot(
   const element = useRenderElement('span', componentProps, {
     state,
     ref: [forwardedRef, switchRef, buttonRef],
-    props: [rootProps, validation.getValidationProps, elementProps, getButtonProps],
+    props: [
+      rootProps,
+      validation.getValidationProps,
+      elementProps as React.ComponentPropsWithoutRef<'span'>,
+      getButtonProps,
+    ],
     stateAttributesMapping,
   });
 
@@ -256,8 +270,10 @@ export interface SwitchRootState extends FieldRoot.State {
   required: boolean;
 }
 
-export interface SwitchRootProps
-  extends NonNativeButtonProps, Omit<BaseUIComponentProps<'span', SwitchRoot.State>, 'onChange'> {
+interface SwitchRootCommonProps extends Omit<
+  BaseUIComponentProps<'span', SwitchRoot.State>,
+  'onChange'
+> {
   /**
    * The id of the switch element.
    */
@@ -308,6 +324,26 @@ export interface SwitchRootProps
    */
   uncheckedValue?: string;
 }
+
+interface SwitchRootNonNativeProps
+  extends
+    NonNativeButtonProps,
+    Omit<GenericHTMLProps<SwitchRoot.State>, keyof SwitchRootCommonProps> {
+  nativeButton?: false;
+}
+
+interface SwitchRootNativeProps
+  extends
+    NativeButtonProps,
+    Omit<
+      BaseUIComponentProps<'button', SwitchRoot.State>,
+      keyof SwitchRootCommonProps | 'onChange'
+    > {
+  nativeButton: true;
+}
+
+export type SwitchRootProps = SwitchRootCommonProps &
+  (SwitchRootNonNativeProps | SwitchRootNativeProps);
 
 export type SwitchRootChangeEventReason = typeof REASONS.none;
 export type SwitchRootChangeEventDetails = BaseUIChangeEventDetails<SwitchRoot.ChangeEventReason>;

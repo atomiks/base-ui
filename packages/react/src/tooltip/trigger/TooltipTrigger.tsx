@@ -1,7 +1,7 @@
 'use client';
 import * as React from 'react';
 import { useTooltipRootContext } from '../root/TooltipRootContext';
-import type { BaseUIComponentProps } from '../../utils/types';
+import type { GenericHTMLProps } from '../../utils/types';
 import { triggerOpenStateMapping } from '../../utils/popupStateMapping';
 import { useRenderElement } from '../../utils/useRenderElement';
 import { useTriggerDataForwarding } from '../../utils/popups';
@@ -121,7 +121,12 @@ export const TooltipTrigger = React.forwardRef(function TooltipTrigger(
   const element = useRenderElement('button', componentProps, {
     state,
     ref: [forwardedRef, registerTrigger, triggerElementRef],
-    props: [hoverProps, rootTriggerProps, { id: thisTriggerId }, elementProps],
+    props: [
+      hoverProps,
+      rootTriggerProps,
+      { id: thisTriggerId },
+      elementProps as React.ComponentPropsWithoutRef<'button'>,
+    ],
     stateAttributesMapping: triggerOpenStateMapping,
   });
 
@@ -141,10 +146,13 @@ export interface TooltipTriggerState {
   open: boolean;
 }
 
-export interface TooltipTriggerProps<Payload = unknown> extends BaseUIComponentProps<
-  'button',
-  TooltipTrigger.State
-> {
+export interface TooltipTriggerProps<
+  Payload = unknown,
+> extends GenericHTMLProps<TooltipTrigger.State> {
+  /**
+   * Whether the tooltip trigger should ignore user interaction.
+   */
+  disabled?: boolean;
   /**
    * A handle to associate the trigger with a tooltip.
    */

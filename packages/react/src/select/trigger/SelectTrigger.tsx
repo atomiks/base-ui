@@ -7,7 +7,13 @@ import { useMergedRefs } from '@base-ui/utils/useMergedRefs';
 import { useValueAsRef } from '@base-ui/utils/useValueAsRef';
 import { useStore } from '@base-ui/utils/store';
 import { useSelectRootContext } from '../root/SelectRootContext';
-import { BaseUIComponentProps, HTMLProps, NativeButtonProps } from '../../utils/types';
+import {
+  BaseUIComponentProps,
+  GenericHTMLProps,
+  HTMLProps,
+  NativeButtonProps,
+  NonNativeButtonProps,
+} from '../../utils/types';
 import { useFieldRootContext } from '../../field/root/FieldRootContext';
 import { useLabelableContext } from '../../labelable-provider/LabelableContext';
 import { pressableTriggerOpenStateMapping } from '../../utils/popupStateMapping';
@@ -39,7 +45,7 @@ const stateAttributesMapping: StateAttributesMapping<SelectTrigger.State> = {
  */
 export const SelectTrigger = React.forwardRef(function SelectTrigger(
   componentProps: SelectTrigger.Props,
-  forwardedRef: React.ForwardedRef<HTMLButtonElement>,
+  forwardedRef: React.ForwardedRef<HTMLElement>,
 ) {
   const {
     render,
@@ -219,7 +225,7 @@ export const SelectTrigger = React.forwardRef(function SelectTrigger(
       },
     },
     validation.getValidationProps,
-    elementProps,
+    elementProps as React.ComponentPropsWithoutRef<'button'>,
     getButtonProps,
   );
 
@@ -256,12 +262,27 @@ export interface SelectTriggerState extends FieldRoot.State {
   value: any;
 }
 
-export interface SelectTriggerProps
-  extends NativeButtonProps, BaseUIComponentProps<'button', SelectTrigger.State> {
+interface SelectTriggerCommonProps {
   children?: React.ReactNode;
   /** Whether the component should ignore user interaction. */
   disabled?: boolean;
 }
+
+interface SelectTriggerNativeProps
+  extends
+    NativeButtonProps,
+    BaseUIComponentProps<'button', SelectTrigger.State>,
+    SelectTriggerCommonProps {
+  nativeButton?: true;
+}
+
+interface SelectTriggerNonNativeProps
+  extends NonNativeButtonProps, GenericHTMLProps<SelectTrigger.State>, SelectTriggerCommonProps {
+  nativeButton: false;
+  type?: undefined;
+}
+
+export type SelectTriggerProps = SelectTriggerNativeProps | SelectTriggerNonNativeProps;
 
 export namespace SelectTrigger {
   export type State = SelectTriggerState;

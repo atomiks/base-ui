@@ -965,4 +965,25 @@ describe('<Checkbox.Root />', () => {
     await user.click(checkbox);
     expect(checkbox).to.have.attribute('aria-checked', 'true');
   });
+
+  it('forwards `id` to the button when `nativeButton` is enabled', async () => {
+    await render(
+      <Field.Root>
+        <Field.Label data-testid="label">Label</Field.Label>
+        <Checkbox.Root id="checkbox-id" render={<button />} nativeButton />
+      </Field.Root>,
+    );
+
+    const checkbox = screen.getByRole('checkbox');
+    const input = screen
+      .getAllByRole('checkbox', { hidden: true })
+      .find((el) => el.tagName === 'INPUT');
+    const label = screen.getByTestId('label');
+
+    expect(input).not.to.equal(undefined);
+
+    expect(checkbox).to.have.attribute('id', 'checkbox-id');
+    expect(input).to.not.have.attribute('id', 'checkbox-id');
+    expect(label).to.have.attribute('for', 'checkbox-id');
+  });
 });

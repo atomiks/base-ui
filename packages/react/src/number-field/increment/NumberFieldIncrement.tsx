@@ -1,6 +1,11 @@
 'use client';
 import * as React from 'react';
-import type { BaseUIComponentProps, NativeButtonProps } from '../../utils/types';
+import type {
+  BaseUIComponentProps,
+  GenericHTMLProps,
+  NativeButtonProps,
+  NonNativeButtonProps,
+} from '../../utils/types';
 import { useRenderElement } from '../../utils/useRenderElement';
 import { useButton } from '../../use-button';
 import { useNumberFieldRootContext } from '../root/NumberFieldRootContext';
@@ -16,7 +21,7 @@ import { stateAttributesMapping } from '../utils/stateAttributesMapping';
  */
 export const NumberFieldIncrement = React.forwardRef(function NumberFieldIncrement(
   componentProps: NumberFieldIncrement.Props,
-  forwardedRef: React.ForwardedRef<HTMLButtonElement>,
+  forwardedRef: React.ForwardedRef<HTMLElement>,
 ) {
   const {
     render,
@@ -96,7 +101,7 @@ export const NumberFieldIncrement = React.forwardRef(function NumberFieldIncreme
   const element = useRenderElement('button', componentProps, {
     ref: [forwardedRef, buttonRef],
     state: buttonState,
-    props: [props, elementProps, getButtonProps],
+    props: [props, elementProps as React.ComponentPropsWithoutRef<'button'>, getButtonProps],
     stateAttributesMapping,
   });
 
@@ -105,8 +110,23 @@ export const NumberFieldIncrement = React.forwardRef(function NumberFieldIncreme
 
 export interface NumberFieldIncrementState extends NumberFieldRoot.State {}
 
-export interface NumberFieldIncrementProps
-  extends NativeButtonProps, BaseUIComponentProps<'button', NumberFieldIncrement.State> {}
+interface NumberFieldIncrementNativeProps
+  extends NativeButtonProps, BaseUIComponentProps<'button', NumberFieldIncrement.State> {
+  nativeButton?: true;
+}
+
+interface NumberFieldIncrementNonNativeProps
+  extends NonNativeButtonProps, GenericHTMLProps<NumberFieldIncrement.State> {
+  nativeButton: false;
+  /**
+   * Whether the component should ignore user interaction.
+   */
+  disabled?: boolean;
+}
+
+export type NumberFieldIncrementProps =
+  | NumberFieldIncrementNativeProps
+  | NumberFieldIncrementNonNativeProps;
 
 export namespace NumberFieldIncrement {
   export type State = NumberFieldIncrementState;

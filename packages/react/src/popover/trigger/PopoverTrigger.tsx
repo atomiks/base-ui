@@ -5,7 +5,12 @@ import { type FocusableElement } from 'tabbable';
 import { useStableCallback } from '@base-ui/utils/useStableCallback';
 import { usePopoverRootContext } from '../root/PopoverRootContext';
 import { useButton } from '../../use-button/useButton';
-import type { BaseUIComponentProps, NativeButtonProps } from '../../utils/types';
+import type {
+  BaseUIComponentProps,
+  GenericHTMLProps,
+  NativeButtonProps,
+  NonNativeButtonProps,
+} from '../../utils/types';
 import {
   triggerOpenStateMapping,
   pressableTriggerOpenStateMapping,
@@ -145,7 +150,7 @@ export const PopoverTrigger = React.forwardRef(function PopoverTrigger(
       hoverProps,
       rootTriggerProps,
       { [CLICK_TRIGGER_IDENTIFIER as string]: '', id: thisTriggerId },
-      elementProps,
+      elementProps as React.ComponentPropsWithoutRef<'button'>,
       getButtonProps,
     ],
     stateAttributesMapping,
@@ -237,49 +242,65 @@ export interface PopoverTriggerState {
   open: boolean;
 }
 
-export type PopoverTriggerProps<Payload = unknown> = NativeButtonProps &
-  BaseUIComponentProps<'button', PopoverTriggerState> & {
-    /**
-     * Whether the component renders a native `<button>` element when replacing it
-     * via the `render` prop.
-     * Set to `false` if the rendered element is not a button (e.g. `<div>`).
-     * @default true
-     */
-    nativeButton?: boolean;
-    /**
-     * A handle to associate the trigger with a popover.
-     */
-    handle?: PopoverHandle<Payload>;
-    /**
-     * A payload to pass to the popover when it is opened.
-     */
-    payload?: Payload;
-    /**
-     * ID of the trigger. In addition to being forwarded to the rendered element,
-     * it is also used to specify the active trigger for the popover in controlled mode (with the PopoverRoot `triggerId` prop).
-     */
-    id?: string;
-    /**
-     * Whether the popover should also open when the trigger is hovered.
-     * @default false
-     */
-    openOnHover?: boolean;
-    /**
-     * How long to wait before the popover may be opened on hover. Specified in milliseconds.
-     *
-     * Requires the `openOnHover` prop.
-     * @default 300
-     */
-    delay?: number;
-    /**
-     * How long to wait before closing the popover that was opened on hover.
-     * Specified in milliseconds.
-     *
-     * Requires the `openOnHover` prop.
-     * @default 0
-     */
-    closeDelay?: number;
-  };
+interface PopoverTriggerCommonProps<Payload = unknown> {
+  /**
+   * A handle to associate the trigger with a popover.
+   */
+  handle?: PopoverHandle<Payload>;
+  /**
+   * A payload to pass to the popover when it is opened.
+   */
+  payload?: Payload;
+  /**
+   * ID of the trigger. In addition to being forwarded to the rendered element,
+   * it is also used to specify the active trigger for the popover in controlled mode (with the PopoverRoot `triggerId` prop).
+   */
+  id?: string;
+  /**
+   * Whether the component should ignore user interaction.
+   */
+  disabled?: boolean;
+  /**
+   * Whether the popover should also open when the trigger is hovered.
+   * @default false
+   */
+  openOnHover?: boolean;
+  /**
+   * How long to wait before the popover may be opened on hover. Specified in milliseconds.
+   *
+   * Requires the `openOnHover` prop.
+   * @default 300
+   */
+  delay?: number;
+  /**
+   * How long to wait before closing the popover that was opened on hover.
+   * Specified in milliseconds.
+   *
+   * Requires the `openOnHover` prop.
+   * @default 0
+   */
+  closeDelay?: number;
+}
+
+interface PopoverTriggerNativeProps<Payload = unknown>
+  extends
+    NativeButtonProps,
+    BaseUIComponentProps<'button', PopoverTriggerState>,
+    PopoverTriggerCommonProps<Payload> {
+  nativeButton?: true;
+}
+
+interface PopoverTriggerNonNativeProps<Payload = unknown>
+  extends
+    NonNativeButtonProps,
+    GenericHTMLProps<PopoverTriggerState>,
+    PopoverTriggerCommonProps<Payload> {
+  nativeButton: false;
+}
+
+export type PopoverTriggerProps<Payload = unknown> =
+  | PopoverTriggerNativeProps<Payload>
+  | PopoverTriggerNonNativeProps<Payload>;
 
 export namespace PopoverTrigger {
   export type State = PopoverTriggerState;

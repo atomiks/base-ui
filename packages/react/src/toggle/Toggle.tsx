@@ -4,7 +4,12 @@ import { useStableCallback } from '@base-ui/utils/useStableCallback';
 import { useControlled } from '@base-ui/utils/useControlled';
 import { useBaseUiId } from '../utils/useBaseUiId';
 import { useRenderElement } from '../utils/useRenderElement';
-import type { BaseUIComponentProps, NativeButtonProps } from '../utils/types';
+import type {
+  BaseUIComponentProps,
+  GenericHTMLProps,
+  NativeButtonProps,
+  NonNativeButtonProps,
+} from '../utils/types';
 import { useToggleGroupContext } from '../toggle-group/ToggleGroupContext';
 import { useButton } from '../use-button/useButton';
 import { CompositeItem } from '../composite/item/CompositeItem';
@@ -22,7 +27,7 @@ import { REASONS } from '../utils/reasons';
  */
 export const Toggle = React.forwardRef(function Toggle(
   componentProps: Toggle.Props,
-  forwardedRef: React.ForwardedRef<HTMLButtonElement>,
+  forwardedRef: React.ForwardedRef<HTMLElement>,
 ) {
   const {
     className,
@@ -93,7 +98,7 @@ export const Toggle = React.forwardRef(function Toggle(
         setPressedState(nextPressed);
       },
     },
-    elementProps,
+    elementProps as React.ComponentPropsWithoutRef<'button'>,
     getButtonProps,
   ];
 
@@ -131,8 +136,7 @@ export interface ToggleState {
   disabled: boolean;
 }
 
-export interface ToggleProps
-  extends NativeButtonProps, BaseUIComponentProps<'button', Toggle.State> {
+interface ToggleCommonProps {
   /**
    * Whether the toggle button is currently pressed.
    * This is the controlled counterpart of `defaultPressed`.
@@ -158,7 +162,33 @@ export interface ToggleProps
    * inside a toggle group.
    */
   value?: string;
+  /**
+   * @ignore - Toggles do not participate in form submission.
+   */
+  form?: never;
+  /**
+   * @ignore - Toggles use `aria-pressed` instead of button type.
+   */
+  type?: never;
 }
+
+interface ToggleNativeProps
+  extends
+    NativeButtonProps,
+    Omit<BaseUIComponentProps<'button', Toggle.State>, 'value' | 'form' | 'type'>,
+    ToggleCommonProps {
+  nativeButton?: true;
+}
+
+interface ToggleNonNativeProps
+  extends
+    NonNativeButtonProps,
+    Omit<GenericHTMLProps<Toggle.State>, keyof ToggleCommonProps>,
+    ToggleCommonProps {
+  nativeButton: false;
+}
+
+export type ToggleProps = ToggleNativeProps | ToggleNonNativeProps;
 
 export type ToggleChangeEventReason = typeof REASONS.none;
 

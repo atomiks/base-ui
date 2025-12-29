@@ -22,7 +22,13 @@ import {
   isOutsideEvent,
   stopEvent,
 } from '../../floating-ui-react/utils';
-import type { BaseUIComponentProps, NativeButtonProps, HTMLProps } from '../../utils/types';
+import type {
+  BaseUIComponentProps,
+  GenericHTMLProps,
+  NativeButtonProps,
+  NonNativeButtonProps,
+  HTMLProps,
+} from '../../utils/types';
 import { useNavigationMenuItemContext } from '../item/NavigationMenuItemContext';
 import {
   useNavigationMenuRootContext,
@@ -55,7 +61,7 @@ const DEFAULT_SIZE = { width: 0, height: 0 };
  */
 export const NavigationMenuTrigger = React.forwardRef(function NavigationMenuTrigger(
   componentProps: NavigationMenuTrigger.Props,
-  forwardedRef: React.ForwardedRef<HTMLButtonElement>,
+  forwardedRef: React.ForwardedRef<HTMLElement>,
 ) {
   const { className, render, nativeButton = true, disabled, ...elementProps } = componentProps;
 
@@ -445,7 +451,7 @@ export const NavigationMenuTrigger = React.forwardRef(function NavigationMenuTri
           getReferenceProps,
           dismissProps?.reference || EMPTY_ARRAY,
           defaultProps,
-          elementProps,
+          elementProps as React.ComponentPropsWithoutRef<'button'>,
           getButtonProps,
         ]}
       />
@@ -495,8 +501,23 @@ export interface NavigationMenuTriggerState {
   open: boolean;
 }
 
-export interface NavigationMenuTriggerProps
-  extends NativeButtonProps, BaseUIComponentProps<'button', NavigationMenuTrigger.State> {}
+interface NavigationMenuTriggerNativeProps
+  extends NativeButtonProps, BaseUIComponentProps<'button', NavigationMenuTrigger.State> {
+  nativeButton?: true;
+}
+
+interface NavigationMenuTriggerNonNativeProps
+  extends NonNativeButtonProps, GenericHTMLProps<NavigationMenuTrigger.State> {
+  nativeButton: false;
+  /**
+   * Whether the component should ignore user interaction.
+   */
+  disabled?: boolean;
+}
+
+export type NavigationMenuTriggerProps =
+  | NavigationMenuTriggerNativeProps
+  | NavigationMenuTriggerNonNativeProps;
 
 export namespace NavigationMenuTrigger {
   export type State = NavigationMenuTriggerState;

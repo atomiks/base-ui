@@ -4,7 +4,12 @@ import { useStableCallback } from '@base-ui/utils/useStableCallback';
 import { useMenuRootContext } from '../root/MenuRootContext';
 import { useRenderElement } from '../../utils/useRenderElement';
 import { useBaseUiId } from '../../utils/useBaseUiId';
-import type { BaseUIComponentProps, NonNativeButtonProps } from '../../utils/types';
+import type {
+  BaseUIComponentProps,
+  GenericHTMLProps,
+  NativeButtonProps,
+  NonNativeButtonProps,
+} from '../../utils/types';
 import { useMenuRadioGroupContext } from '../radio-group/MenuRadioGroupContext';
 import { MenuRadioItemContext } from './MenuRadioItemContext';
 import { itemMapping } from '../utils/stateAttributesMapping';
@@ -91,7 +96,7 @@ export const MenuRadioItem = React.forwardRef(function MenuRadioItem(
         'aria-checked': checked,
         onClick: handleClick,
       },
-      elementProps,
+      elementProps as React.ComponentPropsWithoutRef<'div'>,
       getItemProps,
     ],
     ref: [itemRef, forwardedRef, listItem.ref],
@@ -115,8 +120,7 @@ export type MenuRadioItemState = {
   checked: boolean;
 };
 
-export interface MenuRadioItemProps
-  extends NonNativeButtonProps, BaseUIComponentProps<'div', MenuRadioItem.State> {
+interface MenuRadioItemCommonProps {
   /**
    * Value of the radio item.
    * This is the value that will be set in the MenuRadioGroup when the item is selected.
@@ -145,6 +149,24 @@ export interface MenuRadioItemProps
    */
   closeOnClick?: boolean;
 }
+
+interface MenuRadioItemNonNativeProps
+  extends
+    NonNativeButtonProps,
+    Omit<BaseUIComponentProps<'div', MenuRadioItem.State>, keyof MenuRadioItemCommonProps>,
+    MenuRadioItemCommonProps {
+  nativeButton?: false;
+}
+
+interface MenuRadioItemNativeProps
+  extends
+    NativeButtonProps,
+    Omit<GenericHTMLProps<MenuRadioItem.State>, keyof MenuRadioItemCommonProps>,
+    MenuRadioItemCommonProps {
+  nativeButton: true;
+}
+
+export type MenuRadioItemProps = MenuRadioItemNonNativeProps | MenuRadioItemNativeProps;
 
 export namespace MenuRadioItem {
   export type State = MenuRadioItemState;

@@ -4,7 +4,12 @@ import { triggerOpenStateMapping } from '../../utils/collapsibleOpenStateMapping
 import type { StateAttributesMapping } from '../../utils/getStateAttributesProps';
 import { transitionStatusMapping } from '../../utils/stateAttributesMapping';
 import { useRenderElement } from '../../utils/useRenderElement';
-import { BaseUIComponentProps, NativeButtonProps } from '../../utils/types';
+import {
+  BaseUIComponentProps,
+  GenericHTMLProps,
+  NativeButtonProps,
+  NonNativeButtonProps,
+} from '../../utils/types';
 import { useButton } from '../../use-button';
 import { useCollapsibleRootContext } from '../root/CollapsibleRootContext';
 import { CollapsibleRoot } from '../root/CollapsibleRoot';
@@ -22,7 +27,7 @@ const stateAttributesMapping: StateAttributesMapping<CollapsibleRoot.State> = {
  */
 export const CollapsibleTrigger = React.forwardRef(function CollapsibleTrigger(
   componentProps: CollapsibleTrigger.Props,
-  forwardedRef: React.ForwardedRef<HTMLButtonElement>,
+  forwardedRef: React.ForwardedRef<HTMLElement>,
 ) {
   const {
     panelId,
@@ -60,15 +65,30 @@ export const CollapsibleTrigger = React.forwardRef(function CollapsibleTrigger(
   const element = useRenderElement('button', componentProps, {
     state,
     ref: [forwardedRef, buttonRef],
-    props: [props, elementProps, getButtonProps],
+    props: [props, elementProps as React.ComponentPropsWithoutRef<'button'>, getButtonProps],
     stateAttributesMapping,
   });
 
   return element;
 });
 
-export interface CollapsibleTriggerProps
-  extends NativeButtonProps, BaseUIComponentProps<'button', CollapsibleRoot.State> {}
+interface CollapsibleTriggerNativeProps
+  extends NativeButtonProps, BaseUIComponentProps<'button', CollapsibleRoot.State> {
+  nativeButton?: true;
+}
+
+interface CollapsibleTriggerNonNativeProps
+  extends NonNativeButtonProps, GenericHTMLProps<CollapsibleRoot.State> {
+  nativeButton: false;
+  /**
+   * Whether the component should ignore user interaction.
+   */
+  disabled?: boolean;
+}
+
+export type CollapsibleTriggerProps =
+  | CollapsibleTriggerNativeProps
+  | CollapsibleTriggerNonNativeProps;
 
 export namespace CollapsibleTrigger {
   export type Props = CollapsibleTriggerProps;
