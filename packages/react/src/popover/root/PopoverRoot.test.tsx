@@ -438,6 +438,98 @@ describe('<Popover.Root />', () => {
           });
         });
 
+        it('closes a nested combobox popup when tabbing out of the popover', async () => {
+          const { user } = await render(
+            <div>
+              <TestPopover
+                rootProps={{ defaultOpen: true }}
+                portalProps={{ keepMounted: true }}
+                popupProps={{
+                  children: (
+                    <Combobox.Root items={['a', 'b']}>
+                      <Combobox.Input data-testid="combobox-input" />
+                      <Combobox.Portal>
+                        <Combobox.Positioner>
+                          <Combobox.Popup>
+                            <Combobox.List>
+                              <Combobox.Item value="a">a</Combobox.Item>
+                              <Combobox.Item value="b">b</Combobox.Item>
+                            </Combobox.List>
+                          </Combobox.Popup>
+                        </Combobox.Positioner>
+                      </Combobox.Portal>
+                    </Combobox.Root>
+                  ),
+                }}
+                afterTrigger={<input data-testid="focus-target" />}
+              />
+            </div>,
+          );
+
+          const comboboxInput = screen.getByTestId('combobox-input');
+          await user.click(comboboxInput);
+          await flushMicrotasks();
+
+          expect(screen.getByRole('listbox')).toBeVisible();
+
+          await user.tab();
+
+          expect(screen.getByTestId('focus-target')).toHaveFocus();
+
+          await waitFor(() => {
+            expect(screen.getByTestId('popover-popup')).to.have.attribute('data-closed');
+          });
+
+          await waitFor(() => {
+            expect(screen.queryByRole('listbox')).to.equal(null);
+          });
+        });
+
+        it('closes a nested combobox popup when tabbing backward to the trigger', async () => {
+          const { user } = await render(
+            <div>
+              <TestPopover
+                rootProps={{ defaultOpen: true }}
+                portalProps={{ keepMounted: true }}
+                popupProps={{
+                  children: (
+                    <Combobox.Root items={['a', 'b']}>
+                      <Combobox.Input data-testid="combobox-input" />
+                      <Combobox.Portal>
+                        <Combobox.Positioner>
+                          <Combobox.Popup>
+                            <Combobox.List>
+                              <Combobox.Item value="a">a</Combobox.Item>
+                              <Combobox.Item value="b">b</Combobox.Item>
+                            </Combobox.List>
+                          </Combobox.Popup>
+                        </Combobox.Positioner>
+                      </Combobox.Portal>
+                    </Combobox.Root>
+                  ),
+                }}
+              />
+            </div>,
+          );
+
+          const comboboxInput = screen.getByTestId('combobox-input');
+          await user.click(comboboxInput);
+          await flushMicrotasks();
+
+          expect(screen.getByRole('listbox')).toBeVisible();
+
+          const trigger = screen.getByTestId('trigger');
+          expect(trigger).not.to.have.attribute('aria-hidden', 'true');
+
+          await user.tab({ shift: true });
+
+          expect(screen.getByRole('button', { name: 'Toggle' })).toHaveFocus();
+
+          await waitFor(() => {
+            expect(screen.queryByRole('listbox')).to.equal(null);
+          });
+        });
+
         it.skipIf(isJSDOM)(
           'moves focus to the trigger when tabbing backward from the open popup then to the popup when tabbing forward',
           async () => {

@@ -300,6 +300,9 @@ export function FloatingFocusManager(props: FloatingFocusManagerProps): React.JS
   const tree = useFloatingTree(externalTree);
   const portalContext = usePortalContext();
 
+  const beforeGuardRef = React.useRef<HTMLSpanElement | null>(null);
+  const afterGuardRef = React.useRef<HTMLSpanElement | null>(null);
+
   const startDismissButtonRef = React.useRef<HTMLButtonElement>(null);
   const endDismissButtonRef = React.useRef<HTMLButtonElement>(null);
   const preventReturnFocusRef = React.useRef(false);
@@ -315,6 +318,13 @@ export function FloatingFocusManager(props: FloatingFocusManagerProps): React.JS
 
   const isInsidePortal = portalContext != null;
   const floatingFocusElement = getFloatingFocusElement(floating);
+
+  const mergedBeforeGuardRef = useMergedRefs(
+    beforeGuardRef,
+    beforeContentFocusGuardRef,
+    portalContext?.beforeInsideRef,
+  );
+  const mergedAfterGuardRef = useMergedRefs(afterGuardRef, portalContext?.afterInsideRef);
 
   const getTabbableContent = useStableCallback(
     (container: Element | null = floatingFocusElement) => {
@@ -455,6 +465,20 @@ export function FloatingFocusManager(props: FloatingFocusManagerProps): React.JS
       queueMicrotask(() => {
         const nodeId = getNodeId();
         const triggers = store.context.triggerElements;
+        const isRelatedFocusGuard = Boolean(
+          relatedTarget?.hasAttribute(createAttribute('focus-guard')) &&
+          [
+            beforeGuardRef.current,
+            afterGuardRef.current,
+            portalContext?.beforeInsideRef.current,
+            portalContext?.afterInsideRef.current,
+            portalContext?.beforeOutsideRef.current,
+            portalContext?.afterOutsideRef.current,
+            resolveRef(previousFocusableElement),
+            resolveRef(nextFocusableElement),
+          ].some((focusGuard) => focusGuard === relatedTarget),
+        );
+
         const movedToUnrelatedNode = !(
           contains(domReference, relatedTarget) ||
           contains(floating, relatedTarget) ||
@@ -462,7 +486,7 @@ export function FloatingFocusManager(props: FloatingFocusManagerProps): React.JS
           contains(portalContext?.portalNode, relatedTarget) ||
           (relatedTarget != null && triggers.hasElement(relatedTarget)) ||
           triggers.hasMatchingElement((trigger) => contains(trigger, relatedTarget)) ||
-          relatedTarget?.hasAttribute(createAttribute('focus-guard')) ||
+          isRelatedFocusGuard ||
           (tree &&
             (getNodeChildren(tree.nodesRef.current, nodeId).find(
               (node) =>
@@ -475,7 +499,8 @@ export function FloatingFocusManager(props: FloatingFocusManagerProps): React.JS
                     node.context?.elements.floating,
                     getFloatingFocusElement(node.context?.elements.floating),
                   ].includes(relatedTarget) ||
-                  node.context?.elements.domReference === relatedTarget,
+                  (!isUntrappedTypeableCombobox &&
+                    node.context?.elements.domReference === relatedTarget),
               )))
         );
 
@@ -612,20 +637,12 @@ export function FloatingFocusManager(props: FloatingFocusManagerProps): React.JS
     getNodeId,
     orderRef,
     dataRef,
+    nextFocusableElement,
+    previousFocusableElement,
     blurTimeout,
     pointerDownTimeout,
     restoreFocusFrame,
   ]);
-
-  const beforeGuardRef = React.useRef<HTMLSpanElement | null>(null);
-  const afterGuardRef = React.useRef<HTMLSpanElement | null>(null);
-
-  const mergedBeforeGuardRef = useMergedRefs(
-    beforeGuardRef,
-    beforeContentFocusGuardRef,
-    portalContext?.beforeInsideRef,
-  );
-  const mergedAfterGuardRef = useMergedRefs(afterGuardRef, portalContext?.afterInsideRef);
 
   React.useEffect(() => {
     if (disabled || !floating || !open) {
@@ -642,9 +659,16 @@ export function FloatingFocusManager(props: FloatingFocusManagerProps): React.JS
       isTypeableCombobox(node.context?.elements.domReference || null),
     )?.context?.elements.domReference;
 
+    const ancestorDomReferences = isUntrappedTypeableCombobox
+      ? ancestors
+          .map((node) => node.context?.elements.domReference)
+          .filter((el): el is Element => el != null)
+      : [];
+
     const insideElements = [
       floating,
       rootAncestorComboboxDomReference,
+      ...ancestorDomReferences,
       ...portalNodes,
       ...getInsideElements(),
       startDismissButtonRef.current,
