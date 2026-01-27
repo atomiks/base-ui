@@ -1,3 +1,4 @@
+import * as React from 'react';
 import { expect } from 'chai';
 import { spy } from 'sinon';
 import { act, flushMicrotasks, fireEvent, screen, waitFor } from '@mui/internal-test-utils';
@@ -1345,6 +1346,39 @@ describe('<Tabs.Root />', () => {
       });
 
       expect(root).to.have.attribute('data-activation-direction', 'up');
+    });
+
+    it('should update the activation direction when the value changes programmatically', async () => {
+      function ControlledExample() {
+        const [value, setValue] = React.useState(0);
+
+        return (
+          <div>
+            <button type="button" onClick={() => setValue((prev) => (prev === 0 ? 1 : 0))}>
+              Next
+            </button>
+            <Tabs.Root data-testid="root" value={value}>
+              <Tabs.List>
+                <Tabs.Tab value={0} />
+                <Tabs.Tab value={1} />
+              </Tabs.List>
+            </Tabs.Root>
+          </div>
+        );
+      }
+
+      const { user } = await render(<ControlledExample />);
+
+      const root = screen.getByTestId('root');
+      const nextButton = screen.getByRole('button', { name: 'Next' });
+
+      expect(root).to.have.attribute('data-activation-direction', 'none');
+
+      await user.click(nextButton);
+      expect(root).to.have.attribute('data-activation-direction', 'right');
+
+      await user.click(nextButton);
+      expect(root).to.have.attribute('data-activation-direction', 'left');
     });
   });
 

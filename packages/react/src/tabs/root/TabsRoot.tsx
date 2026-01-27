@@ -61,6 +61,8 @@ export const TabsRoot = React.forwardRef(function TabsRoot(
 
   const [tabActivationDirection, setTabActivationDirection] =
     React.useState<TabsTab.ActivationDirection>('none');
+  const previousValueRef = React.useRef<TabsTab.Value | null | undefined>(value);
+  const skipActivationDirectionValueRef = React.useRef<TabsTab.Value | null | undefined>(undefined);
 
   const onValueChange = useStableCallback(
     (newValue: TabsTab.Value, eventDetails: TabsRoot.ChangeEventDetails) => {
@@ -70,6 +72,7 @@ export const TabsRoot = React.forwardRef(function TabsRoot(
         return;
       }
 
+      skipActivationDirectionValueRef.current = newValue;
       setValue(newValue);
       setTabActivationDirection(eventDetails.activationDirection);
     },
@@ -220,6 +223,7 @@ export const TabsRoot = React.forwardRef(function TabsRoot(
       return;
     }
 
+    skipActivationDirectionValueRef.current = fallbackValue;
     setValue(fallbackValue);
     setTabActivationDirection('none');
   }, [
@@ -233,6 +237,59 @@ export const TabsRoot = React.forwardRef(function TabsRoot(
     tabMap,
     value,
   ]);
+
+  useIsoLayoutEffect(() => {
+    if (skipActivationDirectionValueRef.current === value) {
+      skipActivationDirectionValueRef.current = undefined;
+      previousValueRef.current = value;
+      return;
+    }
+
+    const previousValue = previousValueRef.current;
+    previousValueRef.current = value;
+
+    if (previousValue === value) {
+      return;
+    }
+
+    if (previousValue == null || value == null) {
+      setTabActivationDirection('none');
+      return;
+    }
+
+    const previousTab = getTabElementBySelectedValue(previousValue);
+    const nextTab = getTabElementBySelectedValue(value);
+
+    if (previousTab == null || nextTab == null) {
+      setTabActivationDirection('none');
+      return;
+    }
+
+    const previousRect = previousTab.getBoundingClientRect();
+    const nextRect = nextTab.getBoundingClientRect();
+
+    if (orientation === 'horizontal') {
+      if (nextRect.left > previousRect.left) {
+        setTabActivationDirection('right');
+        return;
+      }
+      if (nextRect.left < previousRect.left) {
+        setTabActivationDirection('left');
+        return;
+      }
+    } else {
+      if (nextRect.top > previousRect.top) {
+        setTabActivationDirection('down');
+        return;
+      }
+      if (nextRect.top < previousRect.top) {
+        setTabActivationDirection('up');
+        return;
+      }
+    }
+
+    setTabActivationDirection('none');
+  }, [getTabElementBySelectedValue, orientation, value]);
 
   const state: TabsRoot.State = {
     orientation,
