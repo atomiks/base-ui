@@ -439,12 +439,13 @@ export const SelectPopup = React.forwardRef(function SelectPopup(
   ]);
 
   React.useEffect(() => {
-    if (!alignItemWithTriggerActive || !positionerElement || !open) {
-      if (!open) {
-        allowWindowResizeDismissalRef.current = false;
-      }
+    if (!open) {
+      allowWindowResizeDismissalRef.current = false;
+    }
+
+    if (!open || !alignItemWithTriggerActive || !positionerElement) {
       resizeDismissalTimeout.clear();
-      return undefined;
+      return;
     }
 
     const win = ownerWindow(positionerElement);
@@ -465,9 +466,7 @@ export const SelectPopup = React.forwardRef(function SelectPopup(
 
     win.addEventListener('resize', handleResize);
 
-    return () => {
-      win.removeEventListener('resize', handleResize);
-    };
+    return () => win.removeEventListener('resize', handleResize);
   }, [setOpen, alignItemWithTriggerActive, positionerElement, open, resizeDismissalTimeout]);
 
   const defaultProps: HTMLProps = {
