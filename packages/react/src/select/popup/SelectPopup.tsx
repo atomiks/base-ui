@@ -78,6 +78,7 @@ export const SelectPopup = React.forwardRef(function SelectPopup(
   const { nonce, disableStyleElements } = useCSPContext();
 
   const highlightTimeout = useTimeout();
+  const resizeDismissalTimeout = useTimeout();
 
   const id = useStore(store, selectors.id);
   const open = useStore(store, selectors.open);
@@ -93,6 +94,7 @@ export const SelectPopup = React.forwardRef(function SelectPopup(
   const maxHeightRef = React.useRef(0);
   const initialPlacedRef = React.useRef(false);
   const originalPositionerStylesRef = React.useRef<React.CSSProperties>({});
+  const allowWindowResizeDismissalRef = React.useRef(false);
 
   const scrollArrowFrame = useAnimationFrame();
 
@@ -438,13 +440,27 @@ export const SelectPopup = React.forwardRef(function SelectPopup(
 
   React.useEffect(() => {
     if (!alignItemWithTriggerActive || !positionerElement || !open) {
+      if (!open) {
+        allowWindowResizeDismissalRef.current = false;
+      }
+      resizeDismissalTimeout.clear();
       return undefined;
     }
 
     const win = ownerWindow(positionerElement);
 
     function handleResize(event: UIEvent) {
+      if (!allowWindowResizeDismissalRef.current) {
+        return;
+      }
       setOpen(false, createChangeEventDetails(REASONS.windowResize, event));
+    }
+
+    // Avoid closing immediately when the popup causes a resize (e.g. extension popups).
+    if (!allowWindowResizeDismissalRef.current) {
+      resizeDismissalTimeout.start(300, () => {
+        allowWindowResizeDismissalRef.current = true;
+      });
     }
 
     win.addEventListener('resize', handleResize);
@@ -452,7 +468,7 @@ export const SelectPopup = React.forwardRef(function SelectPopup(
     return () => {
       win.removeEventListener('resize', handleResize);
     };
-  }, [setOpen, alignItemWithTriggerActive, positionerElement, open]);
+  }, [setOpen, alignItemWithTriggerActive, positionerElement, open, resizeDismissalTimeout]);
 
   const defaultProps: HTMLProps = {
     ...(listElement
