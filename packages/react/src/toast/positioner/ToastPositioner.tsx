@@ -51,10 +51,13 @@ export const ToastPositioner = React.forwardRef(function ToastPositioner(
 
   const [positionerElement, setPositionerElement] = React.useState<HTMLDivElement | null>(null);
 
-  const domIndex = React.useMemo(() => toasts.indexOf(toast), [toast, toasts]);
+  const domIndex = React.useMemo(
+    () => toasts.findIndex((t) => t.id === toast.id),
+    [toast.id, toasts],
+  );
   const visibleIndex = React.useMemo(
-    () => toasts.filter((t) => t.transitionStatus !== 'ending').indexOf(toast),
-    [toast, toasts],
+    () => toasts.filter((t) => t.transitionStatus !== 'ending').findIndex((t) => t.id === toast.id),
+    [toast.id, toasts],
   );
 
   const anchor = isElement(anchorProp) ? anchorProp : null;

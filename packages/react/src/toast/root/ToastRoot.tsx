@@ -127,14 +127,20 @@ export const ToastRoot = React.forwardRef(function ToastRoot(
   const swipeCancelBaselineRef = React.useRef({ x: 0, y: 0 });
   const isFirstPointerMoveRef = React.useRef(false);
 
-  const domIndex = React.useMemo(() => toasts.indexOf(toast), [toast, toasts]);
+  const domIndex = React.useMemo(
+    () => toasts.findIndex((t) => t.id === toast.id),
+    [toast.id, toasts],
+  );
   const visibleIndex = React.useMemo(
-    () => toasts.filter((t) => t.transitionStatus !== 'ending').indexOf(toast),
-    [toast, toasts],
+    () => toasts.filter((t) => t.transitionStatus !== 'ending').findIndex((t) => t.id === toast.id),
+    [toast.id, toasts],
   );
   const offsetY = React.useMemo(() => {
-    return toasts.slice(0, toasts.indexOf(toast)).reduce((acc, t) => acc + (t.height || 0), 0);
-  }, [toasts, toast]);
+    if (domIndex <= 0) {
+      return 0;
+    }
+    return toasts.slice(0, domIndex).reduce((acc, t) => acc + (t.height || 0), 0);
+  }, [toasts, domIndex]);
 
   useOpenChangeComplete({
     open: toast.transitionStatus !== 'ending',

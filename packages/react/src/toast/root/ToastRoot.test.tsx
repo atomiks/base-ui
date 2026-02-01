@@ -25,6 +25,52 @@ describe('<Toast.Root />', () => {
     },
   }));
 
+  it('derives toast index from id when toast object is cloned', async () => {
+    function ToastList() {
+      return Toast.useToastManager().toasts.map((toastItem) => (
+        <Toast.Root
+          key={toastItem.id}
+          toast={{ ...toastItem }}
+          data-testid={`toast-root-${toastItem.id}`}
+        >
+          <Toast.Title>{toastItem.title}</Toast.Title>
+        </Toast.Root>
+      ));
+    }
+
+    function App() {
+      const { add } = Toast.useToastManager();
+      const addedRef = React.useRef(false);
+
+      React.useEffect(() => {
+        if (addedRef.current) {
+          return;
+        }
+        addedRef.current = true;
+        add({ id: 'first', title: 'First toast' });
+        add({ id: 'second', title: 'Second toast' });
+      }, [add]);
+
+      return (
+        <Toast.Viewport>
+          <ToastList />
+        </Toast.Viewport>
+      );
+    }
+
+    await render(
+      <Toast.Provider>
+        <App />
+      </Toast.Provider>,
+    );
+
+    const secondToast = await screen.findByTestId('toast-root-second');
+    const firstToast = await screen.findByTestId('toast-root-first');
+
+    expect(secondToast.style.getPropertyValue('--toast-index')).to.equal('0');
+    expect(firstToast.style.getPropertyValue('--toast-index')).to.equal('1');
+  });
+
   it.skipIf(isJSDOM)('recalculates height when content mutates', async () => {
     function ToastList() {
       return Toast.useToastManager().toasts.map((toastItem) => (
