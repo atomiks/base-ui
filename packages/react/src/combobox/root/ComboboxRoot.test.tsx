@@ -2808,6 +2808,116 @@ describe('<Combobox.Root />', () => {
       expect(activeEl?.textContent).to.equal('banana');
     });
 
+    it('retains highlight after clearing the last selection while filtering (multiple mode)', async () => {
+      const { user } = await render(
+        <Combobox.Root
+          items={['apple', 'banana', 'cherry']}
+          multiple
+          autoHighlight
+          defaultOpen
+          defaultValue={['apple']}
+        >
+          <Combobox.Chips>
+            <Combobox.Value>
+              {(value: string[]) => (
+                <React.Fragment>
+                  {value.map((item) => (
+                    <Combobox.Chip key={item}>
+                      {item}
+                      <Combobox.ChipRemove aria-label={`Remove ${item}`} />
+                    </Combobox.Chip>
+                  ))}
+                  <Combobox.Input data-testid="input" />
+                </React.Fragment>
+              )}
+            </Combobox.Value>
+          </Combobox.Chips>
+          <Combobox.Portal>
+            <Combobox.Positioner>
+              <Combobox.Popup>
+                <Combobox.List>
+                  {(item: string) => (
+                    <Combobox.Item key={item} value={item}>
+                      {item}
+                    </Combobox.Item>
+                  )}
+                </Combobox.List>
+              </Combobox.Popup>
+            </Combobox.Positioner>
+          </Combobox.Portal>
+        </Combobox.Root>,
+      );
+
+      const input = screen.getByTestId('input');
+
+      await waitFor(() => {
+        expect(screen.getByRole('listbox')).not.to.equal(null);
+      });
+
+      await user.type(input, 'a');
+      await waitFor(() => expect(input).to.have.attribute('aria-activedescendant'));
+
+      await user.click(screen.getByRole('button', { name: 'Remove apple', hidden: true }));
+
+      await waitFor(() => expect(input).to.have.attribute('aria-activedescendant'));
+    });
+
+    it('keeps the active item highlighted after clearing the last selected value', async () => {
+      const items = [
+        { id: 'js', value: 'JavaScript' },
+        { id: 'ts', value: 'TypeScript' },
+        { id: 'py', value: 'Python' },
+      ];
+
+      const { user } = await render(
+        <Combobox.Root items={items} multiple>
+          <Combobox.Input data-testid="input" />
+          <Combobox.Portal>
+            <Combobox.Positioner>
+              <Combobox.Popup>
+                <Combobox.List>
+                  {(item: (typeof items)[number]) => (
+                    <Combobox.Item key={item.id} value={item}>
+                      {item.value}
+                    </Combobox.Item>
+                  )}
+                </Combobox.List>
+              </Combobox.Popup>
+            </Combobox.Positioner>
+          </Combobox.Portal>
+        </Combobox.Root>,
+      );
+
+      const input = screen.getByTestId('input');
+
+      await user.click(input);
+      await waitFor(() => expect(screen.getByRole('listbox')).not.to.equal(null));
+
+      await user.click(screen.getByRole('option', { name: 'JavaScript' }));
+      await user.click(screen.getByRole('option', { name: 'TypeScript' }));
+
+      await user.type(input, 'pyth');
+      await user.click(screen.getByRole('option', { name: 'Python' }));
+
+      await waitFor(() => expect(screen.queryByRole('listbox')).to.equal(null));
+
+      await user.click(input);
+      await waitFor(() => expect(screen.getByRole('listbox')).not.to.equal(null));
+
+      await user.hover(screen.getByRole('option', { name: 'JavaScript' }));
+      await user.click(screen.getByRole('option', { name: 'JavaScript' }));
+      await user.hover(screen.getByRole('option', { name: 'TypeScript' }));
+      await user.click(screen.getByRole('option', { name: 'TypeScript' }));
+
+      const pythonOption = screen.getByRole('option', { name: 'Python' });
+      await user.hover(pythonOption);
+      await user.click(pythonOption);
+
+      await waitFor(() => {
+        expect(input).to.have.attribute('aria-activedescendant', pythonOption.id);
+      });
+    });
+
     it('keeps highlight in sync after selecting then backspacing to a single match', async () => {
       const items = ['alpha', 'beta', 'gamma', 'delta', 'epsilon'];
       const { user } = await render(

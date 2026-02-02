@@ -945,7 +945,7 @@ export function AriaCombobox<Value = any, Mode extends SelectionMode = 'none'>(
       store.state.selectedIndex !== null &&
       (!Array.isArray(selectedValue) || selectedValue.length === 0)
     ) {
-      setIndices({ activeIndex: null, selectedIndex: null });
+      setIndices({ selectedIndex: null });
     }
 
     if (single && !hasInputValue && !inputInsidePopup) {

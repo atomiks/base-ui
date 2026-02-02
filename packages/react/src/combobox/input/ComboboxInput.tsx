@@ -141,7 +141,7 @@ export const ComboboxInput = React.forwardRef(function ComboboxInput(
             : highlightedChipIndex;
         // If the computed index is negative, treat it as no highlight.
         nextIndex = computedNextIndex >= 0 ? computedNextIndex : undefined;
-        store.state.setIndices({ activeIndex: null, selectedIndex: null, type: 'keyboard' });
+        store.state.setIndices({ selectedIndex: null });
       }
       return nextIndex;
     }
@@ -160,7 +160,7 @@ export const ComboboxInput = React.forwardRef(function ComboboxInput(
       event.currentTarget.value === '' &&
       selectedValue.length > 0
     ) {
-      store.state.setIndices({ activeIndex: null, selectedIndex: null, type: 'keyboard' });
+      store.state.setIndices({ selectedIndex: null });
       event.preventDefault();
     }
 
@@ -365,12 +365,8 @@ export const ComboboxInput = React.forwardRef(function ComboboxInput(
             selectedValue.length > 0
           ) {
             const newValue = selectedValue.slice(0, -1);
-            // If the removed item was also the active (highlighted) item, clear highlight
-            store.state.setIndices({
-              activeIndex: null,
-              selectedIndex: null,
-              type: store.state.keyboardActiveRef.current ? 'keyboard' : 'pointer',
-            });
+            // Reset selected index so list navigation doesn't keep a stale selection.
+            store.state.setIndices({ selectedIndex: null });
             store.state.setSelectedValue(
               newValue,
               createChangeEventDetails(REASONS.none, event.nativeEvent),
