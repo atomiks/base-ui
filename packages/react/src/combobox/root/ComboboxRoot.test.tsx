@@ -2867,6 +2867,7 @@ describe('<Combobox.Root />', () => {
         { id: 'js', value: 'JavaScript' },
         { id: 'ts', value: 'TypeScript' },
         { id: 'py', value: 'Python' },
+        { id: 'rb', value: 'Ruby' },
       ];
 
       const { user } = await render(
@@ -2901,7 +2902,8 @@ describe('<Combobox.Root />', () => {
 
       await waitFor(() => expect(screen.queryByRole('listbox')).to.equal(null));
 
-      await user.click(input);
+      input.focus();
+      await user.keyboard('{ArrowDown}');
       await waitFor(() => expect(screen.getByRole('listbox')).not.to.equal(null));
 
       await user.hover(screen.getByRole('option', { name: 'JavaScript' }));
@@ -2915,6 +2917,12 @@ describe('<Combobox.Root />', () => {
 
       await waitFor(() => {
         expect(input).to.have.attribute('aria-activedescendant', pythonOption.id);
+      });
+
+      await user.keyboard('{ArrowDown}');
+      const rubyOption = screen.getByRole('option', { name: 'Ruby' });
+      await waitFor(() => {
+        expect(input).to.have.attribute('aria-activedescendant', rubyOption.id);
       });
     });
 

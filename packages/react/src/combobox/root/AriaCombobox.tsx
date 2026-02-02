@@ -1057,12 +1057,18 @@ export function AriaCombobox<Value = any, Mode extends SelectionMode = 'none'>(
     },
   });
 
+  // Keep keyboard navigation anchored to the current highlight after clearing the last selection.
+  const listNavigationSelectedIndex =
+    multiple && (!Array.isArray(selectedValue) || selectedValue.length === 0) && activeIndex != null
+      ? activeIndex
+      : selectedIndex;
+
   const listNavigation = useListNavigation(floatingRootContext, {
     enabled: !readOnly && !disabled,
     id,
     listRef,
     activeIndex,
-    selectedIndex,
+    selectedIndex: listNavigationSelectedIndex,
     virtual: true,
     loopFocus,
     allowEscape: loopFocus && !autoHighlightMode,
