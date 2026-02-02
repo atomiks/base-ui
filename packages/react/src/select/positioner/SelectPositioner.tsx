@@ -163,7 +163,10 @@ export const SelectPositioner = React.forwardRef(function SelectPositioner(
 
   const onMapChange = useStableCallback(
     (map: Map<Element, { index?: (number | null) | undefined } | null>) => {
-      if (map.size === 0 && prevMapSizeRef.current === 0) {
+      // When all items unmount (e.g., due to conditional rendering), we shouldn't
+      // reset the controlled value as the items will remount shortly.
+      if (map.size === 0) {
+        prevMapSizeRef.current = 0;
         return;
       }
 

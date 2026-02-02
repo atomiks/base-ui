@@ -2306,6 +2306,74 @@ describe('<Select.Root />', () => {
       });
     });
 
+    it('does not reset the controlled value when all items temporarily unmount', async () => {
+      if (reactMajor <= 18) {
+        ignoreActWarnings();
+      }
+
+      const onValueChange = spy();
+
+      function TestControlled() {
+        const [itemsMounted, setItemsMounted] = React.useState(true);
+        const [items, setItems] = React.useState(['a', 'b', 'c']);
+        const [value, setValue] = React.useState<string | null>('b');
+        return (
+          <div>
+            <button
+              data-testid="remove-c"
+              onClick={() => setItems((prev) => prev.filter((item) => item !== 'c'))}
+            >
+              Remove C
+            </button>
+            <button data-testid="toggle-items" onClick={() => setItemsMounted((prev) => !prev)}>
+              Toggle Items
+            </button>
+            <Select.Root
+              value={value}
+              defaultOpen
+              onValueChange={(nextValue) => {
+                onValueChange(nextValue);
+                setValue(nextValue);
+              }}
+            >
+              <Select.Trigger data-testid="trigger">
+                <Select.Value />
+              </Select.Trigger>
+              <Select.Portal>
+                <Select.Positioner>
+                  <Select.Popup>
+                    <React.Activity mode={itemsMounted ? 'visible' : 'hidden'}>
+                      {itemsMounted
+                        ? items.map((item) => (
+                            <Select.Item key={item} value={item}>
+                              {item}
+                            </Select.Item>
+                          ))
+                        : null}
+                    </React.Activity>
+                  </Select.Popup>
+                </Select.Positioner>
+              </Select.Portal>
+            </Select.Root>
+          </div>
+        );
+      }
+
+      const { user } = await render(<TestControlled />);
+
+      await screen.findByRole('option', { name: 'b' });
+
+      await user.click(screen.getByTestId('remove-c'));
+      await flushMicrotasks();
+
+      await user.click(screen.getByTestId('toggle-items'));
+      await user.click(screen.getByTestId('toggle-items'));
+      await flushMicrotasks();
+
+      expect(onValueChange.callCount).to.equal(0);
+      expect(screen.getByTestId('trigger')).to.have.text('b');
+    });
+
     it('falls back to null when both selected and initial default are removed (uncontrolled)', async () => {
       if (reactMajor <= 18) {
         ignoreActWarnings();
