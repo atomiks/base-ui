@@ -22,6 +22,8 @@ import { REASONS } from '../../utils/reasons';
 import { useComboboxRootContext } from './ComboboxRootContext';
 import { selectors } from '../store';
 
+type FruitItem = { value: string; label: string };
+
 function AsyncItemsCombobox() {
   const [items, setItems] = React.useState(['Apple', 'Banana', 'Cherry']);
   const [selectedValue, setSelectedValue] = React.useState<string | null>(null);
@@ -5035,6 +5037,51 @@ describe('<Combobox.Root />', () => {
 
       await user.keyboard('{ArrowRight}');
       expect(input).toHaveFocus();
+    });
+  });
+
+  describe('value inference', () => {
+    it('treats primitive selected values as item.value when items are objects', async () => {
+      const items: FruitItem[] = [
+        { value: 'apple', label: 'Apple' },
+        { value: 'banana', label: 'Banana' },
+      ];
+      const onItemHighlighted = spy();
+
+      const { user } = await render(
+        <Combobox.Root
+          items={items}
+          defaultValue="apple"
+          defaultOpen
+          onItemHighlighted={onItemHighlighted}
+        >
+          <Combobox.Input />
+          <Combobox.Portal>
+            <Combobox.Positioner>
+              <Combobox.Popup>
+                <Combobox.List>
+                  {(item: FruitItem) => (
+                    <Combobox.Item key={item.value} value={item.value}>
+                      {item.label}
+                    </Combobox.Item>
+                  )}
+                </Combobox.List>
+              </Combobox.Popup>
+            </Combobox.Positioner>
+          </Combobox.Portal>
+        </Combobox.Root>,
+      );
+
+      const input = screen.getByRole('combobox');
+      await user.click(input);
+      await user.keyboard('{ArrowDown}');
+
+      await waitFor(() => {
+        expect(onItemHighlighted.callCount).to.be.greaterThan(0);
+      });
+
+      const highlightedValue = onItemHighlighted.lastCall.args[0];
+      expect(highlightedValue).to.equal('apple');
     });
   });
 });

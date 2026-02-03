@@ -8,6 +8,13 @@ const objectItems = [
   { value: 'c', label: 'cherry' },
 ];
 
+const mismatchedItems = [
+  { id: 1, name: 'Alice' },
+  { id: 2, name: 'Bob' },
+];
+
+const numberItems = [{ value: 1, label: 'one' }];
+
 const objectItemsReadonly = [
   { value: 'a', label: 'apple' },
   { value: 'b', label: 'banana' },
@@ -29,6 +36,16 @@ const groupItemsReadonly = [
       { value: 'd', label: 'daikon' },
       { value: 'e', label: 'endive' },
       { value: 'f', label: 'fennel' },
+    ],
+  },
+] as const;
+
+const groupNumberItems = [
+  {
+    value: 'numbers',
+    items: [
+      { value: 1, label: 'one' },
+      { value: 2, label: 'two' },
     ],
   },
 ] as const;
@@ -68,6 +85,12 @@ const groupItemsReadonly = [
 />;
 
 <Combobox.Root
+  // @ts-expect-error - items shape doesn't match string value type
+  items={mismatchedItems}
+  defaultValue="a"
+/>;
+
+<Combobox.Root
   items={objectItemsReadonly}
   defaultValue="a"
   onValueChange={(value) => {
@@ -84,6 +107,44 @@ const groupItemsReadonly = [
     // @ts-expect-error - possibly null
     value.startsWith('a');
   }}
+/>;
+
+<Combobox.Root items={objectItems} defaultValue="a" />;
+
+<Combobox.Root items={numberItems} defaultValue={1} />;
+
+<Combobox.Root
+  // @ts-expect-error - items shape doesn't match string value type
+  items={numberItems}
+  defaultValue="1"
+/>;
+
+<Combobox.Root items={groupItemsReadonly} defaultValue="a" />;
+
+<Combobox.Root items={groupNumberItems} defaultValue={1} />;
+
+<Combobox.Root
+  // @ts-expect-error - items shape doesn't match string value type
+  items={mismatchedItems}
+  value="a"
+/>;
+
+<Combobox.Root
+  // @ts-expect-error - items shape doesn't match number value type
+  items={mismatchedItems}
+  defaultValue={1}
+/>;
+
+<Combobox.Root
+  // @ts-expect-error - items shape doesn't match number value type
+  items={groupItemsReadonly}
+  defaultValue={1}
+/>;
+
+<Combobox.Root
+  // @ts-expect-error - items shape doesn't match string value type
+  items={groupNumberItems}
+  defaultValue="1"
 />;
 
 <Combobox.Root

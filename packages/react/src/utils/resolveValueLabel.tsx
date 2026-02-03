@@ -14,9 +14,17 @@ interface LabeledItem {
   label: React.ReactNode;
 }
 
+export function isPrimitiveValue(value: unknown): boolean {
+  return value != null && typeof value !== 'object' && typeof value !== 'function';
+}
+
+export function hasValueField(item: any): item is { value: unknown } {
+  return item != null && typeof item === 'object' && 'value' in item;
+}
+
 export interface Group<Item = any> {
   value: unknown;
-  items: Item[];
+  items: ReadonlyArray<Item>;
 }
 
 export function isGroupedItems(
