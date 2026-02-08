@@ -2,6 +2,7 @@ import * as React from 'react';
 import { createSelector, ReactStore } from '@base-ui/utils/store';
 import { EMPTY_OBJECT } from '@base-ui/utils/empty';
 import { useRefWithInit } from '@base-ui/utils/useRefWithInit';
+import { type InteractionType } from '@base-ui/utils/useEnhancedClickHandler';
 import { MenuParent, MenuRoot } from '../root/MenuRoot';
 import { FloatingTreeStore } from '../../floating-ui-react/components/FloatingTreeStore';
 import { HTMLProps } from '../../utils/types';
@@ -23,6 +24,7 @@ export type State<Payload> = PopupStoreState<Payload> & {
   hoverEnabled: boolean;
   stickIfOpen: boolean;
   instantType: 'dismiss' | 'click' | 'group' | undefined;
+  openMethod: InteractionType | null;
   openChangeReason: MenuRoot.ChangeEventReason | null;
   floatingTreeRoot: FloatingTreeStore;
   floatingNodeId: string | undefined;
@@ -73,6 +75,7 @@ const selectors = {
   ),
   hoverEnabled: createSelector((state: State<unknown>) => state.hoverEnabled),
   instantType: createSelector((state: State<unknown>) => state.instantType),
+  openMethod: createSelector((state: State<unknown>) => state.openMethod),
   lastOpenChangeReason: createSelector((state: State<unknown>) => state.openChangeReason),
   floatingTreeRoot: createSelector((state: State<unknown>): FloatingTreeStore => {
     if (state.parent.type === 'menu') {
@@ -177,6 +180,7 @@ function createInitialState<Payload>(): State<Payload> {
     activeIndex: null,
     hoverEnabled: true,
     instantType: undefined,
+    openMethod: null,
     openChangeReason: null,
     floatingTreeRoot: new FloatingTreeStore(),
     floatingNodeId: undefined,

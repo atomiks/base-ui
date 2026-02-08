@@ -617,7 +617,29 @@ describe('<Menu.Root />', () => {
     });
 
     describe('focus management', () => {
-      it('focuses the first item after the menu is opened by keyboard', async () => {
+      it('focuses the menu popup when opened by pointer input', async () => {
+        const { user } = await render(
+          <TestMenu
+            popupProps={{
+              children: (
+                <React.Fragment>
+                  <input data-testid="menu-input" />
+                  <Menu.Item data-testid="item-1">Item 1</Menu.Item>
+                </React.Fragment>
+              ),
+            }}
+          />,
+        );
+
+        const trigger = screen.getByRole('button', { name: 'Toggle' });
+        await user.click(trigger);
+
+        await waitFor(() => {
+          expect(screen.getByTestId('menu')).toHaveFocus();
+        });
+      });
+
+      it('focuses the first item after the menu is opened by Enter', async () => {
         await render(<TestMenu />);
 
         const trigger = screen.getByRole('button', { name: 'Toggle' });
@@ -629,6 +651,29 @@ describe('<Menu.Root />', () => {
 
         const [firstItem, ...otherItems] = screen.getAllByRole('menuitem');
         await waitFor(() => {
+          expect(firstItem).toHaveFocus();
+          expect(firstItem.tabIndex).to.equal(0);
+        });
+        otherItems.forEach((item) => {
+          expect(item.tabIndex).to.equal(-1);
+        });
+      });
+
+      it('focuses the first item after the menu is opened by Space on a non-native trigger', async () => {
+        const { user } = await render(
+          <TestMenu triggerProps={{ nativeButton: false, render: <span /> }} />,
+        );
+
+        const trigger = screen.getByRole('button', { name: 'Toggle' });
+        await act(async () => {
+          trigger.focus();
+        });
+
+        await user.keyboard('[Space]');
+
+        const [firstItem, ...otherItems] = screen.getAllByRole('menuitem');
+        await waitFor(() => {
+          expect(firstItem).toHaveFocus();
           expect(firstItem.tabIndex).to.equal(0);
         });
         otherItems.forEach((item) => {
@@ -884,6 +929,25 @@ describe('<Menu.Root />', () => {
           doc.body.style.overflow === 'hidden';
 
         expect(isScrollLocked).to.equal(true);
+      });
+
+      it('should treat virtual touch pointers as keyboard when opening', async () => {
+        await render(<TestMenu />);
+
+        const trigger = screen.getByRole('button', { name: 'Toggle' });
+
+        fireEvent.pointerDown(trigger, {
+          pointerType: 'touch',
+          width: 0.333,
+          height: 0.333,
+          pressure: 0,
+          detail: 0,
+        });
+        fireEvent.mouseDown(trigger);
+
+        await waitFor(() => {
+          expect(screen.getByTestId('item-1')).toHaveFocus();
+        });
       });
     });
 

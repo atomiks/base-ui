@@ -52,6 +52,7 @@ export const MenuPopup = React.forwardRef(function MenuPopup(
   const floatingContext = store.useState('floatingRootContext');
   const floatingTreeRoot = store.useState('floatingTreeRoot');
   const closeDelay = store.useState('closeDelay');
+  const openMethod = store.useState('openMethod');
   const activeTriggerElement = store.useState('activeTriggerElement');
 
   const isContextMenu = parent.type === 'context-menu';
@@ -130,8 +131,16 @@ export const MenuPopup = React.forwardRef(function MenuPopup(
       context={floatingContext}
       modal={isContextMenu}
       disabled={!mounted}
+      openInteractionType={openMethod}
       returnFocus={finalFocus === undefined ? returnFocus : finalFocus}
-      initialFocus={parent.type !== 'menu'}
+      initialFocus={
+        parent.type === 'menu'
+          ? false
+          : (openType) =>
+              openType === 'mouse' || openType === 'touch' || openType === 'pen'
+                ? store.context.popupRef.current
+                : true
+      }
       restoreFocus
       externalTree={parent.type !== 'menubar' ? floatingTreeRoot : undefined}
       previousFocusableElement={activeTriggerElement as HTMLElement | null}

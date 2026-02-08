@@ -542,6 +542,7 @@ export const MenuRoot = fastComponent(function MenuRoot<Payload>(props: MenuRoot
   const itemProps = React.useMemo(() => getItemProps(), [getItemProps]);
 
   store.useSyncedValues({
+    openMethod,
     floatingRootContext,
     activeTriggerProps,
     inactiveTriggerProps,
