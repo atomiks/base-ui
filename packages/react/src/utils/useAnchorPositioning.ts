@@ -55,6 +55,288 @@ function getOffsetData(state: MiddlewareState, sideParam: Side, isRtl: boolean) 
   return data;
 }
 
+function getReferenceEdges(state: MiddlewareState) {
+  const { rects, x, y } = state;
+  const left = rects.reference.x - x;
+  const top = rects.reference.y - y;
+  const right = left + rects.reference.width;
+  const bottom = top + rects.reference.height;
+
+  return {
+    left,
+    right,
+    top,
+    bottom,
+    centerX: left + rects.reference.width / 2,
+    centerY: top + rects.reference.height / 2,
+  };
+}
+
+function getAlignAnchorPoint({
+  side,
+  align,
+  isRtl,
+  referenceEdges,
+}: {
+  side: PhysicalSide;
+  align: Align;
+  isRtl: boolean;
+  referenceEdges: ReturnType<typeof getReferenceEdges>;
+}) {
+  if (side === 'top' || side === 'bottom') {
+    if (align === 'center') {
+      return referenceEdges.centerX;
+    }
+
+    if (align === 'start') {
+      return isRtl ? referenceEdges.right : referenceEdges.left;
+    }
+
+    return isRtl ? referenceEdges.left : referenceEdges.right;
+  }
+
+  if (align === 'center') {
+    return referenceEdges.centerY;
+  }
+
+  return align === 'start' ? referenceEdges.top : referenceEdges.bottom;
+}
+
+function evaluateOffset(
+  offsetValue: number | OffsetFunction,
+  state: MiddlewareState,
+  sideParam: Side,
+  isRtl: boolean,
+) {
+  return typeof offsetValue === 'function'
+    ? offsetValue(getOffsetData(state, sideParam, isRtl))
+    : offsetValue;
+}
+
+interface CreateMiddlewareParameters {
+  align: Align;
+  sideParam: Side;
+  sideOffsetRef: { current: number | OffsetFunction };
+  alignOffsetRef: { current: number | OffsetFunction };
+  sideOffsetDep: number;
+  alignOffsetDep: number;
+  isRtl: boolean;
+  collisionPadding: {
+    top: number;
+    right: number;
+    bottom: number;
+    left: number;
+  };
+  collisionBoundary: 'clippingAncestors' | Exclude<Boundary, 'clipping-ancestors'> | undefined;
+  collisionAvoidanceSide: 'flip' | 'shift' | 'none';
+  collisionAvoidanceAlign: 'flip' | 'shift' | 'none';
+  collisionAvoidanceFallbackAxisSide: 'start' | 'end' | 'none';
+  shiftCrossAxis: boolean;
+  crossAxisShiftEnabled: boolean;
+  shiftDisabled: boolean;
+  sticky: boolean;
+  arrowRef: React.RefObject<Element | null>;
+  arrowPadding: number;
+  adaptiveOrigin?: Middleware | undefined;
+}
+
+function createAnchorPositioningMiddleware({
+  align,
+  sideParam,
+  sideOffsetRef,
+  alignOffsetRef,
+  sideOffsetDep,
+  alignOffsetDep,
+  isRtl,
+  collisionPadding,
+  collisionBoundary,
+  collisionAvoidanceSide,
+  collisionAvoidanceAlign,
+  collisionAvoidanceFallbackAxisSide,
+  shiftCrossAxis,
+  crossAxisShiftEnabled,
+  shiftDisabled,
+  sticky,
+  arrowRef,
+  arrowPadding,
+  adaptiveOrigin,
+}: CreateMiddlewareParameters): UseFloatingOptions['middleware'] {
+  const commonCollisionProps = {
+    boundary: collisionBoundary,
+    padding: collisionPadding,
+  } as const;
+
+  const bias = 1;
+
+  const middleware: UseFloatingOptions['middleware'] = [
+    offset(
+      (state) => {
+        const sideAxis = evaluateOffset(sideOffsetRef.current, state, sideParam, isRtl);
+        const alignAxis = evaluateOffset(alignOffsetRef.current, state, sideParam, isRtl);
+
+        return {
+          mainAxis: sideAxis,
+          crossAxis: alignAxis,
+          alignmentAxis: alignAxis,
+        };
+      },
+      [sideOffsetDep, alignOffsetDep, isRtl, sideParam],
+    ),
+  ];
+
+  const flipMiddleware =
+    collisionAvoidanceSide === 'none'
+      ? null
+      : flip({
+          ...commonCollisionProps,
+          // Ensure the popup flips if it's been limited by its --available-height and it resizes.
+          // Since the size() padding is smaller than the flip() padding, flip() will take precedence.
+          padding: {
+            top: collisionPadding.top + bias,
+            right: collisionPadding.right + bias,
+            bottom: collisionPadding.bottom + bias,
+            left: collisionPadding.left + bias,
+          },
+          mainAxis: !shiftCrossAxis && collisionAvoidanceSide === 'flip',
+          crossAxis: collisionAvoidanceAlign === 'flip' ? 'alignment' : false,
+          fallbackAxisSideDirection: collisionAvoidanceFallbackAxisSide,
+        });
+
+  const shiftMiddleware = shiftDisabled
+    ? null
+    : shift(
+        (data) => {
+          const html = ownerDocument(data.elements.floating).documentElement;
+          return {
+            ...commonCollisionProps,
+            // Use the Layout Viewport to avoid shifting around when pinch-zooming
+            // for context menus.
+            rootBoundary: shiftCrossAxis
+              ? { x: 0, y: 0, width: html.clientWidth, height: html.clientHeight }
+              : undefined,
+            mainAxis: collisionAvoidanceAlign !== 'none',
+            crossAxis: crossAxisShiftEnabled,
+            limiter:
+              sticky || shiftCrossAxis
+                ? undefined
+                : limitShift((limitData) => {
+                    if (!arrowRef.current) {
+                      return {};
+                    }
+
+                    const { width, height } = arrowRef.current.getBoundingClientRect();
+                    const sideAxis = getSideAxis(getSide(limitData.placement));
+                    const arrowSize = sideAxis === 'y' ? width : height;
+                    const offsetAmount =
+                      sideAxis === 'y'
+                        ? collisionPadding.left + collisionPadding.right
+                        : collisionPadding.top + collisionPadding.bottom;
+                    return {
+                      offset: arrowSize / 2 + offsetAmount / 2,
+                    };
+                  }),
+          };
+        },
+        [commonCollisionProps, sticky, shiftCrossAxis, collisionPadding, collisionAvoidanceAlign],
+      );
+
+  // https://floating-ui.com/docs/flip#combining-with-shift
+  if (
+    collisionAvoidanceSide === 'shift' ||
+    collisionAvoidanceAlign === 'shift' ||
+    align === 'center'
+  ) {
+    middleware.push(shiftMiddleware, flipMiddleware);
+  } else {
+    middleware.push(flipMiddleware, shiftMiddleware);
+  }
+
+  middleware.push(
+    size({
+      ...commonCollisionProps,
+      apply({ elements: { floating }, rects: { reference }, availableWidth, availableHeight }) {
+        const floatingStyle = floating.style;
+        floatingStyle.setProperty('--available-width', `${availableWidth}px`);
+        floatingStyle.setProperty('--available-height', `${availableHeight}px`);
+        floatingStyle.setProperty('--anchor-width', `${reference.width}px`);
+        floatingStyle.setProperty('--anchor-height', `${reference.height}px`);
+      },
+    }),
+    arrow(
+      () => ({
+        // `transform-origin` calculations rely on an element existing. If the arrow hasn't been set,
+        // we'll create a fake element.
+        element: arrowRef.current || document.createElement('div'),
+        padding: arrowPadding,
+        offsetParent: 'floating',
+      }),
+      [arrowPadding],
+    ),
+    {
+      name: 'transformOrigin',
+      fn(state) {
+        const { elements, middlewareData, placement: renderedPlacement } = state;
+        const currentRenderedSide = getSide(renderedPlacement);
+        const currentRenderedAxis = getSideAxis(currentRenderedSide);
+        const renderedAlign = getAlignment(renderedPlacement) || 'center';
+
+        const arrowEl = arrowRef.current;
+        const arrowX = middlewareData.arrow?.x || 0;
+        const arrowY = middlewareData.arrow?.y || 0;
+        const arrowWidth = arrowEl?.clientWidth || 0;
+        const arrowHeight = arrowEl?.clientHeight || 0;
+        const arrowTransformX = arrowX + arrowWidth / 2;
+        const arrowTransformY = arrowY + arrowHeight / 2;
+
+        const referenceEdges = getReferenceEdges(state);
+        const alignAnchorPoint = getAlignAnchorPoint({
+          side: currentRenderedSide,
+          align: renderedAlign,
+          isRtl,
+          referenceEdges,
+        });
+        let crossAxisAnchorPoint = alignAnchorPoint;
+        if (renderedAlign === 'center') {
+          crossAxisAnchorPoint = currentRenderedAxis === 'y' ? arrowTransformX : arrowTransformY;
+        }
+
+        const sideOffsetValue = evaluateOffset(sideOffsetRef.current, state, sideParam, isRtl);
+        const sideAxisShiftAmount = Math.abs(
+          currentRenderedAxis === 'y'
+            ? (middlewareData.shift?.y ?? 0)
+            : (middlewareData.shift?.x ?? 0),
+        );
+        const isOverlappingAnchor = sideAxisShiftAmount > sideOffsetValue;
+
+        const adjacentTransformOrigin = {
+          top: `${crossAxisAnchorPoint}px calc(100% + ${sideOffsetValue}px)`,
+          bottom: `${crossAxisAnchorPoint}px ${-sideOffsetValue}px`,
+          left: `calc(100% + ${sideOffsetValue}px) ${crossAxisAnchorPoint}px`,
+          right: `${-sideOffsetValue}px ${crossAxisAnchorPoint}px`,
+        }[currentRenderedSide];
+
+        const overlapTransformOrigin =
+          currentRenderedAxis === 'y'
+            ? `${crossAxisAnchorPoint}px ${referenceEdges.centerY}px`
+            : `${referenceEdges.centerX}px ${crossAxisAnchorPoint}px`;
+
+        elements.floating.style.setProperty(
+          '--transform-origin',
+          crossAxisShiftEnabled && isOverlappingAnchor
+            ? overlapTransformOrigin
+            : adjacentTransformOrigin,
+        );
+
+        return {};
+      },
+    },
+    hide,
+    adaptiveOrigin,
+  );
+
+  return middleware;
+}
+
 export type Side = 'top' | 'bottom' | 'left' | 'right' | 'inline-end' | 'inline-start';
 export type Align = 'start' | 'center' | 'end';
 export type Boundary = 'clipping-ancestors' | Element | Element[] | Rect;
@@ -164,42 +446,35 @@ export function useAnchorPositioning(
 
   const placement = align === 'center' ? side : (`${side}-${align}` as Placement);
 
-  let collisionPadding = collisionPaddingParam as {
-    top: number;
-    right: number;
-    bottom: number;
-    left: number;
-  };
+  const collisionPadding = React.useMemo(() => {
+    // Create a bias to the preferred side.
+    // On iOS, when the mobile software keyboard opens, the input is exactly centered
+    // in the viewport, but this can cause it to flip to the top undesirably.
+    const bias = 1;
+    const biasTop = sideParam === 'bottom' ? bias : 0;
+    const biasBottom = sideParam === 'top' ? bias : 0;
+    const biasLeft = sideParam === 'right' ? bias : 0;
+    const biasRight = sideParam === 'left' ? bias : 0;
 
-  // Create a bias to the preferred side.
-  // On iOS, when the mobile software keyboard opens, the input is exactly centered
-  // in the viewport, but this can cause it to flip to the top undesirably.
-  const bias = 1;
-  const biasTop = sideParam === 'bottom' ? bias : 0;
-  const biasBottom = sideParam === 'top' ? bias : 0;
-  const biasLeft = sideParam === 'right' ? bias : 0;
-  const biasRight = sideParam === 'left' ? bias : 0;
+    if (typeof collisionPaddingParam === 'number') {
+      return {
+        top: collisionPaddingParam + biasTop,
+        right: collisionPaddingParam + biasRight,
+        bottom: collisionPaddingParam + biasBottom,
+        left: collisionPaddingParam + biasLeft,
+      };
+    }
 
-  if (typeof collisionPadding === 'number') {
-    collisionPadding = {
-      top: collisionPadding + biasTop,
-      right: collisionPadding + biasRight,
-      bottom: collisionPadding + biasBottom,
-      left: collisionPadding + biasLeft,
+    return {
+      top: (collisionPaddingParam.top || 0) + biasTop,
+      right: (collisionPaddingParam.right || 0) + biasRight,
+      bottom: (collisionPaddingParam.bottom || 0) + biasBottom,
+      left: (collisionPaddingParam.left || 0) + biasLeft,
     };
-  } else if (collisionPadding) {
-    collisionPadding = {
-      top: (collisionPadding.top || 0) + biasTop,
-      right: (collisionPadding.right || 0) + biasRight,
-      bottom: (collisionPadding.bottom || 0) + biasBottom,
-      left: (collisionPadding.left || 0) + biasLeft,
-    };
-  }
+  }, [collisionPaddingParam, sideParam]);
 
-  const commonCollisionProps = {
-    boundary: collisionBoundary === 'clipping-ancestors' ? 'clippingAncestors' : collisionBoundary,
-    padding: collisionPadding,
-  } as const;
+  const normalizedCollisionBoundary =
+    collisionBoundary === 'clipping-ancestors' ? 'clippingAncestors' : collisionBoundary;
 
   // Using a ref assumes that the arrow element is always present in the DOM for the lifetime of the
   // popup. If this assumption ends up being false, we can switch to state to manage the arrow's
@@ -212,162 +487,53 @@ export function useAnchorPositioning(
   const sideOffsetDep = typeof sideOffset !== 'function' ? sideOffset : 0;
   const alignOffsetDep = typeof alignOffset !== 'function' ? alignOffset : 0;
 
-  const middleware: UseFloatingOptions['middleware'] = [
-    offset(
-      (state) => {
-        const data = getOffsetData(state, sideParam, isRtl);
-
-        const sideAxis =
-          typeof sideOffsetRef.current === 'function'
-            ? sideOffsetRef.current(data)
-            : sideOffsetRef.current;
-        const alignAxis =
-          typeof alignOffsetRef.current === 'function'
-            ? alignOffsetRef.current(data)
-            : alignOffsetRef.current;
-
-        return {
-          mainAxis: sideAxis,
-          crossAxis: alignAxis,
-          alignmentAxis: alignAxis,
-        };
-      },
-      [sideOffsetDep, alignOffsetDep, isRtl, sideParam],
-    ),
-  ];
-
   const shiftDisabled = collisionAvoidanceAlign === 'none' && collisionAvoidanceSide !== 'shift';
   const crossAxisShiftEnabled =
     !shiftDisabled && (sticky || shiftCrossAxis || collisionAvoidanceSide === 'shift');
-
-  const flipMiddleware =
-    collisionAvoidanceSide === 'none'
-      ? null
-      : flip({
-          ...commonCollisionProps,
-          // Ensure the popup flips if it's been limited by its --available-height and it resizes.
-          // Since the size() padding is smaller than the flip() padding, flip() will take precedence.
-          padding: {
-            top: collisionPadding.top + bias,
-            right: collisionPadding.right + bias,
-            bottom: collisionPadding.bottom + bias,
-            left: collisionPadding.left + bias,
-          },
-          mainAxis: !shiftCrossAxis && collisionAvoidanceSide === 'flip',
-          crossAxis: collisionAvoidanceAlign === 'flip' ? 'alignment' : false,
-          fallbackAxisSideDirection: collisionAvoidanceFallbackAxisSide,
-        });
-  const shiftMiddleware = shiftDisabled
-    ? null
-    : shift(
-        (data) => {
-          const html = ownerDocument(data.elements.floating).documentElement;
-          return {
-            ...commonCollisionProps,
-            // Use the Layout Viewport to avoid shifting around when pinch-zooming
-            // for context menus.
-            rootBoundary: shiftCrossAxis
-              ? { x: 0, y: 0, width: html.clientWidth, height: html.clientHeight }
-              : undefined,
-            mainAxis: collisionAvoidanceAlign !== 'none',
-            crossAxis: crossAxisShiftEnabled,
-            limiter:
-              sticky || shiftCrossAxis
-                ? undefined
-                : limitShift((limitData) => {
-                    if (!arrowRef.current) {
-                      return {};
-                    }
-                    const { width, height } = arrowRef.current.getBoundingClientRect();
-                    const sideAxis = getSideAxis(getSide(limitData.placement));
-                    const arrowSize = sideAxis === 'y' ? width : height;
-                    const offsetAmount =
-                      sideAxis === 'y'
-                        ? collisionPadding.left + collisionPadding.right
-                        : collisionPadding.top + collisionPadding.bottom;
-                    return {
-                      offset: arrowSize / 2 + offsetAmount / 2,
-                    };
-                  }),
-          };
-        },
-        [commonCollisionProps, sticky, shiftCrossAxis, collisionPadding, collisionAvoidanceAlign],
-      );
-
-  // https://floating-ui.com/docs/flip#combining-with-shift
-  if (
-    collisionAvoidanceSide === 'shift' ||
-    collisionAvoidanceAlign === 'shift' ||
-    align === 'center'
-  ) {
-    middleware.push(shiftMiddleware, flipMiddleware);
-  } else {
-    middleware.push(flipMiddleware, shiftMiddleware);
-  }
-
-  middleware.push(
-    size({
-      ...commonCollisionProps,
-      apply({ elements: { floating }, rects: { reference }, availableWidth, availableHeight }) {
-        const floatingStyle = floating.style;
-        floatingStyle.setProperty('--available-width', `${availableWidth}px`);
-        floatingStyle.setProperty('--available-height', `${availableHeight}px`);
-        floatingStyle.setProperty('--anchor-width', `${reference.width}px`);
-        floatingStyle.setProperty('--anchor-height', `${reference.height}px`);
-      },
-    }),
-    arrow(
-      () => ({
-        // `transform-origin` calculations rely on an element existing. If the arrow hasn't been set,
-        // we'll create a fake element.
-        element: arrowRef.current || document.createElement('div'),
-        padding: arrowPadding,
-        offsetParent: 'floating',
+  const middleware = React.useMemo(
+    () =>
+      createAnchorPositioningMiddleware({
+        align,
+        sideParam,
+        sideOffsetRef,
+        alignOffsetRef,
+        sideOffsetDep,
+        alignOffsetDep,
+        isRtl,
+        collisionPadding,
+        collisionBoundary: normalizedCollisionBoundary,
+        collisionAvoidanceSide,
+        collisionAvoidanceAlign,
+        collisionAvoidanceFallbackAxisSide,
+        shiftCrossAxis,
+        crossAxisShiftEnabled,
+        shiftDisabled,
+        sticky,
+        arrowRef,
+        arrowPadding,
+        adaptiveOrigin,
       }),
-      [arrowPadding],
-    ),
-    {
-      name: 'transformOrigin',
-      fn(state) {
-        const { elements, middlewareData, placement: renderedPlacement, rects, y } = state;
-
-        const currentRenderedSide = getSide(renderedPlacement);
-        const currentRenderedAxis = getSideAxis(currentRenderedSide);
-        const arrowEl = arrowRef.current;
-        const arrowX = middlewareData.arrow?.x || 0;
-        const arrowY = middlewareData.arrow?.y || 0;
-        const arrowWidth = arrowEl?.clientWidth || 0;
-        const arrowHeight = arrowEl?.clientHeight || 0;
-        const transformX = arrowX + arrowWidth / 2;
-        const transformY = arrowY + arrowHeight / 2;
-        const shiftY = Math.abs(middlewareData.shift?.y || 0);
-        const halfAnchorHeight = rects.reference.height / 2;
-        const sideOffsetValue =
-          typeof sideOffset === 'function'
-            ? sideOffset(getOffsetData(state, sideParam, isRtl))
-            : sideOffset;
-        const isOverlappingAnchor = shiftY > sideOffsetValue;
-
-        const adjacentTransformOrigin = {
-          top: `${transformX}px calc(100% + ${sideOffsetValue}px)`,
-          bottom: `${transformX}px ${-sideOffsetValue}px`,
-          left: `calc(100% + ${sideOffsetValue}px) ${transformY}px`,
-          right: `${-sideOffsetValue}px ${transformY}px`,
-        }[currentRenderedSide];
-        const overlapTransformOrigin = `${transformX}px ${rects.reference.y + halfAnchorHeight - y}px`;
-
-        elements.floating.style.setProperty(
-          '--transform-origin',
-          crossAxisShiftEnabled && currentRenderedAxis === 'y' && isOverlappingAnchor
-            ? overlapTransformOrigin
-            : adjacentTransformOrigin,
-        );
-
-        return {};
-      },
-    },
-    hide,
-    adaptiveOrigin,
+    [
+      align,
+      sideParam,
+      sideOffsetRef,
+      alignOffsetRef,
+      sideOffsetDep,
+      alignOffsetDep,
+      isRtl,
+      collisionPadding,
+      normalizedCollisionBoundary,
+      collisionAvoidanceSide,
+      collisionAvoidanceAlign,
+      collisionAvoidanceFallbackAxisSide,
+      shiftCrossAxis,
+      crossAxisShiftEnabled,
+      shiftDisabled,
+      sticky,
+      arrowRef,
+      arrowPadding,
+      adaptiveOrigin,
+    ],
   );
 
   useIsoLayoutEffect(() => {

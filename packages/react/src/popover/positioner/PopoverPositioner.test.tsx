@@ -34,6 +34,7 @@ describe('<Popover.Positioner />', () => {
   const anchorHeight = 36;
   const triggerStyle = { width: anchorWidth, height: anchorHeight };
   const popupStyle = { width: popupWidth, height: popupHeight };
+  const insetContainerStyle = { marginTop: 120, marginLeft: 120 };
 
   describe.skipIf(isJSDOM)('prop: sideOffset', () => {
     it('offsets the side when a number is specified', async () => {
@@ -262,6 +263,96 @@ describe('<Popover.Positioner />', () => {
 
       // correctly flips the side in the browser
       expect(side).to.equal('inline-end');
+    });
+  });
+
+  describe.skipIf(isJSDOM)('css variable: --transform-origin', () => {
+    it('uses the anchor left edge for bottom side with align="start"', async () => {
+      await render(
+        <div style={insetContainerStyle}>
+          <Popover.Root open>
+            <Trigger style={triggerStyle}>Trigger</Trigger>
+            <Popover.Portal>
+              <Popover.Positioner data-testid="positioner" side="bottom" align="start">
+                <Popover.Popup style={popupStyle}>Popup</Popover.Popup>
+              </Popover.Positioner>
+            </Popover.Portal>
+          </Popover.Root>
+        </div>,
+      );
+
+      await waitFor(() => {
+        const transformOrigin = screen
+          .getByTestId('positioner')
+          .style.getPropertyValue('--transform-origin');
+        expect(transformOrigin).to.equal('0px 0px');
+      });
+    });
+
+    it('uses the anchor right edge for bottom side with align="end"', async () => {
+      await render(
+        <div style={insetContainerStyle}>
+          <Popover.Root open>
+            <Trigger style={triggerStyle}>Trigger</Trigger>
+            <Popover.Portal>
+              <Popover.Positioner data-testid="positioner" side="bottom" align="end">
+                <Popover.Popup style={popupStyle}>Popup</Popover.Popup>
+              </Popover.Positioner>
+            </Popover.Portal>
+          </Popover.Root>
+        </div>,
+      );
+
+      await waitFor(() => {
+        const transformOrigin = screen
+          .getByTestId('positioner')
+          .style.getPropertyValue('--transform-origin');
+        expect(transformOrigin).to.equal(`${popupWidth}px 0px`);
+      });
+    });
+
+    it('uses the anchor top edge for right side with align="start"', async () => {
+      await render(
+        <div style={insetContainerStyle}>
+          <Popover.Root open>
+            <Trigger style={triggerStyle}>Trigger</Trigger>
+            <Popover.Portal>
+              <Popover.Positioner data-testid="positioner" side="right" align="start">
+                <Popover.Popup style={popupStyle}>Popup</Popover.Popup>
+              </Popover.Positioner>
+            </Popover.Portal>
+          </Popover.Root>
+        </div>,
+      );
+
+      await waitFor(() => {
+        const transformOrigin = screen
+          .getByTestId('positioner')
+          .style.getPropertyValue('--transform-origin');
+        expect(transformOrigin).to.equal('0px 0px');
+      });
+    });
+
+    it('uses the anchor bottom edge for right side with align="end"', async () => {
+      await render(
+        <div style={insetContainerStyle}>
+          <Popover.Root open>
+            <Trigger style={triggerStyle}>Trigger</Trigger>
+            <Popover.Portal>
+              <Popover.Positioner data-testid="positioner" side="right" align="end">
+                <Popover.Popup style={popupStyle}>Popup</Popover.Popup>
+              </Popover.Positioner>
+            </Popover.Portal>
+          </Popover.Root>
+        </div>,
+      );
+
+      await waitFor(() => {
+        const transformOrigin = screen
+          .getByTestId('positioner')
+          .style.getPropertyValue('--transform-origin');
+        expect(transformOrigin).to.equal(`0px ${popupHeight}px`);
+      });
     });
   });
 
