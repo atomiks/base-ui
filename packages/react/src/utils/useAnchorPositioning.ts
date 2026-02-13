@@ -343,26 +343,26 @@ export function useAnchorPositioning(
         const transformX = arrowX + arrowWidth / 2;
         const transformY = arrowY + arrowHeight / 2;
 
-        const referenceLeft = rects.reference.x - x;
-        const referenceTop = rects.reference.y - y;
-        const referenceRight = referenceLeft + rects.reference.width;
-        const referenceBottom = referenceTop + rects.reference.height;
-        const referenceCenterX = referenceLeft + rects.reference.width / 2;
-        const referenceCenterY = referenceTop + rects.reference.height / 2;
-
         let crossAxisAnchorPoint = currentRenderedAxis === 'y' ? transformX : transformY;
 
         if (renderedAlign !== 'center') {
           if (currentRenderedAxis === 'y') {
+            const referenceX = rects.reference.x - x;
             if (renderedAlign === 'start') {
-              crossAxisAnchorPoint = isRtl ? referenceRight : referenceLeft;
+              crossAxisAnchorPoint = isRtl
+                ? referenceX + rects.reference.width
+                : referenceX;
             } else {
-              crossAxisAnchorPoint = isRtl ? referenceLeft : referenceRight;
+              crossAxisAnchorPoint = isRtl
+                ? referenceX
+                : referenceX + rects.reference.width;
             }
-          } else if (renderedAlign === 'start') {
-            crossAxisAnchorPoint = referenceTop;
           } else {
-            crossAxisAnchorPoint = referenceBottom;
+            const referenceY = rects.reference.y - y;
+            crossAxisAnchorPoint =
+              renderedAlign === 'start'
+                ? referenceY
+                : referenceY + rects.reference.height;
           }
         }
 
@@ -385,8 +385,8 @@ export function useAnchorPositioning(
 
         const overlapTransformOrigin =
           currentRenderedAxis === 'y'
-            ? `${crossAxisAnchorPoint}px ${referenceCenterY}px`
-            : `${referenceCenterX}px ${crossAxisAnchorPoint}px`;
+            ? `${crossAxisAnchorPoint}px ${rects.reference.y + rects.reference.height / 2 - y}px`
+            : `${rects.reference.x + rects.reference.width / 2 - x}px ${crossAxisAnchorPoint}px`;
 
         elements.floating.style.setProperty(
           '--transform-origin',
