@@ -334,6 +334,21 @@ export function AriaCombobox<Value = any, Mode extends SelectionMode = 'none'>(
     return filteredItems as Value[];
   }, [filteredItems, isGrouped]);
 
+  const flatFilteredItemIndices = React.useMemo(() => {
+    const itemIndices = new Map<any, number>();
+
+    for (let i = 0; i < flatFilteredItems.length; i += 1) {
+      const item = flatFilteredItems[i];
+
+      // Keep first index to match `findItemIndex` semantics.
+      if (!itemIndices.has(item)) {
+        itemIndices.set(item, i);
+      }
+    }
+
+    return itemIndices;
+  }, [flatFilteredItems]);
+
   const store = useRefWithInit(
     () =>
       new Store<StoreState>({
@@ -1160,8 +1175,9 @@ export function AriaCombobox<Value = any, Mode extends SelectionMode = 'none'>(
       hasItems,
       filteredItems,
       flatFilteredItems,
+      flatFilteredItemIndices,
     }),
-    [query, hasItems, filteredItems, flatFilteredItems],
+    [query, hasItems, filteredItems, flatFilteredItems, flatFilteredItemIndices],
   );
 
   const serializedValue = React.useMemo(() => {

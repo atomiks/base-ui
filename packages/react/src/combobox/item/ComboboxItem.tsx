@@ -48,7 +48,8 @@ export const ComboboxItem = React.memo(
 
     const store = useComboboxRootContext();
     const isRow = useComboboxRowContext();
-    const { flatFilteredItems, hasItems } = useComboboxDerivedItemsContext();
+    const { flatFilteredItems, flatFilteredItemIndices, hasItems } =
+      useComboboxDerivedItemsContext();
 
     const open = useStore(store, selectors.open);
     const selectionMode = useStore(store, selectors.selectionMode);
@@ -57,11 +58,17 @@ export const ComboboxItem = React.memo(
     const isItemEqualToValue = useStore(store, selectors.isItemEqualToValue);
 
     const selectable = selectionMode !== 'none';
-    const index =
-      indexProp ??
-      (virtualized
-        ? findItemIndex(flatFilteredItems, itemValue, isItemEqualToValue)
-        : listItem.index);
+    let index = indexProp;
+    if (index == null) {
+      if (virtualized) {
+        index = flatFilteredItemIndices.get(itemValue);
+        if (index == null) {
+          index = findItemIndex(flatFilteredItems, itemValue, isItemEqualToValue);
+        }
+      } else {
+        index = listItem.index;
+      }
+    }
     const hasRegistered = listItem.index !== -1;
 
     const rootId = useStore(store, selectors.id);
