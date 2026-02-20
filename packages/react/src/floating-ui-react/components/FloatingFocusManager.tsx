@@ -325,12 +325,7 @@ export function FloatingFocusManager(props: FloatingFocusManagerProps): React.JS
   );
 
   const getTabbableElements = useStableCallback((container?: Element) => {
-    const content = getTabbableContent(container);
-
-    return orderRef.current
-      .map(() => content)
-      .filter(Boolean)
-      .flat() as Array<FocusableElement>;
+    return getTabbableContent(container) as Array<FocusableElement>;
   });
 
   // Prevent Tab from escaping the modal when there are no tabbable elements.
@@ -362,10 +357,8 @@ export function FloatingFocusManager(props: FloatingFocusManagerProps): React.JS
     domReference,
     floatingFocusElement,
     modal,
-    orderRef,
     isUntrappedTypeableCombobox,
     getTabbableContent,
-    getTabbableElements,
   ]);
 
   // Track pointer/keyboard interactions to disambiguate focus and outside presses.
@@ -660,7 +653,6 @@ export function FloatingFocusManager(props: FloatingFocusManagerProps): React.JS
     domReference,
     floating,
     modal,
-    orderRef,
     portalContext,
     isUntrappedTypeableCombobox,
     tree,

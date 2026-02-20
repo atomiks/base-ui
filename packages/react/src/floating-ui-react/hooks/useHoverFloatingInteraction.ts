@@ -32,8 +32,6 @@ export type UseHoverFloatingInteractionProps = {
   closeDelay?: number | (() => number) | undefined;
 };
 
-const clickLikeEvents = new Set(['click', 'mousedown']);
-
 /**
  * Provides hover interactions that should be attached to the floating element.
  */
@@ -59,7 +57,8 @@ export function useHoverFloatingInteraction(
       return true;
     }
 
-    return dataRef.current.openEvent ? clickLikeEvents.has(dataRef.current.openEvent.type) : false;
+    const openEventType = dataRef.current.openEvent?.type;
+    return openEventType === 'click' || openEventType === 'mousedown';
   });
 
   const isHoverOpen = useStableCallback(() => {
@@ -97,6 +96,31 @@ export function useHoverFloatingInteraction(
       body.style.pointerEvents = '';
       body.removeAttribute(safePolygonIdentifier);
       instance.performedPointerEventsMutation = false;
+    }
+  });
+
+  const handleScrollMouseLeave = useStableCallback((event: MouseEvent) => {
+    if (isClickLikeOpenEvent() || !dataRef.current.floatingContext || !store.select('open')) {
+      return;
+    }
+
+    if (isRelatedTargetInsideEnabledTrigger(event.relatedTarget)) {
+      // If the mouse is leaving the reference element to another trigger, don't explicitly close the popup
+      // as it will be moved.
+      return;
+    }
+
+    // If the safePolygon handler is active, let it handle the close logic.
+    // The handler checks for open children in the floating tree.
+    if (instance.handler) {
+      instance.handler(event);
+      return;
+    }
+
+    clearPointerEvents();
+    cleanupMouseMoveHandler();
+    if (!isClickLikeOpenEvent()) {
+      closeWithDelay(event);
     }
   });
 
@@ -178,31 +202,6 @@ export function useHoverFloatingInteraction(
     // Ensure the floating element closes after scrolling even if the pointer
     // did not move.
     // https://github.com/floating-ui/floating-ui/discussions/1692
-    function onScrollMouseLeave(event: MouseEvent) {
-      if (isClickLikeOpenEvent() || !dataRef.current.floatingContext || !store.select('open')) {
-        return;
-      }
-
-      if (isRelatedTargetInsideEnabledTrigger(event.relatedTarget)) {
-        // If the mouse is leaving the reference element to another trigger, don't explicitly close the popup
-        // as it will be moved.
-        return;
-      }
-
-      // If the safePolygon handler is active, let it handle the close logic.
-      // The handler checks for open children in the floating tree.
-      if (instance.handler) {
-        instance.handler(event);
-        return;
-      }
-
-      clearPointerEvents();
-      cleanupMouseMoveHandler();
-      if (!isClickLikeOpenEvent()) {
-        closeWithDelay(event);
-      }
-    }
-
     function onFloatingMouseEnter(event: MouseEvent) {
       instance.openChangeTimeout.clear();
       clearPointerEvents();
@@ -217,7 +216,7 @@ export function useHoverFloatingInteraction(
 
     const floating = floatingElement;
     if (floating) {
-      floating.addEventListener('mouseleave', onScrollMouseLeave);
+      floating.addEventListener('mouseleave', handleScrollMouseLeave);
       floating.addEventListener('mouseenter', onFloatingMouseEnter);
       floating.addEventListener('mouseleave', onFloatingMouseLeave);
       floating.addEventListener('pointerdown', handleInteractInside, true);
@@ -225,7 +224,7 @@ export function useHoverFloatingInteraction(
 
     return () => {
       if (floating) {
-        floating.removeEventListener('mouseleave', onScrollMouseLeave);
+        floating.removeEventListener('mouseleave', handleScrollMouseLeave);
         floating.removeEventListener('mouseenter', onFloatingMouseEnter);
         floating.removeEventListener('mouseleave', onFloatingMouseLeave);
         floating.removeEventListener('pointerdown', handleInteractInside, true);
@@ -241,15 +240,13 @@ export function useHoverFloatingInteraction(
     closeWithDelay,
     clearPointerEvents,
     cleanupMouseMoveHandler,
+    handleScrollMouseLeave,
     handleInteractInside,
     instance,
   ]);
 }
 
-export function getDelay(
-  value: number | (() => number),
-  pointerType?: PointerEvent['pointerType'],
-) {
+function getDelay(value: number | (() => number), pointerType?: PointerEvent['pointerType']) {
   if (pointerType && !isMouseLikePointerType(pointerType)) {
     return 0;
   }

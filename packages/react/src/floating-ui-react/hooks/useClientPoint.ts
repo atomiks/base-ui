@@ -122,7 +122,6 @@ export function useClientPoint(
   const cleanupListenerRef = React.useRef<null | (() => void)>(null);
 
   const [pointerType, setPointerType] = React.useState<string | undefined>();
-  const [reactive, setReactive] = React.useState([]);
 
   const setReference = useStableCallback(
     (newX: number | null, newY: number | null, referenceElement?: Element | null) => {
@@ -149,17 +148,6 @@ export function useClientPoint(
       );
     },
   );
-
-  const handleReferenceEnterOrMove = useStableCallback((event: React.MouseEvent<Element>) => {
-    if (!open) {
-      setReference(event.clientX, event.clientY, event.currentTarget as Element);
-    } else if (!cleanupListenerRef.current) {
-      // If there's no cleanup, there's no listener, but we want to ensure
-      // we add the listener if the cursor landed on the floating element and
-      // then back on the reference (i.e. it's interactive).
-      setReactive([]);
-    }
-  });
 
   // If the pointer is a mouse-like pointer, we want to continue following the
   // mouse even if the floating element is transitioning out. On touch
@@ -199,9 +187,23 @@ export function useClientPoint(
     return undefined;
   }, [openCheck, enabled, floating, dataRef, domReference, store, setReference]);
 
+  const handleReferenceEnterOrMove = useStableCallback((event: React.MouseEvent<Element>) => {
+    if (!open) {
+      setReference(event.clientX, event.clientY, event.currentTarget as Element);
+      return;
+    }
+
+    if (!cleanupListenerRef.current) {
+      // If there's no cleanup, there's no listener, but we want to ensure
+      // we add the listener if the cursor landed on the floating element and
+      // then back on the reference (i.e. it's interactive).
+      addListener();
+    }
+  });
+
   React.useEffect(() => {
     return addListener();
-  }, [addListener, reactive]);
+  }, [addListener]);
 
   React.useEffect(() => {
     if (enabled && !floating) {

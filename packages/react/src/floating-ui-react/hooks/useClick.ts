@@ -76,8 +76,26 @@ export function useClick(
   const frame = useAnimationFrame();
   const touchOpenTimeout = useTimeout();
 
-  const reference: ElementProps['reference'] = React.useMemo(
-    () => ({
+  const reference: ElementProps['reference'] = React.useMemo(() => {
+    function isInactiveTriggerClick(currentTarget: EventTarget | null) {
+      return store.select('domReferenceElement') !== currentTarget;
+    }
+
+    function setOpenWithOptionalTouchDelay(
+      nextOpen: boolean,
+      pointerType: 'mouse' | 'pen' | 'touch' | undefined,
+      details: ReturnType<typeof createChangeEventDetails>,
+    ) {
+      if (nextOpen && pointerType === 'touch' && touchOpenDelay > 0) {
+        touchOpenTimeout.start(touchOpenDelay, () => {
+          store.setOpen(true, details);
+        });
+      } else {
+        store.setOpen(nextOpen, details);
+      }
+    }
+
+    return {
       onPointerDown(event) {
         pointerTypeRef.current = event.pointerType;
       },
@@ -98,8 +116,7 @@ export function useClick(
 
         const openEvent = dataRef.current.openEvent;
         const openEventType = openEvent?.type;
-        const hasClickedOnInactiveTrigger =
-          store.select('domReferenceElement') !== event.currentTarget;
+        const hasClickedOnInactiveTrigger = isInactiveTriggerClick(event.currentTarget);
         const nextOpen =
           (open && hasClickedOnInactiveTrigger) ||
           !(
@@ -118,13 +135,7 @@ export function useClick(
             nativeEvent,
             nativeEvent.target as HTMLElement,
           );
-          if (nextOpen && pointerType === 'touch' && touchOpenDelay > 0) {
-            touchOpenTimeout.start(touchOpenDelay, () => {
-              store.setOpen(true, details);
-            });
-          } else {
-            store.setOpen(nextOpen, details);
-          }
+          setOpenWithOptionalTouchDelay(nextOpen, pointerType, details);
           return;
         }
 
@@ -136,13 +147,7 @@ export function useClick(
         // `event.preventDefault()` to avoid :focus-visible from appearing when using a pointer.
         frame.request(() => {
           const details = createChangeEventDetails(reason, nativeEvent, eventCurrentTarget);
-          if (nextOpen && pointerType === 'touch' && touchOpenDelay > 0) {
-            touchOpenTimeout.start(touchOpenDelay, () => {
-              store.setOpen(true, details);
-            });
-          } else {
-            store.setOpen(nextOpen, details);
-          }
+          setOpenWithOptionalTouchDelay(nextOpen, pointerType, details);
         });
       },
       onClick(event) {
@@ -163,8 +168,7 @@ export function useClick(
 
         const open = store.select('open');
         const openEvent = dataRef.current.openEvent;
-        const hasClickedOnInactiveTrigger =
-          store.select('domReferenceElement') !== event.currentTarget;
+        const hasClickedOnInactiveTrigger = isInactiveTriggerClick(event.currentTarget);
         const nextOpen =
           (open && hasClickedOnInactiveTrigger) ||
           !(open && toggle && (openEvent && stickIfOpen ? isClickLikeEvent(openEvent) : true));
@@ -174,31 +178,24 @@ export function useClick(
           event.currentTarget as HTMLElement,
         );
 
-        if (nextOpen && pointerType === 'touch' && touchOpenDelay > 0) {
-          touchOpenTimeout.start(touchOpenDelay, () => {
-            store.setOpen(true, details);
-          });
-        } else {
-          store.setOpen(nextOpen, details);
-        }
+        setOpenWithOptionalTouchDelay(nextOpen, pointerType, details);
       },
       onKeyDown() {
         pointerTypeRef.current = undefined;
       },
-    }),
-    [
-      dataRef,
-      eventOption,
-      ignoreMouse,
-      store,
-      stickIfOpen,
-      toggle,
-      frame,
-      touchOpenTimeout,
-      touchOpenDelay,
-      reason,
-    ],
-  );
+    };
+  }, [
+    dataRef,
+    eventOption,
+    ignoreMouse,
+    store,
+    stickIfOpen,
+    toggle,
+    frame,
+    touchOpenTimeout,
+    touchOpenDelay,
+    reason,
+  ]);
 
   return React.useMemo(() => (enabled ? { reference } : EMPTY_OBJECT), [enabled, reference]);
 }

@@ -7,6 +7,18 @@ import { contains, stopEvent } from '../utils';
 
 import type { ElementProps, FloatingContext, FloatingRootContext } from '../types';
 
+function getMatchingTypeaheadIndex(
+  list: Array<string | null>,
+  orderedList: Array<string | null>,
+  string: string,
+) {
+  const normalizedString = string.toLocaleLowerCase();
+  const match = orderedList.find(
+    (text) => text?.toLocaleLowerCase().indexOf(normalizedString) === 0,
+  );
+  return match ? list.indexOf(match) : -1;
+}
+
 export interface UseTypeaheadProps {
   /**
    * A ref which contains an array of strings whose indices match the HTML
@@ -105,22 +117,10 @@ export function useTypeahead(
   });
 
   const onKeyDown = useStableCallback((event: React.KeyboardEvent) => {
-    function getMatchingIndex(
-      list: Array<string | null>,
-      orderedList: Array<string | null>,
-      string: string,
-    ) {
-      const str = orderedList.find(
-        (text) => text?.toLocaleLowerCase().indexOf(string.toLocaleLowerCase()) === 0,
-      );
-
-      return str ? list.indexOf(str) : -1;
-    }
-
     const listContent = listRef.current;
 
     if (stringRef.current.length > 0 && stringRef.current[0] !== ' ') {
-      if (getMatchingIndex(listContent, listContent, stringRef.current) === -1) {
+      if (getMatchingTypeaheadIndex(listContent, listContent, stringRef.current) === -1) {
         setTypingChange(false);
       } else if (event.key === ' ') {
         stopEvent(event);
@@ -175,7 +175,7 @@ export function useTypeahead(
     // selection/active item; otherwise continue from the last matched index.
     const prevIndex = isNewSession ? (selectedIndex ?? activeIndex ?? -1) : prevIndexRef.current;
 
-    const index = getMatchingIndex(
+    const index = getMatchingTypeaheadIndex(
       listContent,
       [...listContent.slice((prevIndex || 0) + 1), ...listContent.slice(0, (prevIndex || 0) + 1)],
       stringRef.current,

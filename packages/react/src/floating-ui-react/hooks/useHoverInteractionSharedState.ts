@@ -14,7 +14,7 @@ export function isInteractiveElement(element: Element | null) {
   return element ? Boolean(element.closest(interactiveSelector)) : false;
 }
 
-export class HoverInteraction {
+export interface HoverInteraction {
   pointerType: string | undefined;
   interactedInside: boolean;
   handler: ((event: MouseEvent) => void) | undefined;
@@ -25,31 +25,28 @@ export class HoverInteraction {
   openChangeTimeout: Timeout;
   restTimeout: Timeout;
   handleCloseOptions: SafePolygonOptions | undefined;
+  dispose: () => void;
+}
 
-  constructor() {
-    this.pointerType = undefined;
-    this.interactedInside = false;
-    this.handler = undefined;
-    this.blockMouseMove = true;
-    this.performedPointerEventsMutation = false;
-    this.unbindMouseMove = () => {};
-    this.restTimeoutPending = false;
-    this.openChangeTimeout = new Timeout();
-    this.restTimeout = new Timeout();
-    this.handleCloseOptions = undefined;
-  }
+function createHoverInteraction(): HoverInteraction {
+  const openChangeTimeout = new Timeout();
+  const restTimeout = new Timeout();
 
-  static create(): HoverInteraction {
-    return new HoverInteraction();
-  }
-
-  dispose = () => {
-    this.openChangeTimeout.clear();
-    this.restTimeout.clear();
-  };
-
-  disposeEffect = () => {
-    return this.dispose;
+  return {
+    pointerType: undefined,
+    interactedInside: false,
+    handler: undefined,
+    blockMouseMove: true,
+    performedPointerEventsMutation: false,
+    unbindMouseMove: () => {},
+    restTimeoutPending: false,
+    openChangeTimeout,
+    restTimeout,
+    handleCloseOptions: undefined,
+    dispose() {
+      openChangeTimeout.clear();
+      restTimeout.clear();
+    },
   };
 }
 
@@ -58,14 +55,14 @@ type HoverContextData = ContextData & {
 };
 
 export function useHoverInteractionSharedState(store: FloatingRootContext): HoverInteraction {
-  const instance = useRefWithInit(HoverInteraction.create).current;
+  const instance = useRefWithInit(createHoverInteraction).current;
 
   const data = store.context.dataRef.current as HoverContextData;
   if (!data.hoverInteractionState) {
     data.hoverInteractionState = instance;
   }
 
-  useOnMount(data.hoverInteractionState.disposeEffect);
+  useOnMount(() => data.hoverInteractionState?.dispose);
 
   return data.hoverInteractionState;
 }

@@ -20,6 +20,7 @@ import { createAttribute } from '../utils/createAttribute';
 import { FloatingUIOpenChangeDetails } from '../../utils/types';
 
 const isMacSafari = isMac && isSafari;
+const focusGuardAttribute = createAttribute('focus-guard');
 
 export interface UseFocusProps {
   /**
@@ -161,12 +162,7 @@ export function useFocus(
 
         const { nativeEvent, currentTarget } = event;
         const delayValue = typeof delay === 'function' ? delay() : delay;
-
-        if (
-          (store.select('open') && movedFromOtherEnabledTrigger) ||
-          delayValue === 0 ||
-          delayValue === undefined
-        ) {
+        const openWithFocusReason = () => {
           store.setOpen(
             true,
             createChangeEventDetails(
@@ -175,6 +171,14 @@ export function useFocus(
               currentTarget as HTMLElement,
             ),
           );
+        };
+
+        if (
+          (store.select('open') && movedFromOtherEnabledTrigger) ||
+          delayValue === 0 ||
+          delayValue === undefined
+        ) {
+          openWithFocusReason();
           return;
         }
 
@@ -183,14 +187,7 @@ export function useFocus(
             return;
           }
 
-          store.setOpen(
-            true,
-            createChangeEventDetails(
-              REASONS.triggerFocus,
-              nativeEvent,
-              currentTarget as HTMLElement,
-            ),
-          );
+          openWithFocusReason();
         });
       },
       onBlur(event) {
@@ -203,7 +200,7 @@ export function useFocus(
         // moved into the floating element immediately after.
         const movedToFocusGuard =
           isElement(relatedTarget) &&
-          relatedTarget.hasAttribute(createAttribute('focus-guard')) &&
+          relatedTarget.hasAttribute(focusGuardAttribute) &&
           relatedTarget.getAttribute('data-type') === 'outside';
 
         // Wait for the window blur listener to fire.

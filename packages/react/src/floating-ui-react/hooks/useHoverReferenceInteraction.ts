@@ -10,7 +10,7 @@ import { contains, isMouseLikePointerType, isTargetInsideEnabledTrigger } from '
 import { createChangeEventDetails } from '../../utils/createBaseUIEventDetails';
 import { REASONS } from '../../utils/reasons';
 import type { UseHoverProps } from './useHover';
-import { getDelay } from './useHover';
+import { getDelay, getRestMs } from './useHoverDelay';
 import { useFloatingTree } from '../components/FloatingTree';
 import type { FloatingTreeStore } from '../components/FloatingTreeStore';
 import {
@@ -31,13 +31,6 @@ export interface UseHoverReferenceInteractionProps extends UseHoverProps {
    */
   isActiveTrigger?: boolean | undefined;
   triggerElementRef?: Readonly<React.RefObject<Element | null>> | undefined;
-}
-
-function getRestMs(value: number | (() => number)) {
-  if (typeof value === 'function') {
-    return value();
-  }
-  return value;
 }
 
 const EMPTY_REF: Readonly<React.RefObject<Element | null>> = { current: null };
@@ -291,12 +284,8 @@ export function useHoverReferenceInteraction(
       }
     }
 
-    function onScrollMouseLeave(event: MouseEvent) {
-      handleScrollMouseLeave(event);
-    }
-
     if (store.select('open')) {
-      trigger.addEventListener('mouseleave', onScrollMouseLeave);
+      trigger.addEventListener('mouseleave', handleScrollMouseLeave);
     }
 
     if (move) {
@@ -309,7 +298,7 @@ export function useHoverReferenceInteraction(
     trigger.addEventListener('mouseleave', onMouseLeave);
 
     return () => {
-      trigger.removeEventListener('mouseleave', onScrollMouseLeave);
+      trigger.removeEventListener('mouseleave', handleScrollMouseLeave);
 
       if (move) {
         trigger.removeEventListener('mousemove', onMouseEnter);

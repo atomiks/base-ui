@@ -242,7 +242,7 @@ export function useListNavigation(
   const {
     listRef,
     activeIndex,
-    onNavigate: onNavigateProp = () => {},
+    onNavigate: onNavigateProp,
     enabled = true,
     selectedIndex = null,
     allowEscape = false,
@@ -299,7 +299,7 @@ export function useListNavigation(
   const isPointerModalityRef = React.useRef(true);
 
   const onNavigate = useStableCallback((event?: React.SyntheticEvent) => {
-    onNavigateProp(indexRef.current === -1 ? null : indexRef.current, event);
+    onNavigateProp?.(indexRef.current === -1 ? null : indexRef.current, event);
   });
 
   const previousOnNavigateRef = React.useRef(onNavigate);
@@ -345,9 +345,7 @@ export function useListNavigation(
         runFocus(waitedItem);
       }
 
-      const shouldScrollIntoView =
-        // eslint-disable-next-line @typescript-eslint/no-use-before-define
-        item && (forceScrollIntoView || !isPointerModalityRef.current);
+      const shouldScrollIntoView = forceScrollIntoView || !isPointerModalityRef.current;
 
       if (shouldScrollIntoView) {
         // JSDOM doesn't support `.scrollIntoView()` but it's widely supported
@@ -457,7 +455,6 @@ export function useListNavigation(
     rtl,
     onNavigate,
     focusItem,
-    disabledIndicesRef,
   ]);
 
   // Ensure the parent floating element has focus when a nested child closes
