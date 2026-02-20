@@ -10,7 +10,6 @@ import { DialogHandle } from '../store/DialogHandle';
 import { useTriggerDataForwarding } from '../../utils/popups';
 import { useBaseUiId } from '../../utils/useBaseUiId';
 import { useClick } from '../../floating-ui-react';
-import { mergeInteractionProps } from '../../floating-ui-react/hooks/useInteractions';
 
 /**
  * A button that opens the dialog.
@@ -74,7 +73,7 @@ export const DialogTrigger = React.forwardRef(function DialogTrigger(
     state,
     ref: [buttonRef, forwardedRef, registerTrigger, triggerElementRef],
     props: [
-      mergeInteractionProps([click], 'reference', undefined),
+      click?.reference,
       rootTriggerProps,
       { [CLICK_TRIGGER_IDENTIFIER as string]: '', id: thisTriggerId },
       elementProps,

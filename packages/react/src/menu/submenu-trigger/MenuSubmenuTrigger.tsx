@@ -5,7 +5,6 @@ import {
   useClick,
   useHoverReferenceInteraction,
 } from '../../floating-ui-react';
-import { mergeInteractionProps } from '../../floating-ui-react/hooks/useInteractions';
 import { BaseUIComponentProps, NonNativeButtonProps } from '../../utils/types';
 import { useMenuRootContext } from '../root/MenuRootContext';
 import { useBaseUiId } from '../../utils/useBaseUiId';
@@ -144,7 +143,7 @@ export const MenuSubmenuTrigger = React.forwardRef(function SubmenuTriggerCompon
     state,
     stateAttributesMapping: triggerOpenStateMapping,
     props: [
-      mergeInteractionProps([click], 'reference', undefined),
+      click?.reference,
       hoverProps,
       rootTriggerProps,
       itemProps,

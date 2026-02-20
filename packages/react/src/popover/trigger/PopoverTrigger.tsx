@@ -18,7 +18,6 @@ import {
   useClick,
   useHoverReferenceInteraction,
 } from '../../floating-ui-react';
-import { mergeInteractionProps } from '../../floating-ui-react/hooks/useInteractions';
 import { OPEN_DELAY } from '../utils/constants';
 import { PopoverHandle } from '../store/PopoverHandle';
 import { useBaseUiId } from '../../utils/useBaseUiId';
@@ -136,7 +135,7 @@ export const PopoverTrigger = React.forwardRef(function PopoverTrigger(
     state,
     ref: [buttonRef, forwardedRef, registerTrigger, triggerElementRef],
     props: [
-      mergeInteractionProps([click], 'reference', undefined),
+      click?.reference,
       hoverProps,
       rootTriggerProps,
       { [CLICK_TRIGGER_IDENTIFIER as string]: '', id: thisTriggerId },

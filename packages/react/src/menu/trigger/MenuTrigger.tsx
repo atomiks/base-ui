@@ -17,7 +17,6 @@ import {
   useFloatingNodeId,
   useFloatingParentNodeId,
 } from '../../floating-ui-react';
-import { mergeInteractionProps } from '../../floating-ui-react/hooks/useInteractions';
 import { FloatingTreeStore } from '../../floating-ui-react/components/FloatingTreeStore';
 import {
   contains,
@@ -226,7 +225,8 @@ export const MenuTrigger = fastComponentRef(function MenuTrigger(
 
   const ref = [triggerRef, forwardedRef, buttonRef, registerTrigger, triggerElementRef];
   const props = [
-    mergeInteractionProps([click, focus], 'reference', undefined),
+    focus?.reference ?? EMPTY_OBJECT,
+    click?.reference ?? EMPTY_OBJECT,
     hoverProps ?? EMPTY_OBJECT,
     rootTriggerProps,
     {
