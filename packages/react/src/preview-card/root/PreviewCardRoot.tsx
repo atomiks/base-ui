@@ -17,6 +17,7 @@ import {
   useOpenStateTransitions,
 } from '../../utils/popups';
 import { PreviewCardHandle } from '../store/PreviewCardHandle';
+import { EMPTY_OBJECT } from '../../utils/constants';
 
 function PreviewCardRootComponent<Payload>(props: PreviewCardRoot.Props<Payload>) {
   const {
@@ -55,6 +56,7 @@ function PreviewCardRootComponent<Payload>(props: PreviewCardRoot.Props<Payload>
   store.useContextCallback('onOpenChangeComplete', onOpenChangeComplete);
 
   const open = store.useState('open');
+  const mounted = store.useState('mounted');
 
   const activeTriggerId = store.useState('activeTriggerId');
   const payload = store.useState('payload') as Payload | undefined;
@@ -85,16 +87,16 @@ function PreviewCardRootComponent<Payload>(props: PreviewCardRoot.Props<Payload>
   const dismiss = useDismiss(floatingRootContext);
 
   const activeTriggerProps = React.useMemo(
-    () => mergeInteractionProps([dismiss], 'reference', undefined),
-    [dismiss],
+    () => (open ? mergeInteractionProps([dismiss], 'reference', undefined) : EMPTY_OBJECT),
+    [dismiss, open],
   );
   const inactiveTriggerProps = React.useMemo(
     () => mergeInteractionProps([dismiss], 'trigger', undefined),
     [dismiss],
   );
   const popupProps = React.useMemo(
-    () => mergeInteractionProps([dismiss], 'floating', undefined),
-    [dismiss],
+    () => (mounted ? mergeInteractionProps([dismiss], 'floating', undefined) : EMPTY_OBJECT),
+    [dismiss, mounted],
   );
 
   store.useSyncedValues({

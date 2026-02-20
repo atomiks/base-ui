@@ -24,6 +24,7 @@ import {
   type PayloadChildRenderFunction,
 } from '../../utils/popups';
 import { useOpenInteractionType } from '../../utils/useOpenInteractionType';
+import { EMPTY_OBJECT } from '../../utils/constants';
 
 function PopoverRootComponent<Payload>({ props }: { props: PopoverRoot.Props<Payload> }) {
   const {
@@ -60,6 +61,7 @@ function PopoverRootComponent<Payload>({ props }: { props: PopoverRoot.Props<Pay
   store.useControlledProp('triggerIdProp', triggerIdProp);
 
   const open = store.useState('open');
+  const mounted = store.useState('mounted');
   const positionerElement = store.useState('positionerElement');
   const payload = store.useState('payload') as Payload | undefined;
   const openReason = store.useState('openChangeReason');
@@ -132,16 +134,24 @@ function PopoverRootComponent<Payload>({ props }: { props: PopoverRoot.Props<Pay
   const role = useRole(floatingRootContext);
 
   const activeTriggerProps = React.useMemo(() => {
+    if (!open) {
+      return EMPTY_OBJECT;
+    }
+
     return mergeInteractionProps([dismiss, role], 'reference', interactionTypeTriggerProps);
-  }, [dismiss, role, interactionTypeTriggerProps]);
+  }, [dismiss, role, interactionTypeTriggerProps, open]);
 
   const inactiveTriggerProps = React.useMemo(() => {
     return mergeInteractionProps([dismiss, role], 'trigger', interactionTypeTriggerProps);
   }, [dismiss, role, interactionTypeTriggerProps]);
 
   const popupProps = React.useMemo(() => {
+    if (!mounted) {
+      return EMPTY_OBJECT;
+    }
+
     return mergeInteractionProps([dismiss, role], 'floating', undefined);
-  }, [dismiss, role]);
+  }, [dismiss, role, mounted]);
 
   store.useSyncedValues({
     modal,

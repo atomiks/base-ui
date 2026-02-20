@@ -22,7 +22,7 @@ import {
 import { mergeInteractionProps } from '../../floating-ui-react/hooks/useInteractions';
 import { MenuRootContext, useMenuRootContext } from './MenuRootContext';
 import { MenubarContext, useMenubarContext } from '../../menubar/MenubarContext';
-import { TYPEAHEAD_RESET_MS } from '../../utils/constants';
+import { EMPTY_OBJECT, TYPEAHEAD_RESET_MS } from '../../utils/constants';
 import { useDirection } from '../../direction-provider/DirectionContext';
 import { useOpenInteractionType } from '../../utils/useOpenInteractionType';
 import type { FloatingUIOpenChangeDetails } from '../../utils/types';
@@ -159,6 +159,7 @@ export const MenuRoot = fastComponent(function MenuRoot<Payload>(props: MenuRoot
   ]);
 
   const open = store.useState('open');
+  const mounted = store.useState('mounted');
   const activeTriggerElement = store.useState('activeTriggerElement');
   const positionerElement = store.useState('positionerElement');
   const hoverEnabled = store.useState('hoverEnabled');
@@ -467,6 +468,7 @@ export const MenuRoot = fastComponent(function MenuRoot<Payload>(props: MenuRoot
   );
 
   const typeahead = useTypeahead(floatingRootContext, {
+    enabled: !disabled && open,
     listRef: store.context.itemLabels,
     activeIndex,
     resetMs: TYPEAHEAD_RESET_MS,
@@ -498,6 +500,7 @@ export const MenuRoot = fastComponent(function MenuRoot<Payload>(props: MenuRoot
     typeahead,
     store,
     interactionTypeProps,
+    open,
   ]);
 
   const inactiveTriggerProps = React.useMemo(() => {
@@ -523,8 +526,12 @@ export const MenuRoot = fastComponent(function MenuRoot<Payload>(props: MenuRoot
   ]);
 
   const popupProps = React.useMemo(
-    () =>
-      mergeInteractionProps([dismiss, role, listNavigation, typeahead], 'floating', {
+    () => {
+      if (!mounted) {
+        return EMPTY_OBJECT;
+      }
+
+      return mergeInteractionProps([dismiss, role, listNavigation, typeahead], 'floating', {
         onMouseMove() {
           store.set('allowMouseEnter', true);
           if (parent.type === 'menu') {
@@ -545,7 +552,8 @@ export const MenuRoot = fastComponent(function MenuRoot<Payload>(props: MenuRoot
             relay(event);
           }
         },
-      }),
+      });
+    },
     [
       dismiss,
       role,
@@ -553,6 +561,7 @@ export const MenuRoot = fastComponent(function MenuRoot<Payload>(props: MenuRoot
       typeahead,
       parent.type,
       store,
+      mounted,
     ],
   );
 

@@ -18,6 +18,7 @@ import {
 import { TooltipStore } from '../store/TooltipStore';
 import { type TooltipHandle } from '../store/TooltipHandle';
 import { REASONS } from '../../utils/reasons';
+import { EMPTY_OBJECT } from '../../utils/constants';
 
 /**
  * Groups all parts of the tooltip.
@@ -67,6 +68,7 @@ export const TooltipRoot = fastComponent(function TooltipRoot<Payload>(
   store.useContextCallback('onOpenChangeComplete', onOpenChangeComplete);
 
   const openState = store.useState('open');
+  const mounted = store.useState('mounted');
   const open = !disabled && openState;
 
   const activeTriggerId = store.useState('activeTriggerId');
@@ -142,16 +144,20 @@ export const TooltipRoot = fastComponent(function TooltipRoot<Payload>(
   });
 
   const activeTriggerProps = React.useMemo(
-    () => mergeInteractionProps([dismiss, clientPoint], 'reference', undefined),
-    [dismiss, clientPoint],
+    () =>
+      open ? mergeInteractionProps([dismiss, clientPoint], 'reference', undefined) : EMPTY_OBJECT,
+    [dismiss, clientPoint, open],
   );
   const inactiveTriggerProps = React.useMemo(
     () => mergeInteractionProps([dismiss, clientPoint], 'trigger', undefined),
     [dismiss, clientPoint],
   );
   const popupProps = React.useMemo(
-    () => mergeInteractionProps([dismiss, clientPoint], 'floating', undefined),
-    [dismiss, clientPoint],
+    () =>
+      mounted
+        ? mergeInteractionProps([dismiss, clientPoint], 'floating', undefined)
+        : EMPTY_OBJECT,
+    [dismiss, clientPoint, mounted],
   );
 
   store.useSyncedValues({

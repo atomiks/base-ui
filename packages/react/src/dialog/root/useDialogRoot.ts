@@ -12,6 +12,7 @@ import { contains, getTarget } from '../../floating-ui-react/utils';
 import { useOpenInteractionType } from '../../utils/useOpenInteractionType';
 import { createChangeEventDetails } from '../../utils/createBaseUIEventDetails';
 import { REASONS } from '../../utils/reasons';
+import { EMPTY_OBJECT } from '../../utils/constants';
 import { type DialogRoot } from './DialogRoot';
 import { DialogStore } from '../store/DialogStore';
 import { useImplicitActiveTrigger, useOpenStateTransitions } from '../../utils/popups';
@@ -20,6 +21,7 @@ export function useDialogRoot(params: useDialogRoot.Parameters): useDialogRoot.R
   const { store, parentContext, actionsRef } = params;
 
   const open = store.useState('open');
+  const mounted = store.useState('mounted');
   const disablePointerDismissal = store.useState('disablePointerDismissal');
   const modal = store.useState('modal');
   const popupElement = store.useState('popupElement');
@@ -141,8 +143,8 @@ export function useDialogRoot(params: useDialogRoot.Parameters): useDialogRoot.R
   }, [open, parentContext, ownNestedOpenDialogs]);
 
   const activeTriggerProps = React.useMemo(
-    () => mergeInteractionProps([role, dismiss], 'reference', triggerProps),
-    [role, dismiss, triggerProps],
+    () => (open ? mergeInteractionProps([role, dismiss], 'reference', triggerProps) : EMPTY_OBJECT),
+    [role, dismiss, triggerProps, open],
   );
 
   const inactiveTriggerProps = React.useMemo(
@@ -151,8 +153,8 @@ export function useDialogRoot(params: useDialogRoot.Parameters): useDialogRoot.R
   );
 
   const popupProps = React.useMemo(
-    () => mergeInteractionProps([role, dismiss], 'floating', undefined),
-    [role, dismiss],
+    () => (mounted ? mergeInteractionProps([role, dismiss], 'floating', undefined) : EMPTY_OBJECT),
+    [role, dismiss, mounted],
   );
 
   store.useSyncedValues({
