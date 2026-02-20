@@ -46,11 +46,13 @@ export function isVirtualPointerEvent(event: PointerEvent) {
 export function isMouseLikePointerType(pointerType: string | undefined, strict?: boolean) {
   // On some Linux machines with Chromium, mouse inputs return a `pointerType`
   // of "pen": https://github.com/floating-ui/floating-ui/issues/2015
-  const values: Array<string | undefined> = ['mouse', 'pen'];
-  if (!strict) {
-    values.push('', undefined);
+  if (pointerType === 'mouse' || pointerType === 'pen') {
+    return true;
   }
-  return values.includes(pointerType);
+  if (strict) {
+    return false;
+  }
+  return pointerType === '' || pointerType === undefined;
 }
 
 export function isClickLikeEvent(event: Event | React.SyntheticEvent) {

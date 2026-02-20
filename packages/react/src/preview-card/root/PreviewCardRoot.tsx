@@ -2,7 +2,8 @@
 import * as React from 'react';
 import { useIsoLayoutEffect } from '@base-ui/utils/useIsoLayoutEffect';
 import { useOnFirstRender } from '@base-ui/utils/useOnFirstRender';
-import { useDismiss, useInteractions, FloatingTree } from '../../floating-ui-react';
+import { useDismiss, FloatingTree } from '../../floating-ui-react';
+import { mergeInteractionProps } from '../../floating-ui-react/hooks/useInteractions';
 import { PreviewCardRootContext, usePreviewCardRootContext } from './PreviewCardContext';
 import {
   createChangeEventDetails,
@@ -83,11 +84,18 @@ function PreviewCardRootComponent<Payload>(props: PreviewCardRoot.Props<Payload>
 
   const dismiss = useDismiss(floatingRootContext);
 
-  const { getReferenceProps, getTriggerProps, getFloatingProps } = useInteractions([dismiss]);
-
-  const activeTriggerProps = React.useMemo(() => getReferenceProps(), [getReferenceProps]);
-  const inactiveTriggerProps = React.useMemo(() => getTriggerProps(), [getTriggerProps]);
-  const popupProps = React.useMemo(() => getFloatingProps(), [getFloatingProps]);
+  const activeTriggerProps = React.useMemo(
+    () => mergeInteractionProps([dismiss], 'reference', undefined),
+    [dismiss],
+  );
+  const inactiveTriggerProps = React.useMemo(
+    () => mergeInteractionProps([dismiss], 'trigger', undefined),
+    [dismiss],
+  );
+  const popupProps = React.useMemo(
+    () => mergeInteractionProps([dismiss], 'floating', undefined),
+    [dismiss],
+  );
 
   store.useSyncedValues({
     activeTriggerProps,

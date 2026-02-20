@@ -11,8 +11,8 @@ import {
   useFloatingRootContext,
   useFloatingTree,
   useHover,
-  useInteractions,
 } from '../../floating-ui-react';
+import { mergeInteractionProps } from '../../floating-ui-react/hooks/useInteractions';
 import {
   contains,
   getNextTabbable,
@@ -180,7 +180,11 @@ export const NavigationMenuTrigger = React.forwardRef(function NavigationMenuTri
     }
   }, [isActiveItem, context, setFloatingRootContext, prevTriggerElementRef, triggerElement]);
 
-  const { getReferenceProps } = useInteractions([hover, click]);
+  const getReferenceProps = React.useCallback(
+    (userProps?: React.HTMLProps<Element>) =>
+      mergeInteractionProps([hover, click], 'reference', userProps),
+    [hover, click],
+  );
 
   function handleActivation(event: React.MouseEvent | React.KeyboardEvent) {
     ReactDOM.flushSync(() => {

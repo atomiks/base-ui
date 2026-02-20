@@ -4,7 +4,8 @@ import { fastComponent } from '@base-ui/utils/fastHooks';
 import { useOnFirstRender } from '@base-ui/utils/useOnFirstRender';
 import { useIsoLayoutEffect } from '@base-ui/utils/useIsoLayoutEffect';
 import { TooltipRootContext } from './TooltipRootContext';
-import { useClientPoint, useDismiss, useInteractions } from '../../floating-ui-react';
+import { useClientPoint, useDismiss } from '../../floating-ui-react';
+import { mergeInteractionProps } from '../../floating-ui-react/hooks/useInteractions';
 import {
   type BaseUIChangeEventDetails,
   createChangeEventDetails,
@@ -140,14 +141,18 @@ export const TooltipRoot = fastComponent(function TooltipRoot<Payload>(
     axis: trackCursorAxis === 'none' ? undefined : trackCursorAxis,
   });
 
-  const { getReferenceProps, getFloatingProps, getTriggerProps } = useInteractions([
-    dismiss,
-    clientPoint,
-  ]);
-
-  const activeTriggerProps = React.useMemo(() => getReferenceProps(), [getReferenceProps]);
-  const inactiveTriggerProps = React.useMemo(() => getTriggerProps(), [getTriggerProps]);
-  const popupProps = React.useMemo(() => getFloatingProps(), [getFloatingProps]);
+  const activeTriggerProps = React.useMemo(
+    () => mergeInteractionProps([dismiss, clientPoint], 'reference', undefined),
+    [dismiss, clientPoint],
+  );
+  const inactiveTriggerProps = React.useMemo(
+    () => mergeInteractionProps([dismiss, clientPoint], 'trigger', undefined),
+    [dismiss, clientPoint],
+  );
+  const popupProps = React.useMemo(
+    () => mergeInteractionProps([dismiss, clientPoint], 'floating', undefined),
+    [dismiss, clientPoint],
+  );
 
   store.useSyncedValues({
     activeTriggerProps,

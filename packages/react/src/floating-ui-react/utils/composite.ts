@@ -1,5 +1,3 @@
-import { floor } from '@floating-ui/utils';
-
 import type { Dimensions } from '../types';
 import { stopEvent } from './event';
 import { ARROW_DOWN, ARROW_LEFT, ARROW_RIGHT, ARROW_UP } from './constants';
@@ -253,7 +251,7 @@ export function getGridNavigatedIndex(
 
   // Remains on the same row/column.
   if (orientation === 'both') {
-    const prevRow = floor(prevIndex / cols);
+    const prevRow = Math.floor(prevIndex / cols);
 
     if (event.key === (rtl ? ARROW_LEFT : ARROW_RIGHT)) {
       if (stop) {
@@ -316,7 +314,7 @@ export function getGridNavigatedIndex(
       }
     }
 
-    const lastRow = floor(maxIndex / cols) === prevRow;
+    const lastRow = Math.floor(maxIndex / cols) === prevRow;
 
     if (isIndexOutOfListBounds(listRef, nextIndex)) {
       if (loopFocus && lastRow) {

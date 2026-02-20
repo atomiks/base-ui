@@ -88,7 +88,7 @@ function applyAttributeToOthers(
       return;
     }
 
-    [].forEach.call(parent.children, (node: Element) => {
+    Array.prototype.forEach.call(parent.children, (node: Element) => {
       if (getNodeName(node) === 'script') {
         return;
       }

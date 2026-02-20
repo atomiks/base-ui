@@ -10,7 +10,7 @@ import type { ExtendedUserProps } from './hooks/useInteractions';
 import type { FloatingTreeStore } from './components/FloatingTreeStore';
 import type { FloatingRootStore } from './components/FloatingRootStore';
 
-export * from '.';
+export type * from '.';
 export type { FloatingDelayGroupProps } from './components/FloatingDelayGroup';
 export type { FloatingFocusManagerProps } from './components/FloatingFocusManager';
 export type { UseFloatingPortalNodeProps } from './components/FloatingPortal';

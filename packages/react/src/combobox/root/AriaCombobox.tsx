@@ -13,10 +13,10 @@ import {
   ElementProps,
   useDismiss,
   useFloatingRootContext,
-  useInteractions,
   useListNavigation,
   useClick,
 } from '../../floating-ui-react';
+import { mergeInteractionProps } from '../../floating-ui-react/hooks/useInteractions';
 import { contains, getTarget } from '../../floating-ui-react/utils';
 import {
   createChangeEventDetails,
@@ -1061,12 +1061,21 @@ export function AriaCombobox<Value = any, Mode extends SelectionMode = 'none'>(
     },
   });
 
-  const { getReferenceProps, getFloatingProps, getItemProps } = useInteractions([
-    role,
-    click,
-    dismiss,
-    listNavigation,
-  ]);
+  const getReferenceProps = React.useCallback(
+    (userProps?: React.HTMLProps<Element>) =>
+      mergeInteractionProps([role, click, dismiss, listNavigation], 'reference', userProps),
+    [role, click, dismiss, listNavigation],
+  );
+  const getFloatingProps = React.useCallback(
+    (userProps?: React.HTMLProps<HTMLElement>) =>
+      mergeInteractionProps([role, click, dismiss, listNavigation], 'floating', userProps),
+    [role, click, dismiss, listNavigation],
+  );
+  const getItemProps = React.useCallback(
+    (userProps?: any) =>
+      mergeInteractionProps([role, click, dismiss, listNavigation], 'item', userProps),
+    [role, click, dismiss, listNavigation],
+  );
 
   useOnFirstRender(() => {
     store.update({

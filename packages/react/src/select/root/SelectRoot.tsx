@@ -13,10 +13,10 @@ import {
   useClick,
   useDismiss,
   useFloatingRootContext,
-  useInteractions,
   useListNavigation,
   useTypeahead,
 } from '../../floating-ui-react';
+import { mergeInteractionProps } from '../../floating-ui-react/hooks/useInteractions';
 import { SelectRootContext, SelectFloatingContext } from './SelectRootContext';
 import { useFieldRootContext } from '../../field/root/FieldRootContext';
 import { useLabelableId } from '../../labelable-provider/useLabelableId';
@@ -382,12 +382,25 @@ export function SelectRoot<Value, Multiple extends boolean | undefined = false>(
     },
   });
 
-  const { getReferenceProps, getFloatingProps, getItemProps } = useInteractions([
-    click,
-    dismiss,
-    listNavigation,
-    typeahead,
-  ]);
+  const getReferenceProps = React.useCallback(
+    (userProps?: React.HTMLProps<Element>) =>
+      mergeInteractionProps([click, dismiss, listNavigation, typeahead], 'reference', userProps),
+    [click, dismiss, listNavigation, typeahead],
+  );
+  const getFloatingProps = React.useCallback(
+    (userProps?: React.HTMLProps<HTMLElement>) =>
+      mergeInteractionProps([click, dismiss, listNavigation, typeahead], 'floating', userProps),
+    [click, dismiss, listNavigation, typeahead],
+  );
+  const getItemProps = React.useCallback(
+    (
+      userProps?: Omit<React.HTMLProps<HTMLElement>, 'selected' | 'active'> & {
+        active?: boolean | undefined;
+        selected?: boolean | undefined;
+      },
+    ) => mergeInteractionProps([click, dismiss, listNavigation, typeahead], 'item', userProps),
+    [click, dismiss, listNavigation, typeahead],
+  );
 
   const mergedTriggerProps = React.useMemo(() => {
     return mergeProps(

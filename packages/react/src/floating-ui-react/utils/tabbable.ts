@@ -2,17 +2,20 @@ import { tabbable, type FocusableElement } from 'tabbable';
 import { ownerDocument } from '@base-ui/utils/owner';
 import { activeElement, contains } from './element';
 
-export const getTabbableOptions = () =>
-  ({
-    getShadowRoot: true,
-    displayCheck:
-      // JSDOM does not support the `tabbable` library. To solve this we can
-      // check if `ResizeObserver` is a real function (not polyfilled), which
-      // determines if the current environment is JSDOM-like.
-      typeof ResizeObserver === 'function' && ResizeObserver.toString().includes('[native code]')
-        ? 'full'
-        : 'none',
-  }) as const;
+// JSDOM does not support the `tabbable` library. To solve this we can
+// check if `ResizeObserver` is a real function (not polyfilled), which
+// determines if the current environment is JSDOM-like.
+const tabbableOptions = {
+  getShadowRoot: true,
+  displayCheck:
+    typeof ResizeObserver === 'function' && ResizeObserver.toString().includes('[native code]')
+      ? ('full' as const)
+      : ('none' as const),
+};
+
+export function getTabbableOptions() {
+  return tabbableOptions;
+}
 
 function getTabbableIn(container: HTMLElement, dir: 1 | -1): FocusableElement | undefined {
   const list = tabbable(container, getTabbableOptions());

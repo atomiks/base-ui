@@ -43,6 +43,9 @@ import { CLICK_TRIGGER_IDENTIFIER } from '../../utils/constants';
 import { FloatingUIOpenChangeDetails } from '../../utils/types';
 import { resolveRef } from '../../utils/resolveRef';
 
+const focusGuardAttribute = createAttribute('focus-guard');
+const portalAttribute = `[${createAttribute('portal')}]`;
+
 function getEventType(event: Event, lastInteractionType?: InteractionType): InteractionType {
   const win = ownerWindow(event.target);
   if (event instanceof win.KeyboardEvent) {
@@ -438,7 +441,7 @@ export function FloatingFocusManager(props: FloatingFocusManagerProps): React.JS
         const nodeId = getNodeId();
         const triggers = store.context.triggerElements;
         const isRelatedFocusGuard =
-          relatedTarget?.hasAttribute(createAttribute('focus-guard')) &&
+          relatedTarget?.hasAttribute(focusGuardAttribute) &&
           [
             beforeGuardRef.current,
             afterGuardRef.current,
@@ -623,7 +626,7 @@ export function FloatingFocusManager(props: FloatingFocusManagerProps): React.JS
 
     // Don't hide portals nested within the parent portal.
     const portalNodes = Array.from(
-      portalContext?.portalNode?.querySelectorAll(`[${createAttribute('portal')}]`) || [],
+      portalContext?.portalNode?.querySelectorAll(portalAttribute) || [],
     );
 
     const ancestors = tree ? getNodeAncestors(tree.nodesRef.current, getNodeId()) : [];

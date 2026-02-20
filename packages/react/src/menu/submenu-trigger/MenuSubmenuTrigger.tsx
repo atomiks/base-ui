@@ -4,8 +4,8 @@ import {
   safePolygon,
   useClick,
   useHoverReferenceInteraction,
-  useInteractions,
 } from '../../floating-ui-react';
+import { mergeInteractionProps } from '../../floating-ui-react/hooks/useInteractions';
 import { BaseUIComponentProps, NonNativeButtonProps } from '../../utils/types';
 import { useMenuRootContext } from '../root/MenuRootContext';
 import { useBaseUiId } from '../../utils/useBaseUiId';
@@ -135,8 +135,6 @@ export const MenuSubmenuTrigger = React.forwardRef(function SubmenuTriggerCompon
     stickIfOpen: false,
   });
 
-  const localInteractionProps = useInteractions([click]);
-
   const rootTriggerProps = store.useState('triggerProps', true);
   delete rootTriggerProps.id;
 
@@ -146,7 +144,7 @@ export const MenuSubmenuTrigger = React.forwardRef(function SubmenuTriggerCompon
     state,
     stateAttributesMapping: triggerOpenStateMapping,
     props: [
-      localInteractionProps.getReferenceProps(),
+      mergeInteractionProps([click], 'reference', undefined),
       hoverProps,
       rootTriggerProps,
       itemProps,

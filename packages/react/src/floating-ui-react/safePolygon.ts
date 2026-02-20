@@ -209,162 +209,57 @@ export function safePolygon(options: SafePolygonOptions = {}) {
       }
 
       function getPolygon([px, py]: Point): Array<Point> {
-        switch (side) {
-          case 'top': {
-            const cursorPointOne: Point = [
-              isFloatingWider
-                ? px + buffer / 2
-                : cursorLeaveFromRight
-                  ? px + buffer * 4
-                  : px - buffer * 4,
-              py + buffer + 1,
-            ];
-            const cursorPointTwo: Point = [
-              isFloatingWider
-                ? px - buffer / 2
-                : cursorLeaveFromRight
-                  ? px + buffer * 4
-                  : px - buffer * 4,
-              py + buffer + 1,
-            ];
-            const commonPoints: [Point, Point] = [
-              [
-                rect.left,
-                cursorLeaveFromRight
-                  ? rect.bottom - buffer
-                  : isFloatingWider
-                    ? rect.bottom - buffer
-                    : rect.top,
-              ],
-              [
-                rect.right,
-                cursorLeaveFromRight
-                  ? isFloatingWider
-                    ? rect.bottom - buffer
-                    : rect.top
-                  : rect.bottom - buffer,
-              ],
-            ];
+        const isVertical = side === 'top' || side === 'bottom';
+        const isStart = side === 'top' || side === 'left';
 
-            return [cursorPointOne, cursorPointTwo, ...commonPoints];
-          }
-          case 'bottom': {
-            const cursorPointOne: Point = [
-              isFloatingWider
-                ? px + buffer / 2
-                : cursorLeaveFromRight
-                  ? px + buffer * 4
-                  : px - buffer * 4,
-              py - buffer,
-            ];
-            const cursorPointTwo: Point = [
-              isFloatingWider
-                ? px - buffer / 2
-                : cursorLeaveFromRight
-                  ? px + buffer * 4
-                  : px - buffer * 4,
-              py - buffer,
-            ];
-            const commonPoints: [Point, Point] = [
-              [
-                rect.left,
-                cursorLeaveFromRight
-                  ? rect.top + buffer
-                  : isFloatingWider
-                    ? rect.top + buffer
-                    : rect.bottom,
-              ],
-              [
-                rect.right,
-                cursorLeaveFromRight
-                  ? isFloatingWider
-                    ? rect.top + buffer
-                    : rect.bottom
-                  : rect.top + buffer,
-              ],
-            ];
-
-            return [cursorPointOne, cursorPointTwo, ...commonPoints];
-          }
-          case 'left': {
-            const cursorPointOne: Point = [
-              px + buffer + 1,
-              isFloatingTaller
-                ? py + buffer / 2
-                : cursorLeaveFromBottom
-                  ? py + buffer * 4
-                  : py - buffer * 4,
-            ];
-            const cursorPointTwo: Point = [
-              px + buffer + 1,
-              isFloatingTaller
-                ? py - buffer / 2
-                : cursorLeaveFromBottom
-                  ? py + buffer * 4
-                  : py - buffer * 4,
-            ];
-            const commonPoints: [Point, Point] = [
-              [
-                cursorLeaveFromBottom
-                  ? rect.right - buffer
-                  : isFloatingTaller
-                    ? rect.right - buffer
-                    : rect.left,
-                rect.top,
-              ],
-              [
-                cursorLeaveFromBottom
-                  ? isFloatingTaller
-                    ? rect.right - buffer
-                    : rect.left
-                  : rect.right - buffer,
-                rect.bottom,
-              ],
-            ];
-
-            return [...commonPoints, cursorPointOne, cursorPointTwo];
-          }
-          case 'right': {
-            const cursorPointOne: Point = [
-              px - buffer,
-              isFloatingTaller
-                ? py + buffer / 2
-                : cursorLeaveFromBottom
-                  ? py + buffer * 4
-                  : py - buffer * 4,
-            ];
-            const cursorPointTwo: Point = [
-              px - buffer,
-              isFloatingTaller
-                ? py - buffer / 2
-                : cursorLeaveFromBottom
-                  ? py + buffer * 4
-                  : py - buffer * 4,
-            ];
-            const commonPoints: [Point, Point] = [
-              [
-                cursorLeaveFromBottom
-                  ? rect.left + buffer
-                  : isFloatingTaller
-                    ? rect.left + buffer
-                    : rect.right,
-                rect.top,
-              ],
-              [
-                cursorLeaveFromBottom
-                  ? isFloatingTaller
-                    ? rect.left + buffer
-                    : rect.right
-                  : rect.left + buffer,
-                rect.bottom,
-              ],
-            ];
-
-            return [cursorPointOne, cursorPointTwo, ...commonPoints];
-          }
-          default:
-            return [];
+        if (isVertical) {
+          const cursorOffset = isFloatingWider ? buffer / 2 : buffer * 4;
+          const cursorX = isFloatingWider
+            ? px
+            : cursorLeaveFromRight
+              ? px + cursorOffset
+              : px - cursorOffset;
+          const cursorPointOne: Point = [
+            isFloatingWider ? px + cursorOffset : cursorX,
+            isStart ? py + buffer + 1 : py - buffer,
+          ];
+          const cursorPointTwo: Point = [
+            isFloatingWider ? px - cursorOffset : cursorX,
+            isStart ? py + buffer + 1 : py - buffer,
+          ];
+          const edgeY = isStart ? rect.bottom - buffer : rect.top + buffer;
+          const farEdgeY = isStart ? rect.top : rect.bottom;
+          const commonPoints: [Point, Point] = [
+            [rect.left, cursorLeaveFromRight ? edgeY : isFloatingWider ? edgeY : farEdgeY],
+            [rect.right, cursorLeaveFromRight ? (isFloatingWider ? edgeY : farEdgeY) : edgeY],
+          ];
+          return [cursorPointOne, cursorPointTwo, ...commonPoints];
         }
+
+        // horizontal: left/right
+        const cursorOffset = isFloatingTaller ? buffer / 2 : buffer * 4;
+        const cursorY = isFloatingTaller
+          ? py
+          : cursorLeaveFromBottom
+            ? py + cursorOffset
+            : py - cursorOffset;
+        const cursorPointOne: Point = [
+          isStart ? px + buffer + 1 : px - buffer,
+          isFloatingTaller ? py + cursorOffset : cursorY,
+        ];
+        const cursorPointTwo: Point = [
+          isStart ? px + buffer + 1 : px - buffer,
+          isFloatingTaller ? py - cursorOffset : cursorY,
+        ];
+        const edgeX = isStart ? rect.right - buffer : rect.left + buffer;
+        const farEdgeX = isStart ? rect.left : rect.right;
+        const commonPoints: [Point, Point] = [
+          [cursorLeaveFromBottom ? edgeX : isFloatingTaller ? edgeX : farEdgeX, rect.top],
+          [cursorLeaveFromBottom ? (isFloatingTaller ? edgeX : farEdgeX) : edgeX, rect.bottom],
+        ];
+        return isStart
+          ? [...commonPoints, cursorPointOne, cursorPointTwo]
+          : [cursorPointOne, cursorPointTwo, ...commonPoints];
       }
 
       if (isPointInPolygon([clientX, clientY], rectPoly)) {

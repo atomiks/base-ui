@@ -14,10 +14,10 @@ import {
   useFloatingTree,
   useFocus,
   useHoverReferenceInteraction,
-  useInteractions,
   useFloatingNodeId,
   useFloatingParentNodeId,
 } from '../../floating-ui-react';
+import { mergeInteractionProps } from '../../floating-ui-react/hooks/useInteractions';
 import { FloatingTreeStore } from '../../floating-ui-react/components/FloatingTreeStore';
 import {
   contains,
@@ -217,8 +217,6 @@ export const MenuTrigger = fastComponentRef(function MenuTrigger(
     mouseDownAction: 'open',
   });
 
-  const localInteractionProps = useInteractions([click, focus]);
-
   const state: MenuTrigger.State = {
     disabled,
     open: isOpenedByThisTrigger,
@@ -228,7 +226,7 @@ export const MenuTrigger = fastComponentRef(function MenuTrigger(
 
   const ref = [triggerRef, forwardedRef, buttonRef, registerTrigger, triggerElementRef];
   const props = [
-    localInteractionProps.getReferenceProps(),
+    mergeInteractionProps([click, focus], 'reference', undefined),
     hoverProps ?? EMPTY_OBJECT,
     rootTriggerProps,
     {

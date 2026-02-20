@@ -4,12 +4,12 @@ import { useScrollLock } from '@base-ui/utils/useScrollLock';
 import { useOnFirstRender } from '@base-ui/utils/useOnFirstRender';
 import {
   useDismiss,
-  useInteractions,
   useRole,
   FloatingTree,
   useFloatingParentNodeId,
   useSyncedFloatingRootContext,
 } from '../../floating-ui-react';
+import { mergeInteractionProps } from '../../floating-ui-react/hooks/useInteractions';
 import { PopoverRootContext, usePopoverRootContext } from './PopoverRootContext';
 import { PopoverStore } from '../store/PopoverStore';
 import { PopoverHandle } from '../store/PopoverHandle';
@@ -131,19 +131,17 @@ function PopoverRootComponent<Payload>({ props }: { props: PopoverRoot.Props<Pay
 
   const role = useRole(floatingRootContext);
 
-  const { getReferenceProps, getFloatingProps, getTriggerProps } = useInteractions([dismiss, role]);
-
   const activeTriggerProps = React.useMemo(() => {
-    return getReferenceProps(interactionTypeTriggerProps);
-  }, [getReferenceProps, interactionTypeTriggerProps]);
+    return mergeInteractionProps([dismiss, role], 'reference', interactionTypeTriggerProps);
+  }, [dismiss, role, interactionTypeTriggerProps]);
 
   const inactiveTriggerProps = React.useMemo(() => {
-    return getTriggerProps(interactionTypeTriggerProps);
-  }, [getTriggerProps, interactionTypeTriggerProps]);
+    return mergeInteractionProps([dismiss, role], 'trigger', interactionTypeTriggerProps);
+  }, [dismiss, role, interactionTypeTriggerProps]);
 
   const popupProps = React.useMemo(() => {
-    return getFloatingProps();
-  }, [getFloatingProps]);
+    return mergeInteractionProps([dismiss, role], 'floating', undefined);
+  }, [dismiss, role]);
 
   store.useSyncedValues({
     modal,

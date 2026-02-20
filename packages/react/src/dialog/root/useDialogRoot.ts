@@ -4,10 +4,10 @@ import { useStableCallback } from '@base-ui/utils/useStableCallback';
 import { useScrollLock } from '@base-ui/utils/useScrollLock';
 import {
   useDismiss,
-  useInteractions,
   useRole,
   useSyncedFloatingRootContext,
 } from '../../floating-ui-react';
+import { mergeInteractionProps } from '../../floating-ui-react/hooks/useInteractions';
 import { contains, getTarget } from '../../floating-ui-react/utils';
 import { useOpenInteractionType } from '../../utils/useOpenInteractionType';
 import { createChangeEventDetails } from '../../utils/createBaseUIEventDetails';
@@ -116,8 +116,6 @@ export function useDialogRoot(params: useDialogRoot.Parameters): useDialogRoot.R
 
   useScrollLock(open && modal === true, popupElement);
 
-  const { getReferenceProps, getFloatingProps, getTriggerProps } = useInteractions([role, dismiss]);
-
   // Listen for nested open/close events on this store to maintain the count
   store.useContextCallback('onNestedDialogOpen', (ownChildrenCount) => {
     setOwnNestedOpenDialogs(ownChildrenCount + 1);
@@ -143,16 +141,19 @@ export function useDialogRoot(params: useDialogRoot.Parameters): useDialogRoot.R
   }, [open, parentContext, ownNestedOpenDialogs]);
 
   const activeTriggerProps = React.useMemo(
-    () => getReferenceProps(triggerProps),
-    [getReferenceProps, triggerProps],
+    () => mergeInteractionProps([role, dismiss], 'reference', triggerProps),
+    [role, dismiss, triggerProps],
   );
 
   const inactiveTriggerProps = React.useMemo(
-    () => getTriggerProps(triggerProps),
-    [getTriggerProps, triggerProps],
+    () => mergeInteractionProps([role, dismiss], 'trigger', triggerProps),
+    [role, dismiss, triggerProps],
   );
 
-  const popupProps = React.useMemo(() => getFloatingProps(), [getFloatingProps]);
+  const popupProps = React.useMemo(
+    () => mergeInteractionProps([role, dismiss], 'floating', undefined),
+    [role, dismiss],
+  );
 
   store.useSyncedValues({
     openMethod,

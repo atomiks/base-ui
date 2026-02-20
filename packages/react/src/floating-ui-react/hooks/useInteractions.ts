@@ -30,26 +30,28 @@ export function useInteractions(propsList: Array<ElementProps | void> = []): Use
   const triggerDeps = propsList.map((key) => key?.trigger);
 
   const getReferenceProps = React.useCallback(
-    (userProps?: React.HTMLProps<Element>) => mergeProps(userProps, propsList, 'reference'),
+    (userProps?: React.HTMLProps<Element>) =>
+      mergeInteractionProps(propsList, 'reference', userProps),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     referenceDeps,
   );
 
   const getFloatingProps = React.useCallback(
-    (userProps?: React.HTMLProps<HTMLElement>) => mergeProps(userProps, propsList, 'floating'),
+    (userProps?: React.HTMLProps<HTMLElement>) =>
+      mergeInteractionProps(propsList, 'floating', userProps),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     floatingDeps,
   );
 
   const getItemProps = React.useCallback(
     (userProps?: Omit<React.HTMLProps<HTMLElement>, 'selected' | 'active'> & ExtendedUserProps) =>
-      mergeProps(userProps, propsList, 'item'),
+      mergeInteractionProps(propsList, 'item', userProps),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     itemDeps,
   );
 
   const getTriggerProps = React.useCallback(
-    (userProps?: React.HTMLProps<Element>) => mergeProps(userProps, propsList, 'trigger'),
+    (userProps?: React.HTMLProps<Element>) => mergeInteractionProps(propsList, 'trigger', userProps),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     triggerDeps,
   );
@@ -62,10 +64,10 @@ export function useInteractions(propsList: Array<ElementProps | void> = []): Use
 
 /* eslint-disable guard-for-in */
 
-function mergeProps<Key extends keyof ElementProps>(
-  userProps: (React.HTMLProps<Element> & ExtendedUserProps) | undefined,
+export function mergeInteractionProps<Key extends keyof ElementProps>(
   propsList: Array<ElementProps | void>,
   elementKey: Key,
+  userProps: (React.HTMLProps<Element> & ExtendedUserProps) | undefined,
 ): Record<string, unknown> {
   const eventHandlers = new Map<string, Array<(...args: unknown[]) => void>>();
   const isItem = elementKey === 'item';
@@ -122,21 +124,26 @@ function mutablyMergeProps(
 
     if (!key.startsWith('on')) {
       outputProps[key] = value;
-    } else {
-      if (!eventHandlers.has(key)) {
-        eventHandlers.set(key, []);
+    } else if (typeof value === 'function') {
+      let handlers = eventHandlers.get(key);
+      if (!handlers) {
+        handlers = [];
+        eventHandlers.set(key, handlers);
       }
 
-      if (typeof value === 'function') {
-        eventHandlers.get(key)?.push(value);
+      handlers.push(value);
 
-        outputProps[key] = (...args: unknown[]) => {
-          return eventHandlers
-            .get(key)
-            ?.map((fn) => fn(...args))
-            .find((val) => val !== undefined);
-        };
-      }
+      outputProps[key] = (...args: unknown[]) => {
+        let result: unknown;
+        const fns = eventHandlers.get(key)!;
+        for (let i = 0; i < fns.length; i += 1) {
+          const val = fns[i](...args);
+          if (val !== undefined && result === undefined) {
+            result = val;
+          }
+        }
+        return result;
+      };
     }
   }
 }

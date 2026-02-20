@@ -14,12 +14,12 @@ import {
   useDismiss,
   useFloatingNodeId,
   useFloatingParentNodeId,
-  useInteractions,
   useListNavigation,
   useRole,
   useTypeahead,
   useSyncedFloatingRootContext,
 } from '../../floating-ui-react';
+import { mergeInteractionProps } from '../../floating-ui-react/hooks/useInteractions';
 import { MenuRootContext, useMenuRootContext } from './MenuRootContext';
 import { MenubarContext, useMenubarContext } from '../../menubar/MenubarContext';
 import { TYPEAHEAD_RESET_MS } from '../../utils/constants';
@@ -478,16 +478,9 @@ export const MenuRoot = fastComponent(function MenuRoot<Payload>(props: MenuRoot
     onTypingChange,
   });
 
-  const { getReferenceProps, getFloatingProps, getItemProps, getTriggerProps } = useInteractions([
-    dismiss,
-    role,
-    listNavigation,
-    typeahead,
-  ]);
-
   const activeTriggerProps = React.useMemo(() => {
     const mergedProps = mergeProps(
-      getReferenceProps(),
+      mergeInteractionProps([dismiss, role, listNavigation, typeahead], 'reference', undefined),
       {
         onMouseMove() {
           store.set('allowMouseEnter', true);
@@ -498,10 +491,21 @@ export const MenuRoot = fastComponent(function MenuRoot<Payload>(props: MenuRoot
 
     delete mergedProps.role;
     return mergedProps;
-  }, [getReferenceProps, store, interactionTypeProps]);
+  }, [
+    dismiss,
+    role,
+    listNavigation,
+    typeahead,
+    store,
+    interactionTypeProps,
+  ]);
 
   const inactiveTriggerProps = React.useMemo(() => {
-    const triggerProps = getTriggerProps();
+    const triggerProps = mergeInteractionProps(
+      [dismiss, role, listNavigation, typeahead],
+      'trigger',
+      undefined,
+    );
     if (!triggerProps) {
       return triggerProps;
     }
@@ -510,11 +514,17 @@ export const MenuRoot = fastComponent(function MenuRoot<Payload>(props: MenuRoot
     delete mergedProps.role;
     delete mergedProps['aria-controls'];
     return mergedProps;
-  }, [getTriggerProps, interactionTypeProps]);
+  }, [
+    dismiss,
+    role,
+    listNavigation,
+    typeahead,
+    interactionTypeProps,
+  ]);
 
   const popupProps = React.useMemo(
     () =>
-      getFloatingProps({
+      mergeInteractionProps([dismiss, role, listNavigation, typeahead], 'floating', {
         onMouseMove() {
           store.set('allowMouseEnter', true);
           if (parent.type === 'menu') {
@@ -536,10 +546,20 @@ export const MenuRoot = fastComponent(function MenuRoot<Payload>(props: MenuRoot
           }
         },
       }),
-    [getFloatingProps, parent.type, store],
+    [
+      dismiss,
+      role,
+      listNavigation,
+      typeahead,
+      parent.type,
+      store,
+    ],
   );
 
-  const itemProps = React.useMemo(() => getItemProps(), [getItemProps]);
+  const itemProps = React.useMemo(
+    () => mergeInteractionProps([dismiss, role, listNavigation, typeahead], 'item', undefined),
+    [dismiss, role, listNavigation, typeahead],
+  );
 
   store.useSyncedValues({
     floatingRootContext,
