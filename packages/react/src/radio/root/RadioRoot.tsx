@@ -3,7 +3,7 @@ import * as React from 'react';
 import { useMergedRefs } from '@base-ui/utils/useMergedRefs';
 import { useIsoLayoutEffect } from '@base-ui/utils/useIsoLayoutEffect';
 import { useStableCallback } from '@base-ui/utils/useStableCallback';
-import { visuallyHidden, visuallyHiddenInput } from '@base-ui/utils/visuallyHidden';
+import { visuallyHiddenInput } from '@base-ui/utils/visuallyHidden';
 import type { BaseUIComponentProps, NonNativeButtonProps } from '../../utils/types';
 import { createChangeEventDetails } from '../../utils/createBaseUIEventDetails';
 import { REASONS } from '../../utils/reasons';
@@ -186,7 +186,7 @@ export const RadioRoot = React.forwardRef(function RadioRoot<Value>(
     id: hiddenInputId,
     name,
     tabIndex: -1,
-    style: name ? visuallyHiddenInput : visuallyHidden,
+    style: visuallyHiddenInput,
     'aria-hidden': true,
     ...(value !== undefined ? { value: serializedValue } : EMPTY_OBJECT),
     disabled,

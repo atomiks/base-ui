@@ -439,22 +439,24 @@ describe('<Combobox.Root />', () => {
         const items = ['apple', 'banana', 'cherry'];
 
         await render(
-          <Combobox.Root items={items} name="test" defaultOpen>
-            <Combobox.Input data-testid="input" />
-            <Combobox.Portal>
-              <Combobox.Positioner>
-                <Combobox.Popup>
-                  <Combobox.List>
-                    {(item: string) => (
-                      <Combobox.Item key={item} value={item}>
-                        {item}
-                      </Combobox.Item>
-                    )}
-                  </Combobox.List>
-                </Combobox.Popup>
-              </Combobox.Positioner>
-            </Combobox.Portal>
-          </Combobox.Root>,
+          <form>
+            <Combobox.Root items={items} name="test" defaultOpen>
+              <Combobox.Input data-testid="input" />
+              <Combobox.Portal>
+                <Combobox.Positioner>
+                  <Combobox.Popup>
+                    <Combobox.List>
+                      {(item: string) => (
+                        <Combobox.Item key={item} value={item}>
+                          {item}
+                        </Combobox.Item>
+                      )}
+                    </Combobox.List>
+                  </Combobox.Popup>
+                </Combobox.Positioner>
+              </Combobox.Portal>
+            </Combobox.Root>
+          </form>,
         );
 
         expect(screen.getByRole('listbox')).not.to.equal(null);
@@ -599,19 +601,21 @@ describe('<Combobox.Root />', () => {
       it('should create multiple hidden inputs for form submission', async () => {
         const items = ['a', 'b', 'c'];
         await render(
-          <Combobox.Root multiple value={items} name="languages">
-            <Combobox.Input />
-            <Combobox.Portal>
-              <Combobox.Positioner>
-                <Combobox.Popup>
-                  <Combobox.List>
-                    <Combobox.Item value="a">a</Combobox.Item>
-                    <Combobox.Item value="b">b</Combobox.Item>
-                  </Combobox.List>
-                </Combobox.Popup>
-              </Combobox.Positioner>
-            </Combobox.Portal>
-          </Combobox.Root>,
+          <form>
+            <Combobox.Root multiple value={items} name="languages">
+              <Combobox.Input />
+              <Combobox.Portal>
+                <Combobox.Positioner>
+                  <Combobox.Popup>
+                    <Combobox.List>
+                      <Combobox.Item value="a">a</Combobox.Item>
+                      <Combobox.Item value="b">b</Combobox.Item>
+                    </Combobox.List>
+                  </Combobox.Popup>
+                </Combobox.Positioner>
+              </Combobox.Portal>
+            </Combobox.Root>
+          </form>,
         );
 
         items.forEach((item) => {
@@ -1122,19 +1126,21 @@ describe('<Combobox.Root />', () => {
   it('should handle browser autofill', async () => {
     const onInputValueChange = spy();
     const { user } = await render(
-      <Combobox.Root name="test" onInputValueChange={onInputValueChange}>
-        <Combobox.Input />
-        <Combobox.Portal>
-          <Combobox.Positioner>
-            <Combobox.Popup>
-              <Combobox.List>
-                <Combobox.Item value="a">a</Combobox.Item>
-                <Combobox.Item value="b">b</Combobox.Item>
-              </Combobox.List>
-            </Combobox.Popup>
-          </Combobox.Positioner>
-        </Combobox.Portal>
-      </Combobox.Root>,
+      <form>
+        <Combobox.Root name="test" onInputValueChange={onInputValueChange}>
+          <Combobox.Input />
+          <Combobox.Portal>
+            <Combobox.Positioner>
+              <Combobox.Popup>
+                <Combobox.List>
+                  <Combobox.Item value="a">a</Combobox.Item>
+                  <Combobox.Item value="b">b</Combobox.Item>
+                </Combobox.List>
+              </Combobox.Popup>
+            </Combobox.Positioner>
+          </Combobox.Portal>
+        </Combobox.Root>
+      </form>,
     );
 
     const input = screen.getByRole('combobox');
@@ -1157,22 +1163,24 @@ describe('<Combobox.Root />', () => {
   it('shows all items when opening after browser autofill', async () => {
     const items = ['a', 'b', 'c'];
     const { user } = await render(
-      <Combobox.Root name="test" items={items}>
-        <Combobox.Input />
-        <Combobox.Portal>
-          <Combobox.Positioner>
-            <Combobox.Popup>
-              <Combobox.List>
-                {(item: string) => (
-                  <Combobox.Item key={item} value={item}>
-                    {item}
-                  </Combobox.Item>
-                )}
-              </Combobox.List>
-            </Combobox.Popup>
-          </Combobox.Positioner>
-        </Combobox.Portal>
-      </Combobox.Root>,
+      <form>
+        <Combobox.Root name="test" items={items}>
+          <Combobox.Input />
+          <Combobox.Portal>
+            <Combobox.Positioner>
+              <Combobox.Popup>
+                <Combobox.List>
+                  {(item: string) => (
+                    <Combobox.Item key={item} value={item}>
+                      {item}
+                    </Combobox.Item>
+                  )}
+                </Combobox.List>
+              </Combobox.Popup>
+            </Combobox.Positioner>
+          </Combobox.Portal>
+        </Combobox.Root>
+      </form>,
     );
 
     const input = screen.getByRole('combobox');
@@ -1196,22 +1204,24 @@ describe('<Combobox.Root />', () => {
   it('shows all items when opening after browser autofill with insertReplacementText', async () => {
     const items = ['a', 'b', 'c'];
     const { user } = await render(
-      <Combobox.Root name="test" items={items}>
-        <Combobox.Input />
-        <Combobox.Portal>
-          <Combobox.Positioner>
-            <Combobox.Popup>
-              <Combobox.List>
-                {(item: string) => (
-                  <Combobox.Item key={item} value={item}>
-                    {item}
-                  </Combobox.Item>
-                )}
-              </Combobox.List>
-            </Combobox.Popup>
-          </Combobox.Positioner>
-        </Combobox.Portal>
-      </Combobox.Root>,
+      <form>
+        <Combobox.Root name="test" items={items}>
+          <Combobox.Input />
+          <Combobox.Portal>
+            <Combobox.Positioner>
+              <Combobox.Popup>
+                <Combobox.List>
+                  {(item: string) => (
+                    <Combobox.Item key={item} value={item}>
+                      {item}
+                    </Combobox.Item>
+                  )}
+                </Combobox.List>
+              </Combobox.Popup>
+            </Combobox.Positioner>
+          </Combobox.Portal>
+        </Combobox.Root>
+      </form>,
     );
 
     const input = screen.getByRole('combobox');
@@ -1239,28 +1249,30 @@ describe('<Combobox.Root />', () => {
     ];
 
     await render(
-      <Combobox.Root
-        name="country"
-        items={items}
-        itemToStringLabel={(item: (typeof items)[number]) => item.country}
-        itemToStringValue={(item: (typeof items)[number]) => item.code}
-        defaultOpen
-      >
-        <Combobox.Input />
-        <Combobox.Portal>
-          <Combobox.Positioner>
-            <Combobox.Popup>
-              <Combobox.List>
-                {(item: (typeof items)[1]) => (
-                  <Combobox.Item key={item.code} value={item}>
-                    {item.country}
-                  </Combobox.Item>
-                )}
-              </Combobox.List>
-            </Combobox.Popup>
-          </Combobox.Positioner>
-        </Combobox.Portal>
-      </Combobox.Root>,
+      <form>
+        <Combobox.Root
+          name="country"
+          items={items}
+          itemToStringLabel={(item: (typeof items)[number]) => item.country}
+          itemToStringValue={(item: (typeof items)[number]) => item.code}
+          defaultOpen
+        >
+          <Combobox.Input />
+          <Combobox.Portal>
+            <Combobox.Positioner>
+              <Combobox.Popup>
+                <Combobox.List>
+                  {(item: (typeof items)[1]) => (
+                    <Combobox.Item key={item.code} value={item}>
+                      {item.country}
+                    </Combobox.Item>
+                  )}
+                </Combobox.List>
+              </Combobox.Popup>
+            </Combobox.Positioner>
+          </Combobox.Portal>
+        </Combobox.Root>
+      </form>,
     );
 
     const input = screen.getByRole('combobox');
@@ -1284,19 +1296,21 @@ describe('<Combobox.Root />', () => {
 
   it('should pass autoComplete to the hidden input', async () => {
     await render(
-      <Combobox.Root name="country" autoComplete="country">
-        <Combobox.Input />
-        <Combobox.Portal>
-          <Combobox.Positioner>
-            <Combobox.Popup>
-              <Combobox.List>
-                <Combobox.Item value="US">United States</Combobox.Item>
-                <Combobox.Item value="CA">Canada</Combobox.Item>
-              </Combobox.List>
-            </Combobox.Popup>
-          </Combobox.Positioner>
-        </Combobox.Portal>
-      </Combobox.Root>,
+      <form>
+        <Combobox.Root name="country" autoComplete="country">
+          <Combobox.Input />
+          <Combobox.Portal>
+            <Combobox.Positioner>
+              <Combobox.Popup>
+                <Combobox.List>
+                  <Combobox.Item value="US">United States</Combobox.Item>
+                  <Combobox.Item value="CA">Canada</Combobox.Item>
+                </Combobox.List>
+              </Combobox.Popup>
+            </Combobox.Positioner>
+          </Combobox.Portal>
+        </Combobox.Root>
+      </form>,
     );
 
     const input = screen.getByRole('combobox');
@@ -1498,18 +1512,20 @@ describe('<Combobox.Root />', () => {
 
     it('should set disabled attribute on hidden input', async () => {
       await render(
-        <Combobox.Root disabled name="test">
-          <Combobox.Input />
-          <Combobox.Portal>
-            <Combobox.Positioner>
-              <Combobox.Popup>
-                <Combobox.List>
-                  <Combobox.Item value="a">a</Combobox.Item>
-                </Combobox.List>
-              </Combobox.Popup>
-            </Combobox.Positioner>
-          </Combobox.Portal>
-        </Combobox.Root>,
+        <form>
+          <Combobox.Root disabled name="test">
+            <Combobox.Input />
+            <Combobox.Portal>
+              <Combobox.Positioner>
+                <Combobox.Popup>
+                  <Combobox.List>
+                    <Combobox.Item value="a">a</Combobox.Item>
+                  </Combobox.List>
+                </Combobox.Popup>
+              </Combobox.Positioner>
+            </Combobox.Portal>
+          </Combobox.Root>
+        </form>,
       );
 
       const hiddenInput = screen.getByRole('textbox', { hidden: true });
@@ -1520,9 +1536,11 @@ describe('<Combobox.Root />', () => {
   describe('prop: required', () => {
     it('does not mark the hidden input as required when selection exists in multiple mode', async () => {
       await render(
-        <Combobox.Root multiple required name="languages" value={['a']}>
-          <Combobox.Input />
-        </Combobox.Root>,
+        <form>
+          <Combobox.Root multiple required name="languages" value={['a']}>
+            <Combobox.Input />
+          </Combobox.Root>
+        </form>,
       );
 
       const hiddenInput = screen.getByRole('textbox', { hidden: true });
@@ -1532,9 +1550,11 @@ describe('<Combobox.Root />', () => {
 
     it('keeps the hidden input required when no selection exists in multiple mode', async () => {
       await render(
-        <Combobox.Root multiple required name="languages" value={[]}>
-          <Combobox.Input />
-        </Combobox.Root>,
+        <form>
+          <Combobox.Root multiple required name="languages" value={[]}>
+            <Combobox.Input />
+          </Combobox.Root>
+        </form>,
       );
 
       const hiddenInput = screen.getByRole('textbox', { hidden: true });
@@ -1630,18 +1650,20 @@ describe('<Combobox.Root />', () => {
 
     it('should set readOnly attribute on hidden input', async () => {
       await render(
-        <Combobox.Root readOnly name="test">
-          <Combobox.Input />
-          <Combobox.Portal>
-            <Combobox.Positioner>
-              <Combobox.Popup>
-                <Combobox.List>
-                  <Combobox.Item value="a">a</Combobox.Item>
-                </Combobox.List>
-              </Combobox.Popup>
-            </Combobox.Positioner>
-          </Combobox.Portal>
-        </Combobox.Root>,
+        <form>
+          <Combobox.Root readOnly name="test">
+            <Combobox.Input />
+            <Combobox.Portal>
+              <Combobox.Positioner>
+                <Combobox.Popup>
+                  <Combobox.List>
+                    <Combobox.Item value="a">a</Combobox.Item>
+                  </Combobox.List>
+                </Combobox.Popup>
+              </Combobox.Positioner>
+            </Combobox.Portal>
+          </Combobox.Root>
+        </form>,
       );
 
       const hiddenInput = screen.getByRole('textbox', { hidden: true });
@@ -1742,28 +1764,30 @@ describe('<Combobox.Root />', () => {
 
     it('uses itemToStringValue for form submission', async () => {
       await render(
-        <Combobox.Root
-          name="country"
-          items={items}
-          itemToStringLabel={(item) => item.country}
-          itemToStringValue={(item) => item.code}
-          defaultValue={items[0]}
-        >
-          <Combobox.Input />
-          <Combobox.Portal>
-            <Combobox.Positioner>
-              <Combobox.Popup>
-                <Combobox.List>
-                  {(item: string) => (
-                    <Combobox.Item key={item} value={item}>
-                      {item}
-                    </Combobox.Item>
-                  )}
-                </Combobox.List>
-              </Combobox.Popup>
-            </Combobox.Positioner>
-          </Combobox.Portal>
-        </Combobox.Root>,
+        <form>
+          <Combobox.Root
+            name="country"
+            items={items}
+            itemToStringLabel={(item) => item.country}
+            itemToStringValue={(item) => item.code}
+            defaultValue={items[0]}
+          >
+            <Combobox.Input />
+            <Combobox.Portal>
+              <Combobox.Positioner>
+                <Combobox.Popup>
+                  <Combobox.List>
+                    {(item: string) => (
+                      <Combobox.Item key={item} value={item}>
+                        {item}
+                      </Combobox.Item>
+                    )}
+                  </Combobox.List>
+                </Combobox.Popup>
+              </Combobox.Positioner>
+            </Combobox.Portal>
+          </Combobox.Root>
+        </form>,
       );
 
       const hiddenInput = screen.getByDisplayValue('US'); // input[name="country"]
@@ -1774,29 +1798,31 @@ describe('<Combobox.Root />', () => {
     it('uses itemToStringValue for multiple selection form submission', async () => {
       const values = [items[0], items[1]];
       await render(
-        <Combobox.Root
-          name="countries"
-          items={items}
-          itemToStringLabel={(item) => item.country}
-          itemToStringValue={(item) => item.code}
-          multiple
-          defaultValue={values}
-        >
-          <Combobox.Input />
-          <Combobox.Portal>
-            <Combobox.Positioner>
-              <Combobox.Popup>
-                <Combobox.List>
-                  {(item: string) => (
-                    <Combobox.Item key={item} value={item}>
-                      {item}
-                    </Combobox.Item>
-                  )}
-                </Combobox.List>
-              </Combobox.Popup>
-            </Combobox.Positioner>
-          </Combobox.Portal>
-        </Combobox.Root>,
+        <form>
+          <Combobox.Root
+            name="countries"
+            items={items}
+            itemToStringLabel={(item) => item.country}
+            itemToStringValue={(item) => item.code}
+            multiple
+            defaultValue={values}
+          >
+            <Combobox.Input />
+            <Combobox.Portal>
+              <Combobox.Positioner>
+                <Combobox.Popup>
+                  <Combobox.List>
+                    {(item: string) => (
+                      <Combobox.Item key={item} value={item}>
+                        {item}
+                      </Combobox.Item>
+                    )}
+                  </Combobox.List>
+                </Combobox.Popup>
+              </Combobox.Positioner>
+            </Combobox.Portal>
+          </Combobox.Root>
+        </form>,
       );
 
       values.forEach((value) => {
@@ -4245,27 +4271,29 @@ describe('<Combobox.Root />', () => {
 
       it('serializes {value,label} objects using their value field', async () => {
         await render(
-          <Combobox.Root
-            name="country"
-            items={items}
-            itemToStringLabel={(item) => item.label}
-            defaultValue={items[1]}
-          >
-            <Combobox.Input />
-            <Combobox.Portal>
-              <Combobox.Positioner>
-                <Combobox.Popup>
-                  <Combobox.List>
-                    {(item: { value: string; label: string }) => (
-                      <Combobox.Item key={item.value} value={item}>
-                        {item.label}
-                      </Combobox.Item>
-                    )}
-                  </Combobox.List>
-                </Combobox.Popup>
-              </Combobox.Positioner>
-            </Combobox.Portal>
-          </Combobox.Root>,
+          <form>
+            <Combobox.Root
+              name="country"
+              items={items}
+              itemToStringLabel={(item) => item.label}
+              defaultValue={items[1]}
+            >
+              <Combobox.Input />
+              <Combobox.Portal>
+                <Combobox.Positioner>
+                  <Combobox.Popup>
+                    <Combobox.List>
+                      {(item: { value: string; label: string }) => (
+                        <Combobox.Item key={item.value} value={item}>
+                          {item.label}
+                        </Combobox.Item>
+                      )}
+                    </Combobox.List>
+                  </Combobox.Popup>
+                </Combobox.Positioner>
+              </Combobox.Portal>
+            </Combobox.Root>
+          </form>,
         );
 
         const hiddenInput = screen.getByDisplayValue('CA');
@@ -4276,28 +4304,30 @@ describe('<Combobox.Root />', () => {
       it('serializes multiple {value,label} objects into multiple hidden inputs', async () => {
         const values = [items[0], items[2]];
         const { container } = await render(
-          <Combobox.Root
-            name="countries"
-            items={items}
-            itemToStringLabel={(item) => item.label}
-            multiple
-            defaultValue={values}
-          >
-            <Combobox.Input />
-            <Combobox.Portal>
-              <Combobox.Positioner>
-                <Combobox.Popup>
-                  <Combobox.List>
-                    {(item: { value: string; label: string }) => (
-                      <Combobox.Item key={item.value} value={item}>
-                        {item.label}
-                      </Combobox.Item>
-                    )}
-                  </Combobox.List>
-                </Combobox.Popup>
-              </Combobox.Positioner>
-            </Combobox.Portal>
-          </Combobox.Root>,
+          <form>
+            <Combobox.Root
+              name="countries"
+              items={items}
+              itemToStringLabel={(item) => item.label}
+              multiple
+              defaultValue={values}
+            >
+              <Combobox.Input />
+              <Combobox.Portal>
+                <Combobox.Positioner>
+                  <Combobox.Popup>
+                    <Combobox.List>
+                      {(item: { value: string; label: string }) => (
+                        <Combobox.Item key={item.value} value={item}>
+                          {item.label}
+                        </Combobox.Item>
+                      )}
+                    </Combobox.List>
+                  </Combobox.Popup>
+                </Combobox.Positioner>
+              </Combobox.Portal>
+            </Combobox.Root>
+          </form>,
         );
 
         // eslint-disable-next-line testing-library/no-container -- Can't avoid container here. A better test would be checking form submission.
@@ -4316,28 +4346,30 @@ describe('<Combobox.Root />', () => {
         ];
 
         const { container } = await render(
-          <Combobox.Root
-            name="country"
-            items={codeItems}
-            itemToStringLabel={(item) => item.name}
-            itemToStringValue={(item) => item.code}
-            defaultValue={codeItems[0]}
-          >
-            <Combobox.Input />
-            <Combobox.Portal>
-              <Combobox.Positioner>
-                <Combobox.Popup>
-                  <Combobox.List>
-                    {(item: { code: string; name: string }) => (
-                      <Combobox.Item key={item.code} value={item}>
-                        {item.name}
-                      </Combobox.Item>
-                    )}
-                  </Combobox.List>
-                </Combobox.Popup>
-              </Combobox.Positioner>
-            </Combobox.Portal>
-          </Combobox.Root>,
+          <form>
+            <Combobox.Root
+              name="country"
+              items={codeItems}
+              itemToStringLabel={(item) => item.name}
+              itemToStringValue={(item) => item.code}
+              defaultValue={codeItems[0]}
+            >
+              <Combobox.Input />
+              <Combobox.Portal>
+                <Combobox.Positioner>
+                  <Combobox.Popup>
+                    <Combobox.List>
+                      {(item: { code: string; name: string }) => (
+                        <Combobox.Item key={item.code} value={item}>
+                          {item.name}
+                        </Combobox.Item>
+                      )}
+                    </Combobox.List>
+                  </Combobox.Popup>
+                </Combobox.Positioner>
+              </Combobox.Portal>
+            </Combobox.Root>
+          </form>,
         );
 
         // eslint-disable-next-line testing-library/no-container -- Can't avoid container here. A better test would be checking form submission.
@@ -4592,21 +4624,23 @@ describe('<Combobox.Root />', () => {
 
     it('should receive name prop from Field.Root', async () => {
       await render(
-        <Field.Root name="field-combobox">
-          <Combobox.Root>
-            <Combobox.Input data-testid="input" />
-            <Combobox.Portal>
-              <Combobox.Positioner>
-                <Combobox.Popup>
-                  <Combobox.List>
-                    <Combobox.Item value="a">a</Combobox.Item>
-                    <Combobox.Item value="b">b</Combobox.Item>
-                  </Combobox.List>
-                </Combobox.Popup>
-              </Combobox.Positioner>
-            </Combobox.Portal>
-          </Combobox.Root>
-        </Field.Root>,
+        <form>
+          <Field.Root name="field-combobox">
+            <Combobox.Root>
+              <Combobox.Input data-testid="input" />
+              <Combobox.Portal>
+                <Combobox.Positioner>
+                  <Combobox.Popup>
+                    <Combobox.List>
+                      <Combobox.Item value="a">a</Combobox.Item>
+                      <Combobox.Item value="b">b</Combobox.Item>
+                    </Combobox.List>
+                  </Combobox.Popup>
+                </Combobox.Positioner>
+              </Combobox.Portal>
+            </Combobox.Root>
+          </Field.Root>
+        </form>,
       );
 
       const hiddenInput = screen.getByRole('textbox', { hidden: true });
@@ -5379,32 +5413,34 @@ describe('<Combobox.Root />', () => {
       const hiddenInputRef = React.createRef<HTMLInputElement>();
 
       const { user } = await render(
-        <Combobox.Root
-          items={users}
-          defaultValue={users[0]}
-          itemToStringLabel={(item) => item.name}
-          itemToStringValue={(item) => String(item.id)}
-          isItemEqualToValue={compare}
-          inputRef={hiddenInputRef}
-        >
-          <Combobox.Trigger>
-            <Combobox.Value data-testid="value" />
-          </Combobox.Trigger>
-          <Combobox.Clear data-testid="clear" />
-          <Combobox.Portal>
-            <Combobox.Positioner>
-              <Combobox.Popup>
-                <Combobox.List>
-                  {(item) => (
-                    <Combobox.Item key={item.id} value={item}>
-                      {item.name}
-                    </Combobox.Item>
-                  )}
-                </Combobox.List>
-              </Combobox.Popup>
-            </Combobox.Positioner>
-          </Combobox.Portal>
-        </Combobox.Root>,
+        <form>
+          <Combobox.Root
+            items={users}
+            defaultValue={users[0]}
+            itemToStringLabel={(item) => item.name}
+            itemToStringValue={(item) => String(item.id)}
+            isItemEqualToValue={compare}
+            inputRef={hiddenInputRef}
+          >
+            <Combobox.Trigger>
+              <Combobox.Value data-testid="value" />
+            </Combobox.Trigger>
+            <Combobox.Clear data-testid="clear" />
+            <Combobox.Portal>
+              <Combobox.Positioner>
+                <Combobox.Popup>
+                  <Combobox.List>
+                    {(item) => (
+                      <Combobox.Item key={item.id} value={item}>
+                        {item.name}
+                      </Combobox.Item>
+                    )}
+                  </Combobox.List>
+                </Combobox.Popup>
+              </Combobox.Positioner>
+            </Combobox.Portal>
+          </Combobox.Root>
+        </form>,
       );
 
       const clear = await screen.findByTestId('clear');

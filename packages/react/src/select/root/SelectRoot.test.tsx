@@ -216,27 +216,29 @@ describe('<Select.Root />', () => {
       ];
 
       await render(
-        <Select.Root
-          name="country"
-          defaultValue={items[0]}
-          itemToStringLabel={(item) => item.country}
-          itemToStringValue={(item) => item.code}
-        >
-          <Select.Trigger>
-            <Select.Value />
-          </Select.Trigger>
-          <Select.Portal>
-            <Select.Positioner>
-              <Select.Popup>
-                {items.map((it) => (
-                  <Select.Item key={it.code} value={it}>
-                    {it.country}
-                  </Select.Item>
-                ))}
-              </Select.Popup>
-            </Select.Positioner>
-          </Select.Portal>
-        </Select.Root>,
+        <form>
+          <Select.Root
+            name="country"
+            defaultValue={items[0]}
+            itemToStringLabel={(item) => item.country}
+            itemToStringValue={(item) => item.code}
+          >
+            <Select.Trigger>
+              <Select.Value />
+            </Select.Trigger>
+            <Select.Portal>
+              <Select.Positioner>
+                <Select.Popup>
+                  {items.map((it) => (
+                    <Select.Item key={it.code} value={it}>
+                      {it.country}
+                    </Select.Item>
+                  ))}
+                </Select.Popup>
+              </Select.Positioner>
+            </Select.Portal>
+          </Select.Root>
+        </form>,
       );
 
       const hiddenInput = screen.getByRole('textbox', {
@@ -253,28 +255,30 @@ describe('<Select.Root />', () => {
       ];
 
       const { container } = await render(
-        <Select.Root
-          name="countries"
-          multiple
-          defaultValue={[items[0], items[1]]}
-          itemToStringLabel={(item) => item.country}
-          itemToStringValue={(item) => item.code}
-        >
-          <Select.Trigger>
-            <Select.Value />
-          </Select.Trigger>
-          <Select.Portal>
-            <Select.Positioner>
-              <Select.Popup>
-                {items.map((it) => (
-                  <Select.Item key={it.code} value={it}>
-                    {it.country}
-                  </Select.Item>
-                ))}
-              </Select.Popup>
-            </Select.Positioner>
-          </Select.Portal>
-        </Select.Root>,
+        <form>
+          <Select.Root
+            name="countries"
+            multiple
+            defaultValue={[items[0], items[1]]}
+            itemToStringLabel={(item) => item.country}
+            itemToStringValue={(item) => item.code}
+          >
+            <Select.Trigger>
+              <Select.Value />
+            </Select.Trigger>
+            <Select.Portal>
+              <Select.Positioner>
+                <Select.Popup>
+                  {items.map((it) => (
+                    <Select.Item key={it.code} value={it}>
+                      {it.country}
+                    </Select.Item>
+                  ))}
+                </Select.Popup>
+              </Select.Positioner>
+            </Select.Portal>
+          </Select.Root>
+        </form>,
       );
 
       // eslint-disable-next-line testing-library/no-container -- No appropriate method on screen since it's a type=hidden input
@@ -561,19 +565,21 @@ describe('<Select.Root />', () => {
 
   it('should handle browser autofill', async () => {
     const { user } = await render(
-      <Select.Root name="select">
-        <Select.Trigger data-testid="trigger">
-          <Select.Value />
-        </Select.Trigger>
-        <Select.Portal>
-          <Select.Positioner>
-            <Select.Popup>
-              <Select.Item value="a">a</Select.Item>
-              <Select.Item value="b">b</Select.Item>
-            </Select.Popup>
-          </Select.Positioner>
-        </Select.Portal>
-      </Select.Root>,
+      <form>
+        <Select.Root name="select">
+          <Select.Trigger data-testid="trigger">
+            <Select.Value />
+          </Select.Trigger>
+          <Select.Portal>
+            <Select.Positioner>
+              <Select.Popup>
+                <Select.Item value="a">a</Select.Item>
+                <Select.Item value="b">b</Select.Item>
+              </Select.Popup>
+            </Select.Positioner>
+          </Select.Portal>
+        </Select.Root>
+      </form>,
     );
 
     const trigger = screen.getByTestId('trigger');
@@ -594,19 +600,21 @@ describe('<Select.Root />', () => {
 
   it('should pass autoComplete to the hidden input', async () => {
     await render(
-      <Select.Root name="country" autoComplete="country">
-        <Select.Trigger data-testid="trigger">
-          <Select.Value />
-        </Select.Trigger>
-        <Select.Portal>
-          <Select.Positioner>
-            <Select.Popup>
-              <Select.Item value="US">United States</Select.Item>
-              <Select.Item value="CA">Canada</Select.Item>
-            </Select.Popup>
-          </Select.Positioner>
-        </Select.Portal>
-      </Select.Root>,
+      <form>
+        <Select.Root name="country" autoComplete="country">
+          <Select.Trigger data-testid="trigger">
+            <Select.Value />
+          </Select.Trigger>
+          <Select.Portal>
+            <Select.Positioner>
+              <Select.Popup>
+                <Select.Item value="US">United States</Select.Item>
+                <Select.Item value="CA">Canada</Select.Item>
+              </Select.Popup>
+            </Select.Positioner>
+          </Select.Portal>
+        </Select.Root>
+      </form>,
     );
 
     const hiddenInput = screen.getByRole('textbox', { hidden: true });
@@ -621,26 +629,28 @@ describe('<Select.Root />', () => {
     ];
 
     const { user } = await render(
-      <Select.Root
-        name="country"
-        itemToStringLabel={(item: any) => item.country}
-        itemToStringValue={(item: any) => item.code}
-      >
-        <Select.Trigger data-testid="trigger">
-          <Select.Value />
-        </Select.Trigger>
-        <Select.Portal>
-          <Select.Positioner>
-            <Select.Popup>
-              {items.map((it) => (
-                <Select.Item key={it.code} value={it}>
-                  {it.country}
-                </Select.Item>
-              ))}
-            </Select.Popup>
-          </Select.Positioner>
-        </Select.Portal>
-      </Select.Root>,
+      <form>
+        <Select.Root
+          name="country"
+          itemToStringLabel={(item: any) => item.country}
+          itemToStringValue={(item: any) => item.code}
+        >
+          <Select.Trigger data-testid="trigger">
+            <Select.Value />
+          </Select.Trigger>
+          <Select.Portal>
+            <Select.Positioner>
+              <Select.Popup>
+                {items.map((it) => (
+                  <Select.Item key={it.code} value={it}>
+                    {it.country}
+                  </Select.Item>
+                ))}
+              </Select.Popup>
+            </Select.Positioner>
+          </Select.Portal>
+        </Select.Root>
+      </form>,
     );
 
     const trigger = screen.getByTestId('trigger');
@@ -1202,13 +1212,31 @@ describe('<Select.Root />', () => {
       expect(hiddenInput).not.to.have.attribute('name');
     });
 
+    it('sets a hidden input id when name is not provided and in a form', async () => {
+      await render(
+        <form>
+          <Select.Root id="test-id">
+            <Select.Trigger>
+              <Select.Value />
+            </Select.Trigger>
+          </Select.Root>
+        </form>,
+      );
+
+      const hiddenInput = screen.getByRole('textbox', { hidden: true });
+      expect(hiddenInput).to.have.attribute('id', 'test-id-hidden-input');
+      expect(hiddenInput).not.to.have.attribute('name');
+    });
+
     it('does not set a hidden input id when name is provided', async () => {
       await render(
-        <Select.Root id="test-id" name="country">
-          <Select.Trigger>
-            <Select.Value />
-          </Select.Trigger>
-        </Select.Root>,
+        <form>
+          <Select.Root id="test-id" name="country">
+            <Select.Trigger>
+              <Select.Value />
+            </Select.Trigger>
+          </Select.Root>
+        </form>,
       );
 
       const hiddenInput = screen.getByRole('textbox', { hidden: true });
@@ -1243,21 +1271,23 @@ describe('<Select.Root />', () => {
 
     it('should receive name prop from Field.Root', async () => {
       await render(
-        <Field.Root name="field-select">
-          <Select.Root>
-            <Select.Trigger data-testid="trigger">
-              <Select.Value />
-            </Select.Trigger>
-            <Select.Portal>
-              <Select.Positioner>
-                <Select.Popup>
-                  <Select.Item value="a">a</Select.Item>
-                  <Select.Item value="b">b</Select.Item>
-                </Select.Popup>
-              </Select.Positioner>
-            </Select.Portal>
-          </Select.Root>
-        </Field.Root>,
+        <form>
+          <Field.Root name="field-select">
+            <Select.Root>
+              <Select.Trigger data-testid="trigger">
+                <Select.Value />
+              </Select.Trigger>
+              <Select.Portal>
+                <Select.Positioner>
+                  <Select.Popup>
+                    <Select.Item value="a">a</Select.Item>
+                    <Select.Item value="b">b</Select.Item>
+                  </Select.Popup>
+                </Select.Positioner>
+              </Select.Portal>
+            </Select.Root>
+          </Field.Root>
+        </form>,
       );
 
       const hiddenInput = screen.getByRole('textbox', { hidden: true });
@@ -2862,20 +2892,22 @@ describe('<Select.Root />', () => {
 
     it('should serialize multiple values correctly for form submission', async () => {
       const { container } = await render(
-        <Select.Root multiple name="select" value={['a', 'c']}>
-          <Select.Trigger data-testid="trigger">
-            <Select.Value />
-          </Select.Trigger>
-          <Select.Portal>
-            <Select.Positioner>
-              <Select.Popup>
-                <Select.Item value="a">a</Select.Item>
-                <Select.Item value="b">b</Select.Item>
-                <Select.Item value="c">c</Select.Item>
-              </Select.Popup>
-            </Select.Positioner>
-          </Select.Portal>
-        </Select.Root>,
+        <form>
+          <Select.Root multiple name="select" value={['a', 'c']}>
+            <Select.Trigger data-testid="trigger">
+              <Select.Value />
+            </Select.Trigger>
+            <Select.Portal>
+              <Select.Positioner>
+                <Select.Popup>
+                  <Select.Item value="a">a</Select.Item>
+                  <Select.Item value="b">b</Select.Item>
+                  <Select.Item value="c">c</Select.Item>
+                </Select.Popup>
+              </Select.Positioner>
+            </Select.Portal>
+          </Select.Root>
+        </form>,
       );
 
       // eslint-disable-next-line testing-library/no-container -- No appropriate method on screen since it's a hidden input without any type
@@ -2889,20 +2921,22 @@ describe('<Select.Root />', () => {
 
     it('should serialize empty array as empty string in multiple mode', async () => {
       const { container } = await render(
-        <Select.Root multiple name="select">
-          <Select.Trigger data-testid="trigger">
-            <Select.Value />
-          </Select.Trigger>
-          <Select.Portal>
-            <Select.Positioner>
-              <Select.Popup>
-                <Select.Item value="a">a</Select.Item>
-                <Select.Item value="b">b</Select.Item>
-                <Select.Item value="c">c</Select.Item>
-              </Select.Popup>
-            </Select.Positioner>
-          </Select.Portal>
-        </Select.Root>,
+        <form>
+          <Select.Root multiple name="select">
+            <Select.Trigger data-testid="trigger">
+              <Select.Value />
+            </Select.Trigger>
+            <Select.Portal>
+              <Select.Positioner>
+                <Select.Popup>
+                  <Select.Item value="a">a</Select.Item>
+                  <Select.Item value="b">b</Select.Item>
+                  <Select.Item value="c">c</Select.Item>
+                </Select.Popup>
+              </Select.Positioner>
+            </Select.Portal>
+          </Select.Root>
+        </form>,
       );
 
       // In multiple mode with empty array, no hidden inputs with name should exist
@@ -2919,11 +2953,13 @@ describe('<Select.Root />', () => {
 
     it('does not mark the hidden input as required when selection exists', async () => {
       await render(
-        <Select.Root multiple required name="select" value={['a']}>
-          <Select.Trigger>
-            <Select.Value />
-          </Select.Trigger>
-        </Select.Root>,
+        <form>
+          <Select.Root multiple required name="select" value={['a']}>
+            <Select.Trigger>
+              <Select.Value />
+            </Select.Trigger>
+          </Select.Root>
+        </form>,
       );
 
       const hiddenInput = screen.getByRole('textbox', { hidden: true });
@@ -2933,11 +2969,13 @@ describe('<Select.Root />', () => {
 
     it('keeps the hidden input required when no selection exists', async () => {
       await render(
-        <Select.Root multiple required name="select" value={[]}>
-          <Select.Trigger>
-            <Select.Value />
-          </Select.Trigger>
-        </Select.Root>,
+        <form>
+          <Select.Root multiple required name="select" value={[]}>
+            <Select.Trigger>
+              <Select.Value />
+            </Select.Trigger>
+          </Select.Root>
+        </form>,
       );
 
       const hiddenInput = screen.getByRole('textbox', { hidden: true });

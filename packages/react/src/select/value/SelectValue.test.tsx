@@ -367,22 +367,24 @@ describe('<Select.Value />', () => {
       ];
 
       await render(
-        <Select.Root name="country" value={items[1]}>
-          <Select.Trigger>
-            <Select.Value data-testid="value" />
-          </Select.Trigger>
-          <Select.Portal>
-            <Select.Positioner>
-              <Select.Popup>
-                {items.map((it) => (
-                  <Select.Item key={it.value} value={it}>
-                    {it.label}
-                  </Select.Item>
-                ))}
-              </Select.Popup>
-            </Select.Positioner>
-          </Select.Portal>
-        </Select.Root>,
+        <form>
+          <Select.Root name="country" value={items[1]}>
+            <Select.Trigger>
+              <Select.Value data-testid="value" />
+            </Select.Trigger>
+            <Select.Portal>
+              <Select.Positioner>
+                <Select.Popup>
+                  {items.map((it) => (
+                    <Select.Item key={it.value} value={it}>
+                      {it.label}
+                    </Select.Item>
+                  ))}
+                </Select.Popup>
+              </Select.Positioner>
+            </Select.Portal>
+          </Select.Root>
+        </form>,
       );
 
       const hiddenInput = screen.getByRole('textbox', {

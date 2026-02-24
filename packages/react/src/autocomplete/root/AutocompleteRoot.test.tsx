@@ -68,21 +68,23 @@ describe('<Autocomplete.Root />', () => {
 
   it('should handle browser autofill', async () => {
     await render(
-      <Field.Root name="auto">
-        <Autocomplete.Root defaultValue="">
-          <Autocomplete.Input data-testid="input" />
-          <Autocomplete.Portal>
-            <Autocomplete.Positioner>
-              <Autocomplete.Popup>
-                <Autocomplete.List>
-                  <Autocomplete.Item value="alpha">alpha</Autocomplete.Item>
-                  <Autocomplete.Item value="beta">beta</Autocomplete.Item>
-                </Autocomplete.List>
-              </Autocomplete.Popup>
-            </Autocomplete.Positioner>
-          </Autocomplete.Portal>
-        </Autocomplete.Root>
-      </Field.Root>,
+      <form>
+        <Field.Root name="auto">
+          <Autocomplete.Root defaultValue="">
+            <Autocomplete.Input data-testid="input" />
+            <Autocomplete.Portal>
+              <Autocomplete.Positioner>
+                <Autocomplete.Popup>
+                  <Autocomplete.List>
+                    <Autocomplete.Item value="alpha">alpha</Autocomplete.Item>
+                    <Autocomplete.Item value="beta">beta</Autocomplete.Item>
+                  </Autocomplete.List>
+                </Autocomplete.Popup>
+              </Autocomplete.Positioner>
+            </Autocomplete.Portal>
+          </Autocomplete.Root>
+        </Field.Root>
+      </form>,
     );
 
     // Hidden inputs are rendered without a name for selectionMode='none', but Field provides the form input.
