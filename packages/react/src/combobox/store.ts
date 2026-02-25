@@ -1,4 +1,4 @@
-import { Store, createSelector } from '@base-ui/utils/store';
+import { ReactStore, createSelector } from '@base-ui/utils/store';
 import type { InteractionType } from '@base-ui/utils/useEnhancedClickHandler';
 import type { TransitionStatus } from '../utils/useTransitionStatus';
 import type { HTMLProps } from '../utils/types';
@@ -88,8 +88,6 @@ export type State = {
   submitOnItemClick: boolean;
   hasInputValue: boolean;
 };
-
-export type ComboboxStore = Store<State>;
 
 export const selectors = {
   id: createSelector((state: State) => state.id),
@@ -183,3 +181,9 @@ export const selectors = {
   autoHighlight: createSelector((state: State) => state.autoHighlight),
   submitOnItemClick: createSelector((state: State) => state.submitOnItemClick),
 };
+
+export class ComboboxStore extends ReactStore<Readonly<State>, {}, typeof selectors> {
+  constructor(initialState: State) {
+    super(initialState, {}, selectors);
+  }
+}

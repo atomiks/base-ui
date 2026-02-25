@@ -7,7 +7,6 @@ import { useStableCallback } from '@base-ui/utils/useStableCallback';
 import { useMergedRefs } from '@base-ui/utils/useMergedRefs';
 import { visuallyHidden, visuallyHiddenInput } from '@base-ui/utils/visuallyHidden';
 import { useRefWithInit } from '@base-ui/utils/useRefWithInit';
-import { Store, useStore } from '@base-ui/utils/store';
 import { useValueAsRef } from '@base-ui/utils/useValueAsRef';
 import {
   ElementProps,
@@ -31,7 +30,7 @@ import {
   ComboboxRootContext,
   ComboboxInputValueContext,
 } from './ComboboxRootContext';
-import { selectors, type State as StoreState } from '../store';
+import { ComboboxStore } from '../store';
 import { useOpenChangeComplete } from '../../utils/useOpenChangeComplete';
 import { useFieldRootContext } from '../../field/root/FieldRootContext';
 import { useField } from '../../field/useField';
@@ -336,7 +335,7 @@ export function AriaCombobox<Value = any, Mode extends SelectionMode = 'none'>(
 
   const store = useRefWithInit(
     () =>
-      new Store<StoreState>({
+      new ComboboxStore({
         id,
         selectedValue,
         open,
@@ -413,14 +412,14 @@ export function AriaCombobox<Value = any, Mode extends SelectionMode = 'none'>(
   const onItemHighlighted = useStableCallback(onItemHighlightedProp);
   const onOpenChangeComplete = useStableCallback(onOpenChangeCompleteProp);
 
-  const activeIndex = useStore(store, selectors.activeIndex);
-  const selectedIndex = useStore(store, selectors.selectedIndex);
-  const positionerElement = useStore(store, selectors.positionerElement);
-  const listElement = useStore(store, selectors.listElement);
-  const triggerElement = useStore(store, selectors.triggerElement);
-  const inputElement = useStore(store, selectors.inputElement);
-  const inline = useStore(store, selectors.inline);
-  const inputInsidePopup = useStore(store, selectors.inputInsidePopup);
+  const activeIndex = store.useState('activeIndex');
+  const selectedIndex = store.useState('selectedIndex');
+  const positionerElement = store.useState('positionerElement');
+  const listElement = store.useState('listElement');
+  const triggerElement = store.useState('triggerElement');
+  const inputElement = store.useState('inputElement');
+  const inline = store.useState('inline');
+  const inputInsidePopup = store.useState('inputInsidePopup');
 
   const triggerRef = useValueAsRef(triggerElement);
 
@@ -1068,11 +1067,19 @@ export function AriaCombobox<Value = any, Mode extends SelectionMode = 'none'>(
     listNavigation,
   ]);
 
+  const popupProps = React.useMemo(() => {
+    return getFloatingProps();
+  }, [getFloatingProps]);
+
+  const inputProps = React.useMemo(() => {
+    return getReferenceProps();
+  }, [getReferenceProps]);
+
   useOnFirstRender(() => {
     store.update({
       inline: inlineProp,
-      popupProps: getFloatingProps(),
-      inputProps: getReferenceProps(),
+      popupProps,
+      inputProps,
       triggerProps,
       getItemProps,
       setOpen,
@@ -1086,57 +1093,24 @@ export function AriaCombobox<Value = any, Mode extends SelectionMode = 'none'>(
     });
   });
 
-  useIsoLayoutEffect(() => {
-    store.update({
-      id,
-      selectedValue,
-      open,
-      mounted,
-      transitionStatus,
-      items,
-      inline: inlineProp,
-      popupProps: getFloatingProps(),
-      inputProps: getReferenceProps(),
-      triggerProps,
-      openMethod,
-      getItemProps,
-      selectionMode,
-      name,
-      disabled,
-      readOnly,
-      required,
-      grid,
-      isGrouped,
-      virtualized,
-      onOpenChangeComplete,
-      openOnInputClick,
-      itemToStringLabel,
-      modal,
-      autoHighlight: autoHighlightMode,
-      isItemEqualToValue,
-      submitOnItemClick,
-      hasInputValue,
-      requestSubmit,
-    });
-  }, [
-    store,
+  store.useSyncedValues({
     id,
     selectedValue,
     open,
     mounted,
     transitionStatus,
     items,
-    getFloatingProps,
-    getReferenceProps,
-    getItemProps,
-    openMethod,
+    inline: inlineProp,
+    popupProps,
+    inputProps,
     triggerProps,
+    openMethod,
+    getItemProps,
     selectionMode,
     name,
     disabled,
     readOnly,
     required,
-    validation,
     grid,
     isGrouped,
     virtualized,
@@ -1144,13 +1118,12 @@ export function AriaCombobox<Value = any, Mode extends SelectionMode = 'none'>(
     openOnInputClick,
     itemToStringLabel,
     modal,
+    autoHighlight: autoHighlightMode,
     isItemEqualToValue,
     submitOnItemClick,
     hasInputValue,
-    inlineProp,
     requestSubmit,
-    autoHighlightMode,
-  ]);
+  });
 
   const hiddenInputRef = useMergedRefs(inputRefProp, validation.inputRef);
 

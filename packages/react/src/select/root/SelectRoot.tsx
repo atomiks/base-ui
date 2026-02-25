@@ -8,7 +8,6 @@ import { useControlled } from '@base-ui/utils/useControlled';
 import { useIsoLayoutEffect } from '@base-ui/utils/useIsoLayoutEffect';
 import { useStableCallback } from '@base-ui/utils/useStableCallback';
 import { useValueAsRef } from '@base-ui/utils/useValueAsRef';
-import { useStore, Store } from '@base-ui/utils/store';
 import {
   useClick,
   useDismiss,
@@ -21,7 +20,7 @@ import { SelectRootContext, SelectFloatingContext } from './SelectRootContext';
 import { useFieldRootContext } from '../../field/root/FieldRootContext';
 import { useLabelableId } from '../../labelable-provider/useLabelableId';
 import { useTransitionStatus } from '../../utils/useTransitionStatus';
-import { selectors, type State as StoreState } from '../store';
+import { SelectStore } from '../store';
 import {
   type BaseUIChangeEventDetails,
   createChangeEventDetails,
@@ -130,7 +129,7 @@ export function SelectRoot<Value, Multiple extends boolean | undefined = false>(
 
   const store = useRefWithInit(
     () =>
-      new Store<StoreState>({
+      new SelectStore({
         id: generatedId,
         modal,
         multiple,
@@ -157,10 +156,10 @@ export function SelectRoot<Value, Multiple extends boolean | undefined = false>(
       }),
   ).current;
 
-  const activeIndex = useStore(store, selectors.activeIndex);
-  const selectedIndex = useStore(store, selectors.selectedIndex);
-  const triggerElement = useStore(store, selectors.triggerElement);
-  const positionerElement = useStore(store, selectors.positionerElement);
+  const activeIndex = store.useState('activeIndex');
+  const selectedIndex = store.useState('selectedIndex');
+  const triggerElement = store.useState('triggerElement');
+  const positionerElement = store.useState('positionerElement');
 
   const serializedValue = React.useMemo(() => {
     if (multiple && Array.isArray(value) && value.length === 0) {
@@ -176,7 +175,7 @@ export function SelectRoot<Value, Multiple extends boolean | undefined = false>(
     return stringifyAsValue(value, itemToStringValue);
   }, [multiple, value, itemToStringValue]);
 
-  const controlRef = useValueAsRef(store.state.triggerElement);
+  const controlRef = useValueAsRef(triggerElement);
 
   useField({
     id: generatedId,
@@ -397,47 +396,33 @@ export function SelectRoot<Value, Multiple extends boolean | undefined = false>(
     );
   }, [getReferenceProps, interactionTypeProps, generatedId]);
 
+  const popupProps = React.useMemo(() => {
+    return getFloatingProps();
+  }, [getFloatingProps]);
+
   useOnFirstRender(() => {
     store.update({
-      popupProps: getFloatingProps(),
+      popupProps,
       triggerProps: mergedTriggerProps,
     });
   });
 
-  useIsoLayoutEffect(() => {
-    store.update({
-      id: generatedId,
-      modal,
-      multiple,
-      value,
-      open,
-      mounted,
-      transitionStatus,
-      popupProps: getFloatingProps(),
-      triggerProps: mergedTriggerProps,
-      items,
-      itemToStringLabel,
-      itemToStringValue,
-      isItemEqualToValue,
-      openMethod,
-    });
-  }, [
-    store,
-    generatedId,
+  store.useSyncedValues({
+    id: generatedId,
     modal,
     multiple,
     value,
     open,
     mounted,
     transitionStatus,
-    getFloatingProps,
-    mergedTriggerProps,
+    popupProps,
+    triggerProps: mergedTriggerProps,
     items,
     itemToStringLabel,
     itemToStringValue,
     isItemEqualToValue,
     openMethod,
-  ]);
+  });
 
   const contextValue: SelectRootContext = React.useMemo(
     () => ({
