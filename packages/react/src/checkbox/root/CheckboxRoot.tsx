@@ -176,6 +176,7 @@ export const CheckboxRoot = React.forwardRef(function CheckboxRoot(
   });
 
   const inputRef = React.useRef<HTMLInputElement>(null);
+  const uncheckedInputRef = React.useRef<HTMLInputElement>(null);
   const mergedInputRef = useMergedRefs(inputRefProp, inputRef, validation.inputRef);
   const ariaLabelledBy = useAriaLabelledBy(
     ariaLabelledByProp,
@@ -239,6 +240,10 @@ export const CheckboxRoot = React.forwardRef(function CheckboxRoot(
 
         if (details.isCanceled) {
           return;
+        }
+
+        if (checkedProp === undefined && uncheckedInputRef.current) {
+          uncheckedInputRef.current.disabled = nextChecked;
         }
 
         setCheckedState(nextChecked);
@@ -354,8 +359,14 @@ export const CheckboxRoot = React.forwardRef(function CheckboxRoot(
   return (
     <CheckboxRootContext.Provider value={state}>
       {element}
-      {!checked && !groupContext && name && !parent && uncheckedValue !== undefined && (
-        <input type="hidden" name={name} value={uncheckedValue} />
+      {!groupContext && name && !parent && uncheckedValue !== undefined && (
+        <input
+          ref={uncheckedInputRef}
+          type="hidden"
+          name={name}
+          value={uncheckedValue}
+          disabled={checked}
+        />
       )}
       <input {...inputProps} />
     </CheckboxRootContext.Provider>

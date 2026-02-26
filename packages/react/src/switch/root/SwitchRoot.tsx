@@ -76,6 +76,7 @@ export const SwitchRoot = React.forwardRef(function SwitchRoot(
   const onCheckedChange = useStableCallback(onCheckedChangeProp);
 
   const inputRef = React.useRef<HTMLInputElement>(null);
+  const uncheckedInputRef = React.useRef<HTMLInputElement>(null);
   const handleInputRef = useMergedRefs(inputRef, externalInputRef, validation.inputRef);
 
   const switchRef = React.useRef<HTMLButtonElement | null>(null);
@@ -208,6 +209,10 @@ export const SwitchRoot = React.forwardRef(function SwitchRoot(
               return;
             }
 
+            if (checkedProp === undefined && uncheckedInputRef.current) {
+              uncheckedInputRef.current.disabled = nextChecked;
+            }
+
             setCheckedState(nextChecked);
           },
           onFocus() {
@@ -226,6 +231,7 @@ export const SwitchRoot = React.forwardRef(function SwitchRoot(
       hiddenInputId,
       name,
       onCheckedChange,
+      checkedProp,
       required,
       setCheckedState,
       validation,
@@ -254,8 +260,14 @@ export const SwitchRoot = React.forwardRef(function SwitchRoot(
   return (
     <SwitchRootContext.Provider value={state}>
       {element}
-      {!checked && name && uncheckedValue !== undefined && (
-        <input type="hidden" name={name} value={uncheckedValue} />
+      {name && uncheckedValue !== undefined && (
+        <input
+          ref={uncheckedInputRef}
+          type="hidden"
+          name={name}
+          value={uncheckedValue}
+          disabled={checked}
+        />
       )}
       <input {...inputProps} />
     </SwitchRootContext.Provider>

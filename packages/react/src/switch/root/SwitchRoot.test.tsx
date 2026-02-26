@@ -374,6 +374,61 @@ describe('<Switch.Root />', () => {
   });
 
   describe('Form', () => {
+    it('should include uncheckedValue in FormData on form change events', async () => {
+      const changeSpy = spy((event) => {
+        const formData = new FormData(event.currentTarget);
+        return formData.get('test-switch');
+      });
+
+      const { user } = await render(
+        <form onChange={changeSpy}>
+          <Switch.Root name="test-switch" value="true" uncheckedValue="false" defaultChecked />
+        </form>,
+      );
+
+      const switchElement = screen.getByRole('switch');
+
+      await user.click(switchElement);
+      expect(changeSpy.callCount).to.equal(1);
+      expect(changeSpy.lastCall.returnValue).to.equal('false');
+
+      await user.click(switchElement);
+      expect(changeSpy.callCount).to.equal(2);
+      expect(changeSpy.lastCall.returnValue).to.equal('true');
+    });
+
+    it('should not submit uncheckedValue if controlled checked does not change', async () => {
+      const submitSpy = spy((event) => {
+        event.preventDefault();
+        const formData = new FormData(event.currentTarget);
+        return formData.get('test-switch');
+      });
+      const checkedChangeSpy = spy();
+
+      const { user } = await render(
+        <form onSubmit={submitSpy}>
+          <Switch.Root
+            name="test-switch"
+            value="true"
+            uncheckedValue="false"
+            checked
+            onCheckedChange={checkedChangeSpy}
+          />
+          <button type="submit">Submit</button>
+        </form>,
+      );
+
+      const switchElement = screen.getByRole('switch');
+      const submitButton = screen.getByRole('button');
+
+      await user.click(switchElement);
+      await user.click(submitButton);
+
+      expect(checkedChangeSpy.callCount).to.equal(1);
+      expect(submitSpy.callCount).to.equal(1);
+      expect(submitSpy.lastCall.returnValue).to.equal('true');
+    });
+
     // FormData is not available in JSDOM
     it.skipIf(isJSDOM)(
       'should include the switch value in form submission, matching native checkbox behavior',

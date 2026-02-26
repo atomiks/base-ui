@@ -339,6 +339,61 @@ describe('<Checkbox.Root />', () => {
   });
 
   describe('Form', () => {
+    it('should include uncheckedValue in FormData on form change events', async () => {
+      const changeSpy = spy((event) => {
+        const formData = new FormData(event.currentTarget);
+        return formData.get('test-checkbox');
+      });
+
+      const { user } = await render(
+        <form onChange={changeSpy}>
+          <Checkbox.Root name="test-checkbox" value="true" uncheckedValue="false" defaultChecked />
+        </form>,
+      );
+
+      const checkbox = screen.getByRole('checkbox');
+
+      await user.click(checkbox);
+      expect(changeSpy.callCount).to.equal(1);
+      expect(changeSpy.lastCall.returnValue).to.equal('false');
+
+      await user.click(checkbox);
+      expect(changeSpy.callCount).to.equal(2);
+      expect(changeSpy.lastCall.returnValue).to.equal('true');
+    });
+
+    it('should not submit uncheckedValue if controlled checked does not change', async () => {
+      const submitSpy = spy((event) => {
+        event.preventDefault();
+        const formData = new FormData(event.currentTarget);
+        return formData.get('test-checkbox');
+      });
+      const checkedChangeSpy = spy();
+
+      const { user } = await render(
+        <form onSubmit={submitSpy}>
+          <Checkbox.Root
+            name="test-checkbox"
+            value="true"
+            uncheckedValue="false"
+            checked
+            onCheckedChange={checkedChangeSpy}
+          />
+          <button type="submit">Submit</button>
+        </form>,
+      );
+
+      const checkbox = screen.getByRole('checkbox');
+      const submitButton = screen.getByRole('button');
+
+      await user.click(checkbox);
+      await user.click(submitButton);
+
+      expect(checkedChangeSpy.callCount).to.equal(1);
+      expect(submitSpy.callCount).to.equal(1);
+      expect(submitSpy.lastCall.returnValue).to.equal('true');
+    });
+
     it('triggers native HTML validation on submit', async () => {
       const { user } = await render(
         <Form>
