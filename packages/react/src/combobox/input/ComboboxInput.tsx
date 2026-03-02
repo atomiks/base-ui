@@ -74,6 +74,7 @@ export const ComboboxInput = React.forwardRef(function ComboboxInput(
   const popupSideValue = useStore(store, selectors.popupSide);
   const positionerElement = useStore(store, selectors.positionerElement);
   const rootId = useStore(store, selectors.id);
+  const statusElementId = useStore(store, selectors.statusElementId);
   const inline = useStore(store, selectors.inline);
 
   const autoHighlightEnabled = Boolean(autoHighlightMode);
@@ -464,6 +465,24 @@ export const ComboboxInput = React.forwardRef(function ComboboxInput(
         },
       },
       validationProps,
+      (props) => {
+        if (!statusElementId) {
+          return props;
+        }
+
+        const ariaDescribedBy = props['aria-describedby'];
+
+        if (!ariaDescribedBy) {
+          return { ...props, 'aria-describedby': statusElementId };
+        }
+
+        const ids = ariaDescribedBy.split(/\s+/);
+        if (ids.includes(statusElementId)) {
+          return props;
+        }
+
+        return { ...props, 'aria-describedby': `${ariaDescribedBy} ${statusElementId}` };
+      },
     ],
     stateAttributesMapping: triggerStateAttributesMapping,
   });
