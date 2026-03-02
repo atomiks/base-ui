@@ -6,6 +6,7 @@ import {
   useComboboxDerivedItemsContext,
   useComboboxRootContext,
 } from '../root/ComboboxRootContext';
+import { useComboboxDescriptionElementId } from '../utils/useComboboxDescriptionElementId';
 
 /**
  * Renders its children only when the list is empty.
@@ -17,17 +18,21 @@ export const ComboboxEmpty = React.forwardRef(function ComboboxEmpty(
   componentProps: ComboboxEmpty.Props,
   forwardedRef: React.ForwardedRef<HTMLDivElement>,
 ) {
-  const { render, className, children: childrenProp, ...elementProps } = componentProps;
+  const { render, className, id: idProp, children: childrenProp, ...elementProps } = componentProps;
 
   const { filteredItems } = useComboboxDerivedItemsContext();
   const store = useComboboxRootContext();
 
-  const children = filteredItems.length === 0 ? childrenProp : null;
+  const isEmpty = filteredItems.length === 0;
+  const children = isEmpty ? childrenProp : null;
+
+  const id = useComboboxDescriptionElementId('emptyElementId', idProp, isEmpty);
 
   return useRenderElement('div', componentProps, {
     ref: [forwardedRef, store.state.emptyRef],
     props: [
       {
+        id,
         children,
         role: 'status',
         'aria-live': 'polite',

@@ -381,6 +381,7 @@ export function AriaCombobox<Value = any, Mode extends SelectionMode = 'none'>(
         positionerElement: null,
         listElement: null,
         statusElementId: undefined,
+        emptyElementId: undefined,
         triggerElement: null,
         inputElement: null,
         popupSide: null,

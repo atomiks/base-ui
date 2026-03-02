@@ -27,7 +27,7 @@ describe('<Combobox.Empty />', () => {
   it('renders when there are no filtered items', async () => {
     await render(
       <Combobox.Root items={[]} defaultOpen>
-        <Combobox.Input />
+        <Combobox.Input data-testid="input" />
         <Combobox.Portal>
           <Combobox.Positioner>
             <Combobox.Popup>
@@ -47,12 +47,16 @@ describe('<Combobox.Empty />', () => {
 
     expect(screen.getByTestId('empty')).to.have.text('No results');
     expect(screen.getByTestId('empty')).to.have.attribute('role', 'status');
+    expect(screen.getByTestId('input')).to.have.attribute(
+      'aria-describedby',
+      screen.getByTestId('empty').id,
+    );
   });
 
   it('does not render when there are items', async () => {
     await render(
       <Combobox.Root items={['a']} defaultOpen>
-        <Combobox.Input />
+        <Combobox.Input data-testid="input" />
         <Combobox.Portal>
           <Combobox.Positioner>
             <Combobox.Popup>
@@ -71,6 +75,7 @@ describe('<Combobox.Empty />', () => {
     );
 
     expect(screen.queryByText('No results')).to.equal(null);
+    expect(screen.getByTestId('input')).not.to.have.attribute('aria-describedby');
   });
 
   it('renders when the search query matches no items', async () => {

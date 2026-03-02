@@ -75,6 +75,7 @@ export const ComboboxInput = React.forwardRef(function ComboboxInput(
   const positionerElement = useStore(store, selectors.positionerElement);
   const rootId = useStore(store, selectors.id);
   const statusElementId = useStore(store, selectors.statusElementId);
+  const emptyElementId = useStore(store, selectors.emptyElementId);
   const inline = useStore(store, selectors.inline);
 
   const autoHighlightEnabled = Boolean(autoHighlightMode);
@@ -466,22 +467,20 @@ export const ComboboxInput = React.forwardRef(function ComboboxInput(
       },
       validationProps,
       (props) => {
-        if (!statusElementId) {
+        if (!statusElementId && !emptyElementId) {
           return props;
         }
 
-        const ariaDescribedBy = props['aria-describedby'];
+        const ids = new Set((props['aria-describedby'] ?? '').split(/\s+/).filter(Boolean));
 
-        if (!ariaDescribedBy) {
-          return { ...props, 'aria-describedby': statusElementId };
+        if (emptyElementId) {
+          ids.add(emptyElementId);
+        }
+        if (statusElementId) {
+          ids.add(statusElementId);
         }
 
-        const ids = ariaDescribedBy.split(/\s+/);
-        if (ids.includes(statusElementId)) {
-          return props;
-        }
-
-        return { ...props, 'aria-describedby': `${ariaDescribedBy} ${statusElementId}` };
+        return { ...props, 'aria-describedby': Array.from(ids).join(' ') || undefined };
       },
     ],
     stateAttributesMapping: triggerStateAttributesMapping,

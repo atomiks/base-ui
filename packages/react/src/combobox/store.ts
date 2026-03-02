@@ -35,6 +35,7 @@ export type State = {
   positionerElement: HTMLElement | null;
   listElement: HTMLElement | null;
   statusElementId: string | undefined;
+  emptyElementId: string | undefined;
   triggerElement: HTMLElement | null;
   inputElement: HTMLInputElement | null;
   popupSide: Side | null;
@@ -150,6 +151,7 @@ export const selectors = {
   positionerElement: createSelector((state: State) => state.positionerElement),
   listElement: createSelector((state: State) => state.listElement),
   statusElementId: createSelector((state: State) => state.statusElementId),
+  emptyElementId: createSelector((state: State) => state.emptyElementId),
   triggerElement: createSelector((state: State) => state.triggerElement),
   inputElement: createSelector((state: State) => state.inputElement),
   popupSide: createSelector((state: State) => state.popupSide),
