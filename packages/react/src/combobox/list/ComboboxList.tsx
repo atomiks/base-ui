@@ -23,7 +23,13 @@ export const ComboboxList = React.forwardRef(function ComboboxList(
   componentProps: ComboboxList.Props,
   forwardedRef: React.ForwardedRef<HTMLDivElement>,
 ) {
-  const { render, className, children, ...elementProps } = componentProps;
+  const {
+    render,
+    className,
+    children,
+    'aria-describedby': ariaDescribedByProp,
+    ...elementProps
+  } = componentProps;
 
   const store = useComboboxRootContext();
   const floatingRootContext = useComboboxFloatingContext();
@@ -33,6 +39,7 @@ export const ComboboxList = React.forwardRef(function ComboboxList(
   const items = useStore(store, selectors.items);
   const labelsRef = useStore(store, selectors.labelsRef);
   const listRef = useStore(store, selectors.listRef);
+  const statusElementId = useStore(store, selectors.statusElementId);
   const selectionMode = useStore(store, selectors.selectionMode);
   const grid = useStore(store, selectors.grid);
   const popupProps = useStore(store, selectors.popupProps);
@@ -42,6 +49,8 @@ export const ComboboxList = React.forwardRef(function ComboboxList(
 
   const multiple = selectionMode === 'multiple';
   const empty = filteredItems.length === 0;
+  const ariaDescribedBy =
+    [ariaDescribedByProp, statusElementId].filter(Boolean).join(' ') || undefined;
 
   const setPositionerElement = useStableCallback((element) => {
     store.set('positionerElement', element);
@@ -79,6 +88,7 @@ export const ComboboxList = React.forwardRef(function ComboboxList(
         id: floatingId,
         role: grid ? 'grid' : 'listbox',
         'aria-multiselectable': multiple ? 'true' : undefined,
+        'aria-describedby': ariaDescribedBy,
         onKeyDown(event) {
           if (disabled || readOnly) {
             return;
