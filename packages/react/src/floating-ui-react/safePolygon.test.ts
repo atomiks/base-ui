@@ -2,6 +2,7 @@ import { act } from '@mui/internal-test-utils';
 import { vi } from 'vitest';
 import { FloatingTreeStore } from './components/FloatingTreeStore';
 import type { HandleCloseContext } from './hooks/useHoverShared';
+import type { FloatingContext } from './types';
 import { safePolygon } from './safePolygon';
 import { getEmptyRootContext } from './utils/getEmptyRootContext';
 
@@ -48,7 +49,27 @@ function createHandleCloseContext({
   x?: number;
   y?: number;
 }): HandleCloseContext {
-  const refs: HandleCloseContext['refs'] = {
+  return {
+    x,
+    y,
+    placement,
+    elements: { domReference, floating },
+    nodeId: 'root',
+    onClose,
+    tree,
+  };
+}
+
+function createFloatingContext({
+  domReference,
+  floating,
+  open,
+}: {
+  domReference: Element;
+  floating: HTMLElement;
+  open: boolean;
+}): FloatingContext {
+  const refs: FloatingContext['refs'] = {
     reference: { current: domReference },
     floating: { current: floating },
     domReference: { current: domReference },
@@ -57,22 +78,22 @@ function createHandleCloseContext({
     setPositionReference() {},
   };
 
-  const events: HandleCloseContext['events'] = {
+  const events: FloatingContext['events'] = {
     emit() {},
     on() {},
     off() {},
   };
 
   return {
-    x,
-    y,
+    x: 0,
+    y: 0,
     strategy: 'absolute',
-    placement,
+    placement: 'right',
     middlewareData: {},
     isPositioned: true,
     update: async () => {},
     floatingStyles: {},
-    open: true,
+    open,
     onOpenChange() {},
     events,
     dataRef: { current: {} },
@@ -81,8 +102,6 @@ function createHandleCloseContext({
     refs,
     elements: { reference: domReference, domReference, floating },
     rootStore: getEmptyRootContext(),
-    onClose,
-    tree,
   };
 }
 
@@ -157,7 +176,7 @@ describe('safePolygon', () => {
       tree,
     });
 
-    const openChildContext = { ...context, open: true };
+    const openChildContext = createFloatingContext({ domReference, floating, open: true });
     tree.addNode({ id: 'child', parentId: 'root', context: openChildContext });
 
     const handler = safePolygon()(context);
@@ -185,7 +204,7 @@ describe('safePolygon', () => {
       tree,
     });
 
-    const closedChildContext = { ...context, open: false };
+    const closedChildContext = createFloatingContext({ domReference, floating, open: false });
     tree.addNode({ id: 'child', parentId: 'root', context: closedChildContext });
 
     const handler = safePolygon()(context);

@@ -13,6 +13,7 @@ import { createChangeEventDetails } from '../../utils/createBaseUIEventDetails';
 import { REASONS } from '../../utils/reasons';
 import { useFloatingParentNodeId, useFloatingTree } from '../components/FloatingTree';
 import {
+  applySafePolygonPointerEventsMutation,
   clearSafePolygonPointerEventsMutation,
   isInteractiveElement,
   useHoverInteractionSharedState,
@@ -140,16 +141,19 @@ export function useHoverFloatingInteraction(
         parentFloating.style.pointerEvents = '';
       }
 
-      const scopeElement = parentFloating ?? ref.closest('[data-rootownerid]') ?? doc.body;
+      const scopeElement =
+        instance.handleCloseOptions?.pointerEventsScope ??
+        parentFloating ??
+        (ref.closest('[data-rootownerid]') as HTMLElement | SVGSVGElement | null) ??
+        doc.body;
 
-      instance.pointerEventsScopeElement = scopeElement;
-      scopeElement.style.pointerEvents = 'none';
-      ref.style.pointerEvents = 'auto';
-      floatingEl.style.pointerEvents = 'auto';
+      applySafePolygonPointerEventsMutation(instance, {
+        scopeElement,
+        referenceElement: ref,
+        floatingElement: floatingEl,
+      });
 
       return () => {
-        ref.style.pointerEvents = '';
-        floatingEl.style.pointerEvents = '';
         clearPointerEvents();
       };
     }

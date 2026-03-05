@@ -1,14 +1,20 @@
 import { isMouseLikePointerType } from '../utils';
-import type { FloatingContext, FloatingTreeType } from '../types';
+import type { ExtendedElements, FloatingTreeType, Placement } from '../types';
 
 export interface HandleCloseOptions {
   buffer?: number | undefined;
   blockPointerEvents?: boolean | undefined;
+  pointerEventsScope?: HTMLElement | SVGSVGElement | null | undefined;
   requireIntent?: boolean | undefined;
 }
 
-export interface HandleCloseContext extends FloatingContext {
+export interface HandleCloseContext {
+  x: number | null;
+  y: number | null;
+  placement: Placement | null;
+  elements: Pick<ExtendedElements, 'domReference' | 'floating'>;
   onClose: () => void;
+  nodeId?: string | undefined;
   tree?: FloatingTreeType | null | undefined;
   leave?: boolean | undefined;
 }

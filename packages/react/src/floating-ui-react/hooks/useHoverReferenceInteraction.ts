@@ -5,17 +5,14 @@ import { isElement } from '@floating-ui/utils/dom';
 import { useValueAsRef } from '@base-ui/utils/useValueAsRef';
 import { useStableCallback } from '@base-ui/utils/useStableCallback';
 import { ownerDocument } from '@base-ui/utils/owner';
-import type { Delay, FloatingContext, FloatingRootContext } from '../types';
+import type { Delay, FloatingContext, FloatingRootContext, Placement } from '../types';
 import { contains, isMouseLikePointerType, isTargetInsideEnabledTrigger } from '../utils';
 import { createChangeEventDetails } from '../../utils/createBaseUIEventDetails';
 import { REASONS } from '../../utils/reasons';
 import { useFloatingTree } from '../components/FloatingTree';
 import type { FloatingTreeStore } from '../components/FloatingTreeStore';
-import {
-  clearSafePolygonPointerEventsMutation,
-  useHoverInteractionSharedState,
-} from './useHoverInteractionSharedState';
-import type { HandleClose } from './useHoverShared';
+import { clearSafePolygonPointerEventsMutation, useHoverInteractionSharedState } from './useHoverInteractionSharedState';
+import type { HandleClose, HandleCloseContext } from './useHoverShared';
 import { getDelay, getRestMs } from './useHoverShared';
 import { FloatingUIOpenChangeDetails, HTMLProps } from '../../utils/types';
 
@@ -35,9 +32,56 @@ export interface UseHoverReferenceInteractionProps {
    */
   isActiveTrigger?: boolean | undefined;
   triggerElementRef?: Readonly<React.RefObject<Element | null>> | undefined;
+  nodeId?: string | undefined;
 }
 
 const EMPTY_REF: Readonly<React.RefObject<Element | null>> = { current: null };
+
+function getPlacementFromElements(
+  domReferenceElement: Element,
+  floatingElement: HTMLElement,
+): Placement {
+  const referenceRect = domReferenceElement.getBoundingClientRect();
+  const floatingRect = floatingElement.getBoundingClientRect();
+  const referenceCenterX = referenceRect.left + referenceRect.width / 2;
+  const referenceCenterY = referenceRect.top + referenceRect.height / 2;
+  const floatingCenterX = floatingRect.left + floatingRect.width / 2;
+  const floatingCenterY = floatingRect.top + floatingRect.height / 2;
+  const deltaX = floatingCenterX - referenceCenterX;
+  const deltaY = floatingCenterY - referenceCenterY;
+
+  if (Math.abs(deltaX) >= Math.abs(deltaY)) {
+    return deltaX >= 0 ? 'right' : 'left';
+  }
+
+  return deltaY >= 0 ? 'bottom' : 'top';
+}
+
+function getHandleCloseContextBase(
+  store: FloatingRootContext,
+  currentFloatingContext: FloatingContext | undefined,
+  nodeId: string | undefined,
+): Omit<HandleCloseContext, 'onClose' | 'tree' | 'x' | 'y'> | null {
+  if (currentFloatingContext) {
+    return currentFloatingContext;
+  }
+
+  const domReferenceElement = store.select('domReferenceElement');
+  const floatingElement = store.select('floatingElement');
+
+  if (!isElement(domReferenceElement) || floatingElement == null) {
+    return null;
+  }
+
+  return {
+    placement: getPlacementFromElements(domReferenceElement, floatingElement),
+    elements: {
+      domReference: domReferenceElement,
+      floating: floatingElement,
+    },
+    nodeId,
+  };
+}
 
 /**
  * Provides hover interactions that should be attached to reference or trigger
@@ -60,6 +104,7 @@ export function useHoverReferenceInteraction(
     triggerElementRef = EMPTY_REF,
     externalTree,
     isActiveTrigger = true,
+    nodeId,
   } = props;
 
   const tree = useFloatingTree(externalTree);
@@ -238,11 +283,19 @@ export function useHoverReferenceInteraction(
       instance.restTimeout.clear();
       instance.restTimeoutPending = false;
 
-      if (isRelatedTargetInsideEnabledTrigger(event.relatedTarget)) {
+      const handleCloseContextBase = getHandleCloseContextBase(
+        store,
+        dataRef.current.floatingContext,
+        nodeId,
+      );
+
+      const ignoreRelatedTargetTrigger = isRelatedTargetInsideEnabledTrigger(event.relatedTarget);
+
+      if (ignoreRelatedTargetTrigger) {
         return;
       }
 
-      if (handleCloseRef.current && dataRef.current.floatingContext) {
+      if (handleCloseRef.current && handleCloseContextBase) {
         if (!store.select('open')) {
           instance.openChangeTimeout.clear();
         }
@@ -250,7 +303,7 @@ export function useHoverReferenceInteraction(
         const currentTrigger = triggerElementRef.current;
 
         instance.handler = handleCloseRef.current({
-          ...dataRef.current.floatingContext,
+          ...handleCloseContextBase,
           tree,
           x: event.clientX,
           y: event.clientY,
@@ -320,6 +373,7 @@ export function useHoverReferenceInteraction(
     triggerElementRef,
     tree,
     enabledRef,
+    nodeId,
   ]);
 
   return React.useMemo<HTMLProps | undefined>(() => {

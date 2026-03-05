@@ -67,6 +67,7 @@ export const NavigationMenuRoot = React.forwardRef(function NavigationMenuRoot(
   const rootRef = React.useRef<HTMLDivElement | null>(null);
 
   const [positionerElement, setPositionerElement] = React.useState<HTMLElement | null>(null);
+  const [listElement, setListElement] = React.useState<HTMLElement | null>(null);
   const [popupElement, setPopupElement] = React.useState<HTMLElement | null>(null);
   const [viewportElement, setViewportElement] = React.useState<HTMLElement | null>(null);
   const [viewportTargetElement, setViewportTargetElement] = React.useState<HTMLElement | null>(
@@ -175,6 +176,8 @@ export const NavigationMenuRoot = React.forwardRef(function NavigationMenuRoot(
       transitionStatus,
       positionerElement,
       setPositionerElement,
+      listElement,
+      setListElement,
       popupElement,
       setPopupElement,
       viewportElement,
@@ -206,6 +209,7 @@ export const NavigationMenuRoot = React.forwardRef(function NavigationMenuRoot(
       mounted,
       transitionStatus,
       positionerElement,
+      listElement,
       popupElement,
       viewportElement,
       viewportTargetElement,

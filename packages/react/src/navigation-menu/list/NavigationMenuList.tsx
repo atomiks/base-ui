@@ -23,15 +23,25 @@ export const NavigationMenuList = React.forwardRef(function NavigationMenuList(
 ) {
   const { className, render, ...elementProps } = componentProps;
 
-  const { orientation, open, floatingRootContext, positionerElement, value, closeDelay, nested } =
-    useNavigationMenuRootContext();
+  const {
+    orientation,
+    open,
+    floatingRootContext,
+    positionerElement,
+    setListElement,
+    value,
+    closeDelay,
+    viewportElement,
+    nested,
+  } = useNavigationMenuRootContext();
 
   const fallbackContext = React.useMemo(() => getEmptyRootContext(), []);
   const context = floatingRootContext || fallbackContext;
   const interactionsEnabled = positionerElement ? true : !value;
+  const hoverInteractionsEnabled = positionerElement || viewportElement ? true : !value;
 
   useHoverFloatingInteraction(context, {
-    enabled: Boolean(floatingRootContext) && interactionsEnabled,
+    enabled: Boolean(floatingRootContext) && hoverInteractionsEnabled,
     closeDelay,
   });
 
@@ -78,7 +88,7 @@ export const NavigationMenuList = React.forwardRef(function NavigationMenuList(
   // handler that blocks propagation so arrow keys can reach the parent CompositeRoot.
   const element = useRenderElement('ul', componentProps, {
     state,
-    ref: forwardedRef,
+    ref: [forwardedRef, setListElement],
     props,
     enabled: nested,
   });
@@ -97,7 +107,7 @@ export const NavigationMenuList = React.forwardRef(function NavigationMenuList(
         render={render}
         className={className}
         state={state}
-        refs={[forwardedRef]}
+        refs={[forwardedRef, setListElement]}
         props={props}
         loopFocus={false}
         orientation={orientation}

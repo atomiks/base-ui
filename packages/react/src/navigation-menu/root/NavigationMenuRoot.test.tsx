@@ -105,7 +105,7 @@ function TestInlineNestedNavigationMenu(props: { nestedDefaultValue?: string | n
           <NavigationMenu.Content data-testid="popup-1">
             <NavigationMenu.Link href="#link-1">Link 1</NavigationMenu.Link>
             <NavigationMenu.Root {...nestedRootProps}>
-              <NavigationMenu.List>
+              <NavigationMenu.List data-testid="inline-nested-list">
                 <NavigationMenu.Item value="nested-item-1">
                   <NavigationMenu.Trigger data-testid="nested-trigger-1">
                     Nested Item 1
@@ -124,7 +124,7 @@ function TestInlineNestedNavigationMenu(props: { nestedDefaultValue?: string | n
                 </NavigationMenu.Item>
               </NavigationMenu.List>
 
-              <NavigationMenu.Viewport />
+              <NavigationMenu.Viewport data-testid="inline-nested-viewport" />
             </NavigationMenu.Root>
           </NavigationMenu.Content>
         </NavigationMenu.Item>
@@ -366,6 +366,28 @@ function TestNavigationMenuWithKeepMountedContent() {
       </NavigationMenu.Portal>
     </NavigationMenu.Root>
   );
+}
+
+function mockBoundingClientRect(
+  element: Element,
+  rect: { x: number; y: number; width: number; height: number },
+) {
+  const domRect = {
+    x: rect.x,
+    y: rect.y,
+    width: rect.width,
+    height: rect.height,
+    top: rect.y,
+    left: rect.x,
+    right: rect.x + rect.width,
+    bottom: rect.y + rect.height,
+    toJSON: () => ({}),
+  };
+
+  Object.defineProperty(element, 'getBoundingClientRect', {
+    configurable: true,
+    value: () => domRect,
+  });
 }
 
 function TestDeeplyNestedNavigationMenu() {
@@ -1170,6 +1192,79 @@ describe('<NavigationMenu.Root />', () => {
         expect(nestedTrigger2).to.have.attribute('aria-expanded', 'false');
         expect(screen.getByTestId('nested-popup-1')).not.to.equal(null);
         expect(screen.queryByTestId('nested-popup-2')).to.equal(null);
+      });
+
+      it('scopes inline safePolygon pointer events to the submenu list while traversing to the viewport', async () => {
+        await render(<TestInlineNestedNavigationMenu />);
+        const trigger1 = screen.getByTestId('trigger-1');
+
+        fireEvent.mouseEnter(trigger1);
+        fireEvent.mouseMove(trigger1);
+        clock.tick(OPEN_DELAY);
+        await flushMicrotasks();
+
+        const nestedList = screen.getByTestId('inline-nested-list');
+        const nestedTrigger1 = screen.getByTestId('nested-trigger-1');
+        const nestedViewport = screen.getByTestId('inline-nested-viewport');
+
+        mockBoundingClientRect(nestedTrigger1, { x: 0, y: 40, width: 100, height: 40 });
+        mockBoundingClientRect(nestedViewport, { x: 200, y: 0, width: 300, height: 300 });
+        fireEvent.mouseEnter(nestedTrigger1);
+
+        expect(nestedList.style.pointerEvents).to.equal('none');
+
+        fireEvent.mouseLeave(nestedTrigger1, {
+          clientX: 98,
+          clientY: 60,
+        });
+
+        expect(nestedList.style.pointerEvents).to.equal('none');
+        expect(document.body.style.pointerEvents).to.equal('');
+
+        fireEvent.mouseMove(document, { clientX: 150, clientY: 80 });
+        await flushMicrotasks();
+
+        expect(nestedTrigger1).to.have.attribute('aria-expanded', 'true');
+        expect(screen.getByTestId('nested-popup-1')).not.to.equal(null);
+        expect(nestedList.style.pointerEvents).to.equal('none');
+
+        fireEvent.mouseEnter(nestedViewport);
+        await flushMicrotasks();
+
+        expect(nestedList.style.pointerEvents).to.equal('');
+      });
+
+      it('clears inline safePolygon pointer events when the pointer leaves the traversal path', async () => {
+        await render(<TestInlineNestedNavigationMenu />);
+        const trigger1 = screen.getByTestId('trigger-1');
+
+        fireEvent.mouseEnter(trigger1);
+        fireEvent.mouseMove(trigger1);
+        clock.tick(OPEN_DELAY);
+        await flushMicrotasks();
+
+        const nestedList = screen.getByTestId('inline-nested-list');
+        const nestedTrigger1 = screen.getByTestId('nested-trigger-1');
+        const nestedViewport = screen.getByTestId('inline-nested-viewport');
+
+        mockBoundingClientRect(nestedTrigger1, { x: 0, y: 40, width: 100, height: 40 });
+        mockBoundingClientRect(nestedViewport, { x: 200, y: 0, width: 300, height: 300 });
+        fireEvent.mouseEnter(nestedTrigger1);
+
+        expect(nestedList.style.pointerEvents).to.equal('none');
+
+        fireEvent.mouseLeave(nestedTrigger1, {
+          clientX: 98,
+          clientY: 60,
+        });
+        expect(nestedList.style.pointerEvents).to.equal('none');
+
+        fireEvent.mouseMove(document, { clientX: 40, clientY: 220 });
+        await flushMicrotasks();
+
+        expect(nestedList.style.pointerEvents).to.equal('');
+        expect(nestedTrigger1).to.have.attribute('aria-expanded', 'true');
+        expect(screen.getByTestId('nested-popup-1')).not.to.equal(null);
       });
 
       it('closes inline nested viewport when parent menu closes', async () => {

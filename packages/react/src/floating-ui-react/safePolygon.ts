@@ -87,7 +87,12 @@ export interface SafePolygonOptions extends HandleCloseOptions {}
  * @see https://floating-ui.com/docs/useHover#safepolygon
  */
 export function safePolygon(options: SafePolygonOptions = {}) {
-  const { buffer = 0.5, blockPointerEvents = false, requireIntent = true } = options;
+  const {
+    buffer = 0.5,
+    blockPointerEvents = false,
+    pointerEventsScope,
+    requireIntent = true,
+  } = options;
 
   const timeout = new Timeout();
 
@@ -445,6 +450,7 @@ export function safePolygon(options: SafePolygonOptions = {}) {
   // eslint-disable-next-line no-underscore-dangle
   fn.__options = {
     blockPointerEvents,
+    pointerEventsScope,
   };
 
   return fn;
