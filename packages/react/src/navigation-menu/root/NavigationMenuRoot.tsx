@@ -322,12 +322,12 @@ export interface NavigationMenuRootProps extends BaseUIComponentProps<
     | ((value: any, eventDetails: NavigationMenuRoot.ChangeEventDetails) => void)
     | undefined;
   /**
-   * How long to wait before opening the navigation menu. Specified in milliseconds.
+   * How long to wait before opening the navigation popup. Specified in milliseconds.
    * @default 50
    */
   delay?: number | undefined;
   /**
-   * How long to wait before closing the navigation menu. Specified in milliseconds.
+   * How long to wait before closing the navigation popup. Specified in milliseconds.
    * @default 50
    */
   closeDelay?: number | undefined;

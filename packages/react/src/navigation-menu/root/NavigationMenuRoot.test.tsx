@@ -1,3 +1,4 @@
+import * as React from 'react';
 import { expect } from 'chai';
 import { spy } from 'sinon';
 import { fireEvent, screen, flushMicrotasks, act, within, waitFor } from '@mui/internal-test-utils';
@@ -90,7 +91,11 @@ function TestNestedNavigationMenu() {
   );
 }
 
-function TestInlineNestedNavigationMenu() {
+function TestInlineNestedNavigationMenu(props: { nestedDefaultValue?: string | null } = {}) {
+  const { nestedDefaultValue = 'nested-item-1' } = props;
+  const nestedRootProps =
+    nestedDefaultValue == null ? undefined : { defaultValue: nestedDefaultValue };
+
   return (
     <NavigationMenu.Root>
       <NavigationMenu.List>
@@ -99,7 +104,7 @@ function TestInlineNestedNavigationMenu() {
 
           <NavigationMenu.Content data-testid="popup-1">
             <NavigationMenu.Link href="#link-1">Link 1</NavigationMenu.Link>
-            <NavigationMenu.Root defaultValue="nested-item-1">
+            <NavigationMenu.Root {...nestedRootProps}>
               <NavigationMenu.List>
                 <NavigationMenu.Item value="nested-item-1">
                   <NavigationMenu.Trigger data-testid="nested-trigger-1">
@@ -135,6 +140,226 @@ function TestInlineNestedNavigationMenu() {
       <NavigationMenu.Portal>
         <NavigationMenu.Positioner>
           <NavigationMenu.Popup>
+            <NavigationMenu.Viewport />
+          </NavigationMenu.Popup>
+        </NavigationMenu.Positioner>
+      </NavigationMenu.Portal>
+    </NavigationMenu.Root>
+  );
+}
+
+function TestInlineNestedNavigationMenuWithoutDefaultValue() {
+  return <TestInlineNestedNavigationMenu nestedDefaultValue={null} />;
+}
+
+function TestInlineNestedNavigationMenuWithDynamicContent() {
+  const [showExtraContent, setShowExtraContent] = React.useState(false);
+
+  return (
+    <NavigationMenu.Root>
+      <NavigationMenu.List>
+        <NavigationMenu.Item value="item-1">
+          <NavigationMenu.Trigger data-testid="trigger-1">Item 1</NavigationMenu.Trigger>
+
+          <NavigationMenu.Content data-testid="popup-1">
+            <NavigationMenu.Link href="#link-1">Link 1</NavigationMenu.Link>
+            <NavigationMenu.Root defaultValue="nested-item-1">
+              <NavigationMenu.List>
+                <NavigationMenu.Item value="nested-item-1">
+                  <NavigationMenu.Trigger data-testid="nested-trigger-1">
+                    Nested Item 1
+                  </NavigationMenu.Trigger>
+                  <NavigationMenu.Content data-testid="nested-popup-1">
+                    <button
+                      type="button"
+                      data-testid="insert-content"
+                      onClick={() => {
+                        setShowExtraContent(true);
+                      }}
+                    >
+                      Insert content
+                    </button>
+                    {showExtraContent && (
+                      <div data-testid="extra-content">
+                        <NavigationMenu.Link href="#nested-link-1">
+                          Nested Link 1
+                        </NavigationMenu.Link>
+                        <NavigationMenu.Link href="#nested-link-2">
+                          Nested Link 2
+                        </NavigationMenu.Link>
+                        <NavigationMenu.Link href="#nested-link-3">
+                          Nested Link 3
+                        </NavigationMenu.Link>
+                      </div>
+                    )}
+                  </NavigationMenu.Content>
+                </NavigationMenu.Item>
+              </NavigationMenu.List>
+
+              <NavigationMenu.Viewport />
+            </NavigationMenu.Root>
+          </NavigationMenu.Content>
+        </NavigationMenu.Item>
+      </NavigationMenu.List>
+
+      <NavigationMenu.Portal>
+        <NavigationMenu.Positioner data-testid="positioner">
+          <NavigationMenu.Popup data-testid="popup-root">
+            <NavigationMenu.Viewport />
+          </NavigationMenu.Popup>
+        </NavigationMenu.Positioner>
+      </NavigationMenu.Portal>
+    </NavigationMenu.Root>
+  );
+}
+
+function TestInlineNestedNavigationMenuTabForwardBoundary() {
+  return (
+    <NavigationMenu.Root>
+      <NavigationMenu.List>
+        <NavigationMenu.Item value="item-1">
+          <NavigationMenu.Trigger data-testid="trigger-1">Product</NavigationMenu.Trigger>
+
+          <NavigationMenu.Content data-testid="popup-1">
+            <NavigationMenu.Root defaultValue="nested-item-2">
+              <NavigationMenu.List>
+                <NavigationMenu.Item value="nested-item-1">
+                  <NavigationMenu.Trigger data-testid="nested-trigger-1">
+                    Engineering Leads
+                  </NavigationMenu.Trigger>
+                  <NavigationMenu.Content data-testid="nested-popup-1">
+                    <NavigationMenu.Link href="#releases">Releases</NavigationMenu.Link>
+                  </NavigationMenu.Content>
+                </NavigationMenu.Item>
+                <NavigationMenu.Item value="nested-item-2">
+                  <NavigationMenu.Trigger data-testid="nested-trigger-2">
+                    Startups
+                  </NavigationMenu.Trigger>
+                  <NavigationMenu.Content data-testid="nested-popup-2">
+                    <NavigationMenu.Link href="#quick-start">Quick start</NavigationMenu.Link>
+                    <NavigationMenu.Link href="#menu">Menu</NavigationMenu.Link>
+                    <NavigationMenu.Link href="#select" data-testid="nested-last-link">
+                      Select
+                    </NavigationMenu.Link>
+                  </NavigationMenu.Content>
+                </NavigationMenu.Item>
+              </NavigationMenu.List>
+
+              <NavigationMenu.Viewport />
+            </NavigationMenu.Root>
+          </NavigationMenu.Content>
+        </NavigationMenu.Item>
+
+        <NavigationMenu.Item value="item-2">
+          <NavigationMenu.Trigger data-testid="trigger-2">Learn</NavigationMenu.Trigger>
+          <NavigationMenu.Content data-testid="popup-2">
+            <NavigationMenu.Link href="#learn">Learn link</NavigationMenu.Link>
+          </NavigationMenu.Content>
+        </NavigationMenu.Item>
+      </NavigationMenu.List>
+
+      <NavigationMenu.Portal>
+        <NavigationMenu.Positioner>
+          <NavigationMenu.Popup>
+            <NavigationMenu.Viewport />
+          </NavigationMenu.Popup>
+        </NavigationMenu.Positioner>
+      </NavigationMenu.Portal>
+    </NavigationMenu.Root>
+  );
+}
+
+function TestInlineNestedNavigationMenuTabFlow() {
+  return (
+    <NavigationMenu.Root>
+      <NavigationMenu.List>
+        <NavigationMenu.Item value="item-1">
+          <NavigationMenu.Trigger data-testid="trigger-product">Product</NavigationMenu.Trigger>
+
+          <NavigationMenu.Content data-testid="popup-product">
+            <NavigationMenu.Root defaultValue="developers" orientation="vertical">
+              <NavigationMenu.List>
+                <NavigationMenu.Item value="developers">
+                  <NavigationMenu.Trigger data-testid="nested-trigger-developers">
+                    Developers
+                  </NavigationMenu.Trigger>
+                  <NavigationMenu.Content data-testid="nested-popup-developers">
+                    <NavigationMenu.Link href="#get-started" data-testid="nested-link-get-started">
+                      Get started
+                    </NavigationMenu.Link>
+                    <NavigationMenu.Link href="#composition" data-testid="nested-link-composition">
+                      Composition
+                    </NavigationMenu.Link>
+                  </NavigationMenu.Content>
+                </NavigationMenu.Item>
+                <NavigationMenu.Item value="design-systems">
+                  <NavigationMenu.Trigger data-testid="nested-trigger-design-systems">
+                    Design Systems
+                  </NavigationMenu.Trigger>
+                  <NavigationMenu.Content data-testid="nested-popup-design-systems">
+                    <NavigationMenu.Link
+                      href="#styling"
+                      data-testid="nested-link-design-systems-styling"
+                    >
+                      Styling
+                    </NavigationMenu.Link>
+                    <NavigationMenu.Link href="#accessibility">Accessibility</NavigationMenu.Link>
+                  </NavigationMenu.Content>
+                </NavigationMenu.Item>
+                <NavigationMenu.Item value="engineering-leads">
+                  <NavigationMenu.Trigger>Engineering Leads</NavigationMenu.Trigger>
+                  <NavigationMenu.Content>
+                    <NavigationMenu.Link href="#releases">Releases</NavigationMenu.Link>
+                  </NavigationMenu.Content>
+                </NavigationMenu.Item>
+              </NavigationMenu.List>
+
+              <NavigationMenu.Viewport />
+            </NavigationMenu.Root>
+          </NavigationMenu.Content>
+        </NavigationMenu.Item>
+
+        <NavigationMenu.Item value="item-2">
+          <NavigationMenu.Trigger data-testid="trigger-learn">Learn</NavigationMenu.Trigger>
+          <NavigationMenu.Content>
+            <NavigationMenu.Link href="#learn">Learn link</NavigationMenu.Link>
+          </NavigationMenu.Content>
+        </NavigationMenu.Item>
+      </NavigationMenu.List>
+
+      <NavigationMenu.Portal>
+        <NavigationMenu.Positioner>
+          <NavigationMenu.Popup>
+            <NavigationMenu.Viewport />
+          </NavigationMenu.Popup>
+        </NavigationMenu.Positioner>
+      </NavigationMenu.Portal>
+    </NavigationMenu.Root>
+  );
+}
+
+function TestNavigationMenuWithKeepMountedContent() {
+  return (
+    <NavigationMenu.Root defaultValue="item-1">
+      <NavigationMenu.List>
+        <NavigationMenu.Item value="item-1">
+          <NavigationMenu.Trigger data-testid="trigger-product">Product</NavigationMenu.Trigger>
+          <NavigationMenu.Content keepMounted>
+            <div style={{ width: 675, height: 220 }}>Product panel</div>
+          </NavigationMenu.Content>
+        </NavigationMenu.Item>
+
+        <NavigationMenu.Item value="item-2">
+          <NavigationMenu.Trigger data-testid="trigger-learn">Learn</NavigationMenu.Trigger>
+          <NavigationMenu.Content keepMounted>
+            <div style={{ width: 500, height: 180 }}>Learn panel</div>
+          </NavigationMenu.Content>
+        </NavigationMenu.Item>
+      </NavigationMenu.List>
+
+      <NavigationMenu.Portal>
+        <NavigationMenu.Positioner data-testid="positioner">
+          <NavigationMenu.Popup data-testid="popup-root">
             <NavigationMenu.Viewport />
           </NavigationMenu.Popup>
         </NavigationMenu.Positioner>
@@ -854,6 +1079,41 @@ describe('<NavigationMenu.Root />', () => {
       expect(nestedTrigger1).to.have.attribute('aria-expanded', 'false');
     });
 
+    it('keeps parent menu open when hovering inline nested triggers without defaultValue', async () => {
+      await render(<TestInlineNestedNavigationMenuWithoutDefaultValue />);
+      const trigger1 = screen.getByTestId('trigger-1');
+
+      fireEvent.mouseEnter(trigger1);
+      fireEvent.mouseMove(trigger1);
+      clock.tick(OPEN_DELAY);
+      await flushMicrotasks();
+
+      const popup1 = screen.getByTestId('popup-1');
+      const nestedTrigger1 = within(popup1).getByTestId('nested-trigger-1');
+      expect(nestedTrigger1).to.have.attribute('aria-expanded', 'false');
+
+      fireEvent.mouseEnter(nestedTrigger1);
+      fireEvent.mouseMove(nestedTrigger1);
+      clock.tick(OPEN_DELAY);
+      await flushMicrotasks();
+
+      expect(screen.queryByTestId('popup-1')).not.to.equal(null);
+      expect(trigger1).to.have.attribute('aria-expanded', 'true');
+      expect(screen.getByTestId('nested-popup-1')).not.to.equal(null);
+      expect(nestedTrigger1).to.have.attribute('aria-expanded', 'true');
+
+      const nestedTrigger2 = within(popup1).getByTestId('nested-trigger-2');
+      fireEvent.mouseEnter(nestedTrigger2);
+      fireEvent.mouseMove(nestedTrigger2);
+      clock.tick(OPEN_DELAY);
+      await flushMicrotasks();
+
+      expect(screen.queryByTestId('popup-1')).not.to.equal(null);
+      expect(trigger1).to.have.attribute('aria-expanded', 'true');
+      expect(screen.getByTestId('nested-popup-2')).not.to.equal(null);
+      expect(nestedTrigger2).to.have.attribute('aria-expanded', 'true');
+    });
+
     describe('inline nested viewport', () => {
       it('renders viewport content correctly for inline nested menu', async () => {
         await render(<TestInlineNestedNavigationMenu />);
@@ -1087,6 +1347,193 @@ describe('<NavigationMenu.Root />', () => {
 
         await user.keyboard('{ArrowUp}');
         expect(level2Link1).toHaveFocus();
+      });
+
+      it('updates popup sizing when inline nested content is inserted while active', async () => {
+        const originalResizeObserver = globalThis.ResizeObserver;
+
+        if (typeof originalResizeObserver === 'function') {
+          globalThis.ResizeObserver = undefined as unknown as typeof ResizeObserver;
+        }
+
+        try {
+          await render(<TestInlineNestedNavigationMenuWithDynamicContent />);
+          const trigger1 = screen.getByTestId('trigger-1');
+
+          fireEvent.click(trigger1);
+          await flushMicrotasks();
+
+          const popupRoot = screen.getByTestId('popup-root');
+          const positioner = screen.getByTestId('positioner');
+
+          let popupWidth = 250;
+          let popupHeight = 120;
+
+          Object.defineProperty(popupRoot, 'offsetWidth', {
+            configurable: true,
+            get: () => popupWidth,
+          });
+          Object.defineProperty(popupRoot, 'offsetHeight', {
+            configurable: true,
+            get: () => popupHeight,
+          });
+
+          popupWidth = 250;
+          popupHeight = 220;
+          fireEvent.click(screen.getByTestId('insert-content'));
+          await flushMicrotasks();
+
+          expect(screen.getByTestId('extra-content')).not.to.equal(null);
+          await waitFor(() => {
+            expect(
+              parseInt(getComputedStyle(positioner).getPropertyValue('--positioner-height'), 10),
+            ).to.equal(220);
+          });
+        } finally {
+          if (typeof originalResizeObserver === 'function') {
+            globalThis.ResizeObserver = originalResizeObserver;
+          }
+        }
+      });
+
+      it('updates popup sizing immediately when switching to a keepMounted trigger', async () => {
+        const originalResizeObserver = globalThis.ResizeObserver;
+
+        if (typeof originalResizeObserver === 'function') {
+          globalThis.ResizeObserver = undefined as unknown as typeof ResizeObserver;
+        }
+
+        try {
+          await render(<TestNavigationMenuWithKeepMountedContent />);
+
+          const popupRoot = screen.getByTestId('popup-root');
+          const positioner = screen.getByTestId('positioner');
+
+          let popupWidth = 675;
+          let popupHeight = 220;
+
+          Object.defineProperty(popupRoot, 'offsetWidth', {
+            configurable: true,
+            get: () => popupWidth,
+          });
+          Object.defineProperty(popupRoot, 'offsetHeight', {
+            configurable: true,
+            get: () => popupHeight,
+          });
+
+          popupRoot.style.setProperty('--popup-width', '675px');
+          popupRoot.style.setProperty('--popup-height', '220px');
+          positioner.style.setProperty('--positioner-width', '675px');
+          positioner.style.setProperty('--positioner-height', '220px');
+
+          popupWidth = 500;
+          popupHeight = 180;
+          fireEvent.click(screen.getByTestId('trigger-learn'));
+          await flushMicrotasks();
+
+          await waitFor(() => {
+            expect(parseInt(positioner.style.getPropertyValue('--positioner-width'), 10)).to.equal(
+              500,
+            );
+            expect(parseInt(positioner.style.getPropertyValue('--positioner-height'), 10)).to.equal(
+              180,
+            );
+          });
+        } finally {
+          if (typeof originalResizeObserver === 'function') {
+            globalThis.ResizeObserver = originalResizeObserver;
+          }
+        }
+      });
+
+      it('does not collapse popup size to zero on close if a measurement temporarily returns 0', async () => {
+        await render(<TestInlineNestedNavigationMenuWithDynamicContent />);
+        const trigger1 = screen.getByTestId('trigger-1');
+
+        fireEvent.click(trigger1);
+        await flushMicrotasks();
+
+        const popupRoot = screen.getByTestId('popup-root');
+        const positioner = screen.getByTestId('positioner');
+
+        popupRoot.style.setProperty('--popup-width', '250px');
+        popupRoot.style.setProperty('--popup-height', '120px');
+        positioner.style.setProperty('--positioner-width', '250px');
+        positioner.style.setProperty('--positioner-height', '120px');
+
+        Object.defineProperty(popupRoot, 'offsetWidth', {
+          configurable: true,
+          get: () => 0,
+        });
+        Object.defineProperty(popupRoot, 'offsetHeight', {
+          configurable: true,
+          get: () => 0,
+        });
+        Object.defineProperty(positioner, 'offsetWidth', {
+          configurable: true,
+          get: () => 0,
+        });
+        Object.defineProperty(positioner, 'offsetHeight', {
+          configurable: true,
+          get: () => 0,
+        });
+
+        fireEvent.blur(trigger1, { relatedTarget: document.body });
+        await flushMicrotasks();
+
+        expect(popupRoot.style.getPropertyValue('--popup-width')).to.equal('250px');
+        expect(popupRoot.style.getPropertyValue('--popup-height')).to.equal('120px');
+        expect(positioner.style.getPropertyValue('--positioner-width')).to.equal('250px');
+        expect(positioner.style.getPropertyValue('--positioner-height')).to.equal('120px');
+      });
+
+      it('tabs from the last link of the last nested panel to the next top-level trigger', async () => {
+        const { user } = await render(<TestInlineNestedNavigationMenuTabForwardBoundary />);
+        const trigger1 = screen.getByTestId('trigger-1');
+
+        await user.click(trigger1);
+        await flushMicrotasks();
+
+        const nestedLastLink = screen.getByTestId('nested-last-link');
+        await act(async () => nestedLastLink.focus());
+        expect(nestedLastLink).toHaveFocus();
+
+        await user.tab();
+
+        expect(screen.getByTestId('trigger-2')).toHaveFocus();
+        expect(screen.getByTestId('nested-popup-2')).not.to.equal(null);
+        expect(screen.getByTestId('nested-trigger-2')).to.have.attribute('aria-expanded', 'true');
+      });
+
+      it('tabs between nested triggers and links without opening inactive panels', async () => {
+        const { user } = await render(<TestInlineNestedNavigationMenuTabFlow />);
+        const triggerProduct = screen.getByTestId('trigger-product');
+
+        await user.click(triggerProduct);
+        await flushMicrotasks();
+
+        const nestedDevelopersTrigger = screen.getByTestId('nested-trigger-developers');
+        await act(async () => nestedDevelopersTrigger.focus());
+        expect(nestedDevelopersTrigger).toHaveFocus();
+
+        await user.tab();
+        expect(screen.getByTestId('nested-link-get-started')).toHaveFocus();
+
+        await user.tab({ shift: true });
+        expect(nestedDevelopersTrigger).toHaveFocus();
+
+        await user.tab();
+        expect(screen.getByTestId('nested-link-get-started')).toHaveFocus();
+
+        await user.tab();
+        expect(screen.getByTestId('nested-link-composition')).toHaveFocus();
+
+        await user.tab();
+        expect(screen.getByTestId('nested-trigger-design-systems')).toHaveFocus();
+        expect(screen.queryByTestId('nested-popup-design-systems')).to.equal(null);
+
+        await user.tab();
+        expect(screen.getByText('Engineering Leads')).toHaveFocus();
       });
     });
   });
