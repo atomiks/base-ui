@@ -91,7 +91,7 @@ export function useHoverFloatingInteraction(
   );
 
   const clearPointerEvents = useStableCallback(() => {
-    clearSafePolygonPointerEventsMutation(instance, ownerDocument(floatingElement).body);
+    clearSafePolygonPointerEventsMutation(instance);
   });
 
   const handleInteractInside = useStableCallback((event: PointerEvent) => {
@@ -129,7 +129,6 @@ export function useHoverFloatingInteraction(
       isElement(domReferenceElement) &&
       floatingElement
     ) {
-      instance.performedPointerEventsMutation = true;
       const ref = domReferenceElement as HTMLElement | SVGSVGElement;
       const floatingEl = floatingElement;
       const doc = ownerDocument(floatingElement);

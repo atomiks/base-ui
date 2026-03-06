@@ -55,22 +55,20 @@ export class HoverInteraction {
   };
 }
 
-export function clearSafePolygonPointerEventsMutation(
-  instance: Pick<
-    HoverInteraction,
-    | 'performedPointerEventsMutation'
-    | 'pointerEventsScopeElement'
-    | 'pointerEventsReferenceElement'
-    | 'pointerEventsFloatingElement'
-  >,
-  fallbackScopeElement: HTMLElement,
-) {
+type PointerEventsMutationState = Pick<
+  HoverInteraction,
+  | 'performedPointerEventsMutation'
+  | 'pointerEventsScopeElement'
+  | 'pointerEventsReferenceElement'
+  | 'pointerEventsFloatingElement'
+>;
+
+export function clearSafePolygonPointerEventsMutation(instance: PointerEventsMutationState) {
   if (!instance.performedPointerEventsMutation) {
     return;
   }
 
-  const scopeElement = instance.pointerEventsScopeElement ?? fallbackScopeElement;
-  scopeElement.style.pointerEvents = '';
+  instance.pointerEventsScopeElement?.style.removeProperty('pointer-events');
   instance.pointerEventsReferenceElement?.style.removeProperty('pointer-events');
   instance.pointerEventsFloatingElement?.style.removeProperty('pointer-events');
   instance.performedPointerEventsMutation = false;
@@ -80,13 +78,7 @@ export function clearSafePolygonPointerEventsMutation(
 }
 
 export function applySafePolygonPointerEventsMutation(
-  instance: Pick<
-    HoverInteraction,
-    | 'performedPointerEventsMutation'
-    | 'pointerEventsScopeElement'
-    | 'pointerEventsReferenceElement'
-    | 'pointerEventsFloatingElement'
-  >,
+  instance: PointerEventsMutationState,
   options: {
     scopeElement: HTMLElement | SVGSVGElement;
     referenceElement: HTMLElement | SVGSVGElement;
@@ -95,12 +87,7 @@ export function applySafePolygonPointerEventsMutation(
 ) {
   const { scopeElement, referenceElement, floatingElement } = options;
 
-  if (instance.performedPointerEventsMutation) {
-    instance.pointerEventsScopeElement?.style.removeProperty('pointer-events');
-    instance.pointerEventsReferenceElement?.style.removeProperty('pointer-events');
-    instance.pointerEventsFloatingElement?.style.removeProperty('pointer-events');
-  }
-
+  clearSafePolygonPointerEventsMutation(instance);
   instance.performedPointerEventsMutation = true;
   instance.pointerEventsScopeElement = scopeElement;
   instance.pointerEventsReferenceElement = referenceElement;

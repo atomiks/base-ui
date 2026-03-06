@@ -188,10 +188,7 @@ export function useHoverReferenceInteraction(
   React.useEffect(() => cleanupMouseMoveHandler, [cleanupMouseMoveHandler]);
 
   const clearPointerEvents = useStableCallback(() => {
-    clearSafePolygonPointerEventsMutation(
-      instance,
-      ownerDocument(store.select('domReferenceElement')).body,
-    );
+    clearSafePolygonPointerEventsMutation(instance);
   });
 
   // When closing before opening, clear the delay timeouts to cancel it
