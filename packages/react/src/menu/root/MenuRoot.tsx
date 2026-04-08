@@ -24,6 +24,7 @@ import { MenubarContext, useMenubarContext } from '../../menubar/MenubarContext'
 import { TYPEAHEAD_RESET_MS } from '../../utils/constants';
 import { useDirection } from '../../direction-provider/DirectionContext';
 import { useOpenInteractionType } from '../../utils/useOpenInteractionType';
+import { useTouchOpenScrollLock } from '../../utils/useTouchOpenScrollLock';
 import {
   createChangeEventDetails,
   type BaseUIChangeEventDetails,
@@ -220,10 +221,13 @@ export const MenuRoot = fastComponent(function MenuRoot<Payload>(props: MenuRoot
     });
   }, [allowOutsidePressDismissalTimeout, open, parent.type]);
 
-  useScrollLock(
-    open && modal && lastOpenChangeReason !== REASONS.triggerHover && openMethod !== 'touch',
+  const scrollLockEnabled = useTouchOpenScrollLock(
+    open && modal && lastOpenChangeReason !== REASONS.triggerHover,
+    openMethod,
     positionerElement,
   );
+
+  useScrollLock(scrollLockEnabled, positionerElement);
 
   useIsoLayoutEffect(() => {
     if (!open && !hoverEnabled) {

@@ -24,6 +24,7 @@ import {
   type PayloadChildRenderFunction,
 } from '../../utils/popups';
 import { useOpenInteractionType } from '../../utils/useOpenInteractionType';
+import { useTouchOpenScrollLock } from '../../utils/useTouchOpenScrollLock';
 
 function PopoverRootComponent<Payload>({ props }: { props: PopoverRoot.Props<Payload> }) {
   const {
@@ -74,10 +75,13 @@ function PopoverRootComponent<Payload>({ props }: { props: PopoverRoot.Props<Pay
     store.update({ stickIfOpen: true, openChangeReason: null });
   });
 
-  useScrollLock(
-    open && modal === true && openReason !== REASONS.triggerHover && openMethod !== 'touch',
+  const scrollLockEnabled = useTouchOpenScrollLock(
+    open && modal === true && openReason !== REASONS.triggerHover,
+    openMethod,
     positionerElement,
   );
+
+  useScrollLock(scrollLockEnabled, positionerElement);
 
   React.useEffect(() => {
     if (!open) {

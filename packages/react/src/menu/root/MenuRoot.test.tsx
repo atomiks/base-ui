@@ -1168,6 +1168,34 @@ describe('<Menu.Root />', () => {
         expect(isScrollLocked).toBe(false);
       });
 
+      it('should apply scroll lock when a touch-opened popup covers the viewport width', async () => {
+        await render(<TestMenu rootProps={{ modal: true }} />);
+
+        const trigger = screen.getByRole('button', { name: 'Toggle' });
+
+        fireEvent.pointerDown(trigger, { pointerType: 'touch' });
+        fireEvent.mouseDown(trigger);
+
+        const menu = await screen.findByRole('menu');
+        const doc = menu.ownerDocument;
+        const positioner = screen.getByTestId('menu-positioner');
+
+        positioner.style.setProperty('--available-width', '300px');
+        Object.defineProperty(positioner, 'offsetWidth', {
+          configurable: true,
+          value: 290,
+        });
+
+        await waitFor(() => {
+          const isScrollLocked =
+            doc.documentElement.style.overflow === 'hidden' ||
+            doc.documentElement.hasAttribute('data-base-ui-scroll-locked') ||
+            doc.body.style.overflow === 'hidden';
+
+          expect(isScrollLocked).toBe(true);
+        });
+      });
+
       it('should apply scroll lock when opened via mouse', async () => {
         const { user } = await render(<TestMenu rootProps={{ modal: true }} />);
 

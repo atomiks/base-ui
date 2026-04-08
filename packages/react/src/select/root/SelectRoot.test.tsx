@@ -862,6 +862,44 @@ describe('<Select.Root />', () => {
       expect(isScrollLocked()).toBe(false);
     });
 
+    it('applies scroll lock when a touch-opened popup covers the viewport width', async () => {
+      await render(
+        <Select.Root modal>
+          <Select.Trigger>Open</Select.Trigger>
+          <Select.Portal>
+            <Select.Positioner data-testid="positioner">
+              <Select.Popup>
+                <Select.Item>Item</Select.Item>
+              </Select.Popup>
+            </Select.Positioner>
+          </Select.Portal>
+        </Select.Root>,
+      );
+
+      const trigger = screen.getByRole('combobox');
+
+      fireEvent.pointerDown(trigger, { pointerType: 'touch' });
+      fireEvent.mouseDown(trigger);
+
+      await screen.findByRole('listbox');
+      const positioner = screen.getByTestId('positioner');
+      positioner.style.setProperty('--available-width', '300px');
+
+      Object.defineProperty(positioner, 'offsetWidth', {
+        configurable: true,
+        value: 290,
+      });
+
+      await waitFor(() => {
+        const isScrollLocked =
+          trigger.ownerDocument.documentElement.style.overflow === 'hidden' ||
+          trigger.ownerDocument.documentElement.hasAttribute('data-base-ui-scroll-locked') ||
+          trigger.ownerDocument.body.style.overflow === 'hidden';
+
+        expect(isScrollLocked).toBe(true);
+      });
+    });
+
     it('keeps touch positioning during the close transition', async ({ onTestFinished }) => {
       globalThis.BASE_UI_ANIMATIONS_DISABLED = false;
 
