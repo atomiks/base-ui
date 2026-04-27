@@ -55,6 +55,7 @@ import {
   compareItemEquality,
   defaultItemEquality,
   findItemIndex,
+  getLatestSelectedValue,
   removeItem,
   selectedValueIncludes,
 } from '../../internals/itemEquality';
@@ -156,6 +157,7 @@ export function AriaCombobox<Value = any, Mode extends SelectionMode = 'none'>(
    * Contains the currently visible list of item values post-filtering.
    */
   const valuesRef = React.useRef<any[]>([]);
+  const allValuesRef = React.useRef<any[]>([]);
 
   const disabled = fieldDisabled || disabledProp;
   const name = fieldName ?? nameProp;
@@ -354,6 +356,7 @@ export function AriaCombobox<Value = any, Mode extends SelectionMode = 'none'>(
         chipsContainerRef,
         clearRef,
         valuesRef,
+        allValuesRef,
         selectionEventRef,
         name,
         form,
@@ -375,8 +378,9 @@ export function AriaCombobox<Value = any, Mode extends SelectionMode = 'none'>(
         transitionStatus: 'idle',
         inline: inlineProp,
         activeIndex: null,
-        itemValues: EMPTY_ARRAY,
-        allItemValues: EMPTY_ARRAY,
+        itemValues: valuesRef.current,
+        allItemValues: allValuesRef.current,
+        itemValuesVersion: 0,
         popupProps: {},
         inputProps: {},
         triggerProps: {},
@@ -426,6 +430,7 @@ export function AriaCombobox<Value = any, Mode extends SelectionMode = 'none'>(
   const inputInsidePopup = useStore(store, selectors.inputInsidePopup);
   const itemValues = useStore(store, selectors.itemValues);
   const allItemValues = useStore(store, selectors.allItemValues);
+  const itemValuesVersion = useStore(store, selectors.itemValuesVersion);
 
   const triggerRef = useValueAsRef(triggerElement);
   const [listNavigationSelectedValue, setListNavigationSelectedValue] =
@@ -753,17 +758,14 @@ export function AriaCombobox<Value = any, Mode extends SelectionMode = 'none'>(
       store.update({
         itemValues: flatFilteredItems,
         allItemValues: flatItems,
+        itemValuesVersion: store.state.itemValuesVersion + 1,
       });
     }
   }, [items, flatFilteredItems, flatItems, listRef, store, valuesRef]);
 
   useIsoLayoutEffect(() => {
     if (!open && selectionMode !== 'none') {
-      setListNavigationSelectedValue(
-        multiple && Array.isArray(selectedValue)
-          ? selectedValue[selectedValue.length - 1]
-          : selectedValue,
-      );
+      setListNavigationSelectedValue(getListNavigationSelectedValue(selectedValue, multiple));
     }
   }, [multiple, open, selectedValue, selectionMode]);
 
@@ -848,6 +850,7 @@ export function AriaCombobox<Value = any, Mode extends SelectionMode = 'none'>(
     flatFilteredItems,
     inline,
     itemValues,
+    itemValuesVersion,
     open,
     pendingQueryHighlight,
     store,
@@ -881,6 +884,10 @@ export function AriaCombobox<Value = any, Mode extends SelectionMode = 'none'>(
   useValueChanged(selectedValue, () => {
     if (selectionMode === 'none') {
       return;
+    }
+
+    if (open && activeIndex === null) {
+      setListNavigationSelectedValue(getListNavigationSelectedValue(selectedValue, multiple));
     }
 
     clearErrors(name);
@@ -1284,6 +1291,11 @@ export function AriaCombobox<Value = any, Mode extends SelectionMode = 'none'>(
 }
 
 type SelectionMode = 'single' | 'multiple' | 'none';
+
+function getListNavigationSelectedValue(selectedValue: any, multiple: boolean) {
+  const latestSelectedValue = getLatestSelectedValue(selectedValue, multiple);
+  return multiple && latestSelectedValue === undefined ? NO_ACTIVE_VALUE : latestSelectedValue;
+}
 
 type ComboboxItemValueType<ItemValue, Mode extends SelectionMode> = Mode extends 'multiple'
   ? ItemValue[]

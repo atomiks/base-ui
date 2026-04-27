@@ -3,7 +3,7 @@ import type { InteractionType } from '@base-ui/utils/useEnhancedClickHandler';
 import type { TransitionStatus } from '../internals/useTransitionStatus';
 import type { HTMLProps } from '../internals/types';
 import type { Side } from '../utils/useAnchorPositioning';
-import { compareItemEquality, findItemIndex } from '../internals/itemEquality';
+import { compareItemEquality, findSelectedItemIndex } from '../internals/itemEquality';
 import { hasNullItemLabel } from '../internals/resolveValueLabel';
 import type { AriaCombobox } from './root/AriaCombobox';
 
@@ -29,6 +29,7 @@ export type State = {
   activeIndex: number | null;
   itemValues: readonly any[];
   allItemValues: readonly any[];
+  itemValuesVersion: number;
 
   popupProps: HTMLProps;
   inputProps: HTMLProps;
@@ -58,6 +59,7 @@ export type State = {
   chipsContainerRef: React.RefObject<HTMLDivElement | null>;
   clearRef: React.RefObject<HTMLButtonElement | null>;
   valuesRef: React.RefObject<Array<any>>;
+  allValuesRef: React.RefObject<Array<any>>;
   selectionEventRef: React.RefObject<MouseEvent | PointerEvent | KeyboardEvent | null>;
 
   setOpen: (open: boolean, eventDetails: AriaCombobox.ChangeEventDetails) => void;
@@ -95,6 +97,33 @@ export type State = {
 
 export type ComboboxStore = Store<State>;
 
+let cachedSelectedIndexState: State | undefined;
+let cachedSelectedIndex: number | null = null;
+
+function getSelectedIndex(state: State) {
+  if (state === cachedSelectedIndexState) {
+    return cachedSelectedIndex;
+  }
+
+  if (state.selectionMode === 'none') {
+    cachedSelectedIndexState = state;
+    cachedSelectedIndex = null;
+    return cachedSelectedIndex;
+  }
+
+  const registry = state.open || state.inline ? state.itemValues : state.allItemValues;
+  const index = findSelectedItemIndex(
+    registry,
+    state.selectedValue,
+    state.selectionMode === 'multiple',
+    state.isItemEqualToValue,
+  );
+
+  cachedSelectedIndexState = state;
+  cachedSelectedIndex = index === -1 ? null : index;
+  return cachedSelectedIndex;
+}
+
 export const selectors = {
   id: createSelector((state: State) => state.id),
   labelId: createSelector((state: State) => state.labelId),
@@ -131,7 +160,8 @@ export const selectors = {
   activeIndex: createSelector((state: State) => state.activeIndex),
   itemValues: createSelector((state: State) => state.itemValues),
   allItemValues: createSelector((state: State) => state.allItemValues),
-  selectedIndex: createSelector(getSelectedIndex),
+  itemValuesVersion: createSelector((state: State) => state.itemValuesVersion),
+  selectedIndex: getSelectedIndex,
   isActive: createSelector((state: State, index: number) => state.activeIndex === index),
   isSelected: createSelector((state: State, itemValue: any) => {
     const comparer = state.isItemEqualToValue;
@@ -177,21 +207,3 @@ export const selectors = {
   autoHighlight: createSelector((state: State) => state.autoHighlight),
   submitOnItemClick: createSelector((state: State) => state.submitOnItemClick),
 };
-
-function getSelectedIndex(state: State) {
-  if (state.selectionMode === 'none') {
-    return null;
-  }
-
-  let selectedValue = state.selectedValue;
-  if (state.selectionMode === 'multiple') {
-    if (!Array.isArray(selectedValue) || selectedValue.length === 0) {
-      return null;
-    }
-    selectedValue = selectedValue[selectedValue.length - 1];
-  }
-
-  const registry = state.open || state.inline ? state.itemValues : state.allItemValues;
-  const index = findItemIndex(registry, selectedValue, state.isItemEqualToValue);
-  return index === -1 ? null : index;
-}

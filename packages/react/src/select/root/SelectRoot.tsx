@@ -146,7 +146,7 @@ export function SelectRoot<Value, Multiple extends boolean | undefined = false>(
         forceMount: false,
         openMethod: null,
         activeIndex: null,
-        itemValues: EMPTY_ARRAY,
+        itemValues: valuesRef.current,
         popupProps: {},
         triggerProps: {},
         triggerElement: null,

@@ -3235,7 +3235,11 @@ describe('<Select.Root />', () => {
 
         await waitFor(() => {
           expect(trigger).toHaveAttribute('aria-expanded', 'true');
+        });
+        await waitFor(() => {
           expect(listbox.scrollTop).toBe(0);
+        });
+        await waitFor(() => {
           expect(firstOption.getBoundingClientRect().top).toBeGreaterThanOrEqual(
             positioner.getBoundingClientRect().top,
           );

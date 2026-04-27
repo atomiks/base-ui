@@ -20,7 +20,7 @@ import { selectors } from '../store';
 import { useButton } from '../../internals/use-button';
 import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
 import { REASONS } from '../../internals/reasons';
-import { compareItemEquality, removeItem } from '../../internals/itemEquality';
+import { isItemSelected, removeItem } from '../../internals/itemEquality';
 
 /**
  * An individual option in the select popup.
@@ -81,34 +81,30 @@ export const SelectItem = React.memo(
 
       const values = valuesRef.current;
       values[index] = itemValue;
-      store.set('itemValues', values.slice());
+      if (isItemSelected(itemValue, store.state.value, multiple, isItemEqualToValue)) {
+        store.notifyAll();
+      }
 
       return () => {
+        const wasSelected = isItemSelected(
+          itemValue,
+          store.state.value,
+          multiple,
+          isItemEqualToValue,
+        );
         delete values[index];
-        store.set('itemValues', values.slice());
+        if (wasSelected) {
+          store.notifyAll();
+        }
       };
-    }, [hasRegistered, index, itemValue, valuesRef, store]);
+    }, [hasRegistered, index, itemValue, valuesRef, store, multiple, isItemEqualToValue]);
 
     useIsoLayoutEffect(() => {
       if (!hasRegistered) {
         return;
       }
 
-      const selectedValue = store.state.value;
-
-      let selectedCandidate = selectedValue;
-      if (multiple) {
-        const selectedValues = Array.isArray(selectedValue) ? selectedValue : [];
-        if (selectedValues.length === 0) {
-          return;
-        }
-        selectedCandidate = selectedValues[selectedValues.length - 1];
-      }
-
-      if (
-        selectedCandidate !== undefined &&
-        compareItemEquality(itemValue, selectedCandidate, isItemEqualToValue)
-      ) {
+      if (isItemSelected(itemValue, store.state.value, multiple, isItemEqualToValue)) {
         // Make sure SelectPopup can measure the selected item on first open.
         // SelectItemText can still update this ref later when focus moves.
         if (textRef.current) {

@@ -822,6 +822,118 @@ describe('<Combobox.Root />', () => {
         });
       });
 
+      it('starts keyboard navigation from the first item after clearing selections while open', async () => {
+        const items = ['apple', 'banana', 'cherry'];
+
+        function App() {
+          const [value, setValue] = React.useState(items.slice(0, 2));
+
+          return (
+            <Combobox.Root items={items} multiple value={value} onValueChange={setValue}>
+              <Combobox.Input data-testid="input" />
+              <Combobox.Clear data-testid="clear" />
+              <Combobox.Portal>
+                <Combobox.Positioner>
+                  <Combobox.Popup>
+                    <Combobox.List>
+                      {(item: string) => (
+                        <Combobox.Item key={item} value={item}>
+                          {item}
+                        </Combobox.Item>
+                      )}
+                    </Combobox.List>
+                  </Combobox.Popup>
+                </Combobox.Positioner>
+              </Combobox.Portal>
+            </Combobox.Root>
+          );
+        }
+
+        const { user } = await render(<App />);
+
+        const input = screen.getByTestId('input');
+        await user.click(input);
+        await screen.findByRole('listbox');
+
+        await user.click(screen.getByTestId('clear'));
+        await user.keyboard('{ArrowDown}');
+
+        const apple = screen.getByRole('option', { name: 'apple' });
+
+        await waitFor(() => {
+          expect(apple).toHaveAttribute('data-highlighted');
+        });
+        await waitFor(() => {
+          expect(input).toHaveAttribute('aria-activedescendant', apple.id);
+        });
+      });
+
+      it('uses the remaining selected chip as the keyboard anchor after removing a chip', async () => {
+        const items = ['apple', 'banana', 'cherry'];
+
+        function App() {
+          const [value, setValue] = React.useState(items.slice(0, 2));
+
+          return (
+            <Combobox.Root items={items} multiple value={value} onValueChange={setValue}>
+              <Combobox.Chips>
+                <Combobox.Value>
+                  {(selectedValue: string[]) => (
+                    <React.Fragment>
+                      {selectedValue.map((item) => (
+                        <Combobox.Chip key={item}>
+                          {item}
+                          <Combobox.ChipRemove aria-label={`Remove ${item}`} />
+                        </Combobox.Chip>
+                      ))}
+                      <Combobox.Input data-testid="input" />
+                    </React.Fragment>
+                  )}
+                </Combobox.Value>
+              </Combobox.Chips>
+              <SelectedIndexProbe />
+              <Combobox.Portal>
+                <Combobox.Positioner>
+                  <Combobox.Popup>
+                    <Combobox.List>
+                      {(item: string) => (
+                        <Combobox.Item key={item} value={item}>
+                          {item}
+                        </Combobox.Item>
+                      )}
+                    </Combobox.List>
+                  </Combobox.Popup>
+                </Combobox.Positioner>
+              </Combobox.Portal>
+            </Combobox.Root>
+          );
+        }
+
+        const { user } = await render(<App />);
+
+        const input = screen.getByTestId('input');
+        await user.click(input);
+
+        const banana = await screen.findByRole('option', { name: 'banana' });
+        await waitFor(() => {
+          expect(banana).toHaveAttribute('data-highlighted');
+        });
+
+        await user.click(screen.getByRole('button', { name: 'Remove banana', hidden: true }));
+        await waitFor(() => {
+          expect(screen.getByTestId('selected-index').textContent).toBe('0');
+        });
+
+        await user.keyboard('{ArrowDown}');
+
+        await waitFor(() => {
+          expect(banana).toHaveAttribute('data-highlighted');
+        });
+        await waitFor(() => {
+          expect(input).toHaveAttribute('aria-activedescendant', banana.id);
+        });
+      });
+
       it('re-syncs selectedIndex after an external controlled update when closing', async () => {
         const items = ['apple', 'banana', 'cherry'];
 
@@ -1172,6 +1284,48 @@ describe('<Combobox.Root />', () => {
 
         await waitFor(() => {
           expect(screen.getByTestId('selected-index').textContent).toBe('null');
+        });
+      });
+
+      it('starts keyboard navigation from the first item after clearing selections while open without the items prop', async () => {
+        function App() {
+          const [value, setValue] = React.useState(['apple', 'banana']);
+
+          return (
+            <Combobox.Root multiple value={value} onValueChange={setValue}>
+              <Combobox.Input data-testid="input" />
+              <Combobox.Clear data-testid="clear" />
+              <Combobox.Portal>
+                <Combobox.Positioner>
+                  <Combobox.Popup>
+                    <Combobox.List>
+                      <Combobox.Item value="apple">apple</Combobox.Item>
+                      <Combobox.Item value="banana">banana</Combobox.Item>
+                      <Combobox.Item value="cherry">cherry</Combobox.Item>
+                    </Combobox.List>
+                  </Combobox.Popup>
+                </Combobox.Positioner>
+              </Combobox.Portal>
+            </Combobox.Root>
+          );
+        }
+
+        const { user } = await render(<App />);
+
+        const input = screen.getByTestId('input');
+        await user.click(input);
+        await screen.findByRole('listbox');
+
+        await user.click(screen.getByTestId('clear'));
+        await user.keyboard('{ArrowDown}');
+
+        const apple = screen.getByRole('option', { name: 'apple' });
+
+        await waitFor(() => {
+          expect(apple).toHaveAttribute('data-highlighted');
+        });
+        await waitFor(() => {
+          expect(input).toHaveAttribute('aria-activedescendant', apple.id);
         });
       });
 

@@ -2,7 +2,7 @@ import { Store, createSelector } from '@base-ui/utils/store';
 import { type InteractionType } from '@base-ui/utils/useEnhancedClickHandler';
 import type { TransitionStatus } from '../internals/useTransitionStatus';
 import type { HTMLProps } from '../internals/types';
-import { compareItemEquality, findItemIndex } from '../internals/itemEquality';
+import { compareItemEquality, findSelectedItemIndex } from '../internals/itemEquality';
 import { type Group, hasNullItemLabel, stringifyAsValue } from '../internals/resolveValueLabel';
 
 export type State = {
@@ -45,6 +45,25 @@ export type State = {
 
 export type SelectStore = Store<State>;
 
+let cachedSelectedIndexState: State | undefined;
+let cachedSelectedIndex: number | null = null;
+
+function getSelectedIndex(state: State) {
+  if (state === cachedSelectedIndexState) {
+    return cachedSelectedIndex;
+  }
+
+  const index = findSelectedItemIndex(
+    state.itemValues,
+    state.value,
+    state.multiple,
+    state.isItemEqualToValue,
+  );
+  cachedSelectedIndexState = state;
+  cachedSelectedIndex = index === -1 ? null : index;
+  return cachedSelectedIndex;
+}
+
 export const selectors = {
   id: createSelector((state: State) => state.id),
   labelId: createSelector((state: State) => state.labelId),
@@ -81,7 +100,7 @@ export const selectors = {
   openMethod: createSelector((state: State) => state.openMethod),
 
   activeIndex: createSelector((state: State) => state.activeIndex),
-  selectedIndex: createSelector(getSelectedIndex),
+  selectedIndex: getSelectedIndex,
   isActive: createSelector((state: State, index: number) => state.activeIndex === index),
 
   isSelected: createSelector((state: State, index: number, itemValue: any) => {
@@ -98,7 +117,9 @@ export const selectors = {
     return compareItemEquality(itemValue, storeValue, comparer);
   }),
   isSelectedByFocus: createSelector(
-    (state: State, index: number) => getSelectedIndex(state) === index,
+    getSelectedIndex,
+    (_state: State, index: number) => index,
+    (selectedIndex, index) => selectedIndex === index,
   ),
 
   popupProps: createSelector((state: State) => state.popupProps),
@@ -112,17 +133,3 @@ export const selectors = {
 
   hasScrollArrows: createSelector((state: State) => state.hasScrollArrows),
 };
-
-function getSelectedIndex(state: State) {
-  const { value, itemValues, isItemEqualToValue } = state;
-  let selectedValue = value;
-  if (state.multiple) {
-    if (!Array.isArray(value) || value.length === 0) {
-      return null;
-    }
-    selectedValue = value[value.length - 1];
-  }
-
-  const index = findItemIndex(itemValues, selectedValue, isItemEqualToValue);
-  return index === -1 ? null : index;
-}

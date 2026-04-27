@@ -49,6 +49,48 @@ export function findItemIndex<Item, Value>(
   });
 }
 
+export function getLatestSelectedValue<Value>(
+  selectedValue: Value | readonly Value[] | undefined,
+  multiple: boolean,
+): Value | undefined {
+  if (!multiple) {
+    return selectedValue as Value | undefined;
+  }
+
+  if (!Array.isArray(selectedValue) || selectedValue.length === 0) {
+    return undefined;
+  }
+
+  return selectedValue[selectedValue.length - 1];
+}
+
+export function findSelectedItemIndex<Item, Value>(
+  itemValues: readonly Item[] | undefined | null,
+  selectedValue: Value | readonly Value[] | undefined,
+  multiple: boolean,
+  comparer: ItemEqualityComparer<Item, Value>,
+): number {
+  const latestSelectedValue = getLatestSelectedValue(selectedValue, multiple);
+  if (latestSelectedValue === undefined) {
+    return -1;
+  }
+
+  return findItemIndex(itemValues, latestSelectedValue, comparer);
+}
+
+export function isItemSelected<Item, Value>(
+  itemValue: Item,
+  selectedValue: Value | readonly Value[] | undefined,
+  multiple: boolean,
+  comparer: ItemEqualityComparer<Item, Value>,
+): boolean {
+  const latestSelectedValue = getLatestSelectedValue(selectedValue, multiple);
+  return (
+    latestSelectedValue !== undefined &&
+    compareItemEquality(itemValue, latestSelectedValue, comparer)
+  );
+}
+
 export function removeItem<Item, Value>(
   selectedValues: readonly Item[],
   itemValue: Value,

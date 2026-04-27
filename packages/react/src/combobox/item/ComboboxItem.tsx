@@ -14,10 +14,10 @@ import {
 import type { BaseUIComponentProps, HTMLProps, NonNativeButtonProps } from '../../internals/types';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { ComboboxItemContext } from './ComboboxItemContext';
-import { selectors } from '../store';
+import { selectors, type State as ComboboxState } from '../store';
 import { useButton } from '../../internals/use-button';
 import { useComboboxRowContext } from '../row/ComboboxRowContext';
-import { findItemIndex } from '../../internals/itemEquality';
+import { findItemIndex, isItemSelected } from '../../internals/itemEquality';
 import { useComboboxPortalContext } from '../portal/ComboboxPortalContext';
 
 /**
@@ -98,30 +98,29 @@ export const ComboboxItem = React.memo(
         return undefined;
       }
 
-      const visibleMap = store.state.valuesRef.current;
-      visibleMap[index] = itemValue;
+      const values = store.state.valuesRef.current;
+      const allValues = store.state.allValuesRef.current;
 
-      const itemValues = visibleMap.slice();
-      store.update({
-        itemValues,
-        allItemValues: itemValues,
-      });
+      values[index] = itemValue;
+      allValues[index] = itemValue;
+      if (shouldNotifyForItemValueChange(index, itemValue, store.state)) {
+        store.set('itemValuesVersion', store.state.itemValuesVersion + 1);
+      }
 
       return () => {
         const preserveClosedRegistry =
           !store.state.open && !keepPortalMounted && !store.state.forceMounted;
         if (preserveClosedRegistry) {
-          visibleMap.length = 0;
-          store.set('itemValues', []);
+          values.length = 0;
           return;
         }
 
-        delete visibleMap[index];
-        const nextItemValues = visibleMap.slice();
-        store.update({
-          itemValues: nextItemValues,
-          allItemValues: nextItemValues,
-        });
+        const shouldNotify = shouldNotifyForItemValueChange(index, itemValue, store.state, true);
+        delete values[index];
+        delete allValues[index];
+        if (shouldNotify) {
+          store.set('itemValuesVersion', store.state.itemValuesVersion + 1);
+        }
       };
     }, [hasRegistered, hasItems, index, itemValue, keepPortalMounted, store]);
 
@@ -216,6 +215,39 @@ export const ComboboxItem = React.memo(
     );
   }),
 );
+
+function shouldNotifyForItemValueChange(
+  index: number,
+  itemValue: any,
+  state: ComboboxState,
+  unregistering = false,
+) {
+  if (
+    state.selectionMode !== 'none' &&
+    isItemSelected(
+      itemValue,
+      state.selectedValue,
+      state.selectionMode === 'multiple',
+      state.isItemEqualToValue,
+    )
+  ) {
+    return true;
+  }
+
+  if (!state.open && !state.inline) {
+    return false;
+  }
+
+  if (state.activeIndex === index) {
+    return true;
+  }
+
+  if (unregistering && state.activeIndex != null) {
+    return true;
+  }
+
+  return state.activeIndex == null && state.autoHighlight === 'always' && index === 0;
+}
 
 export interface ComboboxItemState {
   /**
