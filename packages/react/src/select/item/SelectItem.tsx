@@ -83,6 +83,11 @@ export const SelectItem = React.memo(
       values[index] = itemValue;
       if (isItemSelected(itemValue, store.state.value, multiple, isItemEqualToValue)) {
         store.notifyAll();
+        // Make sure SelectPopup can measure the selected item on first open.
+        // SelectItemText can still update this ref later when focus moves.
+        if (textRef.current) {
+          selectedItemTextRef.current = textRef.current;
+        }
       }
 
       return () => {
@@ -97,21 +102,16 @@ export const SelectItem = React.memo(
           store.notifyAll();
         }
       };
-    }, [hasRegistered, index, itemValue, valuesRef, store, multiple, isItemEqualToValue]);
-
-    useIsoLayoutEffect(() => {
-      if (!hasRegistered) {
-        return;
-      }
-
-      if (isItemSelected(itemValue, store.state.value, multiple, isItemEqualToValue)) {
-        // Make sure SelectPopup can measure the selected item on first open.
-        // SelectItemText can still update this ref later when focus moves.
-        if (textRef.current) {
-          selectedItemTextRef.current = textRef.current;
-        }
-      }
-    }, [hasRegistered, multiple, isItemEqualToValue, store, itemValue, selectedItemTextRef]);
+    }, [
+      hasRegistered,
+      index,
+      itemValue,
+      valuesRef,
+      store,
+      multiple,
+      isItemEqualToValue,
+      selectedItemTextRef,
+    ]);
 
     const lastKeyRef = React.useRef<string | null>(null);
     const pointerTypeRef = React.useRef<'mouse' | 'touch' | 'pen'>('mouse');
