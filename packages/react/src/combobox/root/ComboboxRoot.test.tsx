@@ -1075,8 +1075,8 @@ describe('<Combobox.Root />', () => {
 
         await waitFor(() => {
           expect(banana).toHaveAttribute('data-highlighted');
-          expect(input).toHaveAttribute('aria-activedescendant', banana.id);
         });
+        await waitFor(() => expect(input).toHaveAttribute('aria-activedescendant', banana.id));
       });
 
       it('does not highlight a removed selected item on reopen without the items prop', async () => {
@@ -1188,13 +1188,13 @@ describe('<Combobox.Root />', () => {
 
           await waitFor(() => {
             expect(option).toHaveAttribute('data-highlighted');
-            expect(popup.scrollTop).toBeGreaterThan(0);
-
-            const popupRect = popup.getBoundingClientRect();
-            const optionRect = option.getBoundingClientRect();
-            expect(optionRect.top).toBeGreaterThanOrEqual(popupRect.top);
-            expect(optionRect.bottom).toBeLessThanOrEqual(popupRect.bottom);
           });
+          await waitFor(() => expect(popup.scrollTop).toBeGreaterThan(0));
+
+          const popupRect = popup.getBoundingClientRect();
+          const optionRect = option.getBoundingClientRect();
+          expect(optionRect.top).toBeGreaterThanOrEqual(popupRect.top);
+          expect(optionRect.bottom).toBeLessThanOrEqual(popupRect.bottom);
         },
       );
 
@@ -1235,10 +1235,8 @@ describe('<Combobox.Root />', () => {
         });
 
         await user.click(screen.getByTestId('set-external'));
-        await waitFor(() => {
-          expect(screen.queryByRole('listbox')).toBe(null);
-          expect(screen.getByTestId('selected-index').textContent).toBe('2');
-        });
+        await waitFor(() => expect(screen.queryByRole('listbox')).toBe(null));
+        await waitFor(() => expect(screen.getByTestId('selected-index').textContent).toBe('2'));
 
         await user.click(input);
         expect(await screen.findByRole('listbox')).not.toBe(null);
