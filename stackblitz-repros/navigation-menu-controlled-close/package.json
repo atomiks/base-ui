@@ -1,0 +1,18 @@
+{
+  "name": "base-ui-navigation-menu-controlled-close-repro",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 0.0.0.0"
+  },
+  "dependencies": {
+    "@base-ui/react": "1.4.1",
+    "@vitejs/plugin-react": "6.0.2",
+    "vite": "8.0.13",
+    "react": "19.2.6",
+    "react-dom": "19.2.6"
+  },
+  "devDependencies": {},
+  "packageManager": "pnpm@10.33.4"
+}
