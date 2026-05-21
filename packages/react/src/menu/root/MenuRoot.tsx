@@ -202,6 +202,9 @@ export const MenuRoot = fastComponent(function MenuRoot<Payload>(props: MenuRoot
   React.useEffect(() => {
     if (!open) {
       openEventRef.current = null;
+      if (store.select('pendingHighlightItem') !== null) {
+        store.set('pendingHighlightItem', null);
+      }
     }
 
     if (parent.type !== 'context-menu') {
@@ -220,7 +223,7 @@ export const MenuRoot = fastComponent(function MenuRoot<Payload>(props: MenuRoot
     allowOutsidePressDismissalTimeout.start(500, () => {
       allowOutsidePressDismissalRef.current = true;
     });
-  }, [allowOutsidePressDismissalTimeout, open, parent.type]);
+  }, [allowOutsidePressDismissalTimeout, open, parent.type, store]);
 
   useIsoLayoutEffect(() => {
     if (!open && !hoverEnabled) {

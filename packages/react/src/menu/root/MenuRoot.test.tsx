@@ -1509,6 +1509,210 @@ describe('<Menu.Root />', () => {
           });
         });
 
+        it('moves focus to the first item when called with `first` while open', async () => {
+          const actionsRef: React.RefObject<Menu.Root.Actions | null> = { current: null };
+
+          function App() {
+            const [open, setOpen] = React.useState(false);
+            return (
+              <div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setOpen(true);
+                    actionsRef.current?.highlightItem('last');
+                  }}
+                >
+                  external
+                </button>
+                <TestMenu rootProps={{ open, onOpenChange: setOpen, actionsRef }} />
+              </div>
+            );
+          }
+
+          const { user } = await render(<App />);
+
+          await user.click(screen.getByRole('button', { name: 'external' }));
+
+          const firstItem = await screen.findByTestId('item-1');
+          const lastItem = await screen.findByTestId('item-5');
+          await waitFor(() => {
+            expect(lastItem).toHaveFocus();
+          });
+
+          await act(async () => {
+            actionsRef.current?.highlightItem('first');
+          });
+
+          await waitFor(() => {
+            expect(firstItem).toHaveFocus();
+          });
+          expect(firstItem).toHaveAttribute('tabindex', '0');
+          expect(lastItem).toHaveAttribute('tabindex', '-1');
+        });
+
+        it('moves focus to the last item when called with `last` while open', async () => {
+          const actionsRef: React.RefObject<Menu.Root.Actions | null> = { current: null };
+
+          function App() {
+            const [open, setOpen] = React.useState(false);
+            return (
+              <div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setOpen(true);
+                    actionsRef.current?.highlightItem('first');
+                  }}
+                >
+                  external
+                </button>
+                <TestMenu rootProps={{ open, onOpenChange: setOpen, actionsRef }} />
+              </div>
+            );
+          }
+
+          const { user } = await render(<App />);
+
+          await user.click(screen.getByRole('button', { name: 'external' }));
+
+          const firstItem = await screen.findByTestId('item-1');
+          const lastItem = await screen.findByTestId('item-5');
+          await waitFor(() => {
+            expect(firstItem).toHaveFocus();
+          });
+
+          await act(async () => {
+            actionsRef.current?.highlightItem('last');
+          });
+
+          await waitFor(() => {
+            expect(lastItem).toHaveFocus();
+          });
+          expect(firstItem).toHaveAttribute('tabindex', '-1');
+          expect(lastItem).toHaveAttribute('tabindex', '0');
+        });
+
+        it('skips disabled items when resolving `first` and `last`', async () => {
+          const actionsRef: React.RefObject<Menu.Root.Actions | null> = { current: null };
+
+          function App() {
+            const [open, setOpen] = React.useState(false);
+            return (
+              <div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setOpen(true);
+                    actionsRef.current?.highlightItem('first');
+                  }}
+                >
+                  external
+                </button>
+                <TestMenu
+                  rootProps={{ open, onOpenChange: setOpen, actionsRef }}
+                  popupProps={{
+                    children: (
+                      <React.Fragment>
+                        <Menu.Item data-testid="item-1" disabled>
+                          One
+                        </Menu.Item>
+                        <Menu.Item data-testid="item-2">Two</Menu.Item>
+                        <Menu.Item data-testid="item-3">Three</Menu.Item>
+                        <Menu.Item data-testid="item-4" disabled>
+                          Four
+                        </Menu.Item>
+                      </React.Fragment>
+                    ),
+                  }}
+                />
+              </div>
+            );
+          }
+
+          const { user } = await render(<App />);
+
+          await user.click(screen.getByRole('button', { name: 'external' }));
+
+          const item1 = await screen.findByTestId('item-1');
+          const item2 = await screen.findByTestId('item-2');
+          const item3 = await screen.findByTestId('item-3');
+          const item4 = await screen.findByTestId('item-4');
+
+          await waitFor(() => {
+            expect(item2).toHaveFocus();
+          });
+          expect(item1).toHaveAttribute('tabindex', '-1');
+
+          await act(async () => {
+            actionsRef.current?.highlightItem('last');
+          });
+
+          await waitFor(() => {
+            expect(item3).toHaveFocus();
+          });
+          expect(item3).toHaveAttribute('tabindex', '0');
+          expect(item4).toHaveAttribute('tabindex', '-1');
+        });
+
+        it('clears an unconsumed pending highlight when closed', async () => {
+          const actionsRef: React.RefObject<Menu.Root.Actions | null> = { current: null };
+
+          function App() {
+            const [disabled, setDisabled] = React.useState(true);
+            const [open, setOpen] = React.useState(false);
+
+            return (
+              <div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setDisabled(true);
+                    setOpen(true);
+                    actionsRef.current?.highlightItem('last');
+                  }}
+                >
+                  open disabled
+                </button>
+                <button type="button" onClick={() => setOpen(false)}>
+                  close
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setDisabled(false);
+                    setOpen(true);
+                  }}
+                >
+                  open enabled
+                </button>
+                <TestMenu rootProps={{ disabled, open, onOpenChange: setOpen, actionsRef }} />
+              </div>
+            );
+          }
+
+          const { user } = await render(<App />);
+
+          await user.click(screen.getByRole('button', { name: 'open disabled' }));
+          await screen.findByRole('menu');
+          const lastItem = screen.getByTestId('item-5');
+
+          expect(lastItem).toHaveAttribute('tabindex', '-1');
+
+          await user.click(screen.getByRole('button', { name: 'close' }));
+          await waitFor(() => {
+            expect(screen.queryByRole('menu')).toBe(null);
+          });
+
+          await user.click(screen.getByRole('button', { name: 'open enabled' }));
+          await screen.findByRole('menu');
+
+          await waitFor(() => {
+            expect(screen.getByTestId('item-5')).toHaveAttribute('tabindex', '-1');
+          });
+          expect(screen.getByTestId('item-5')).not.toHaveFocus();
+        });
+
         it('waits for composed items that register after a layout effect', async () => {
           const actionsRef: React.RefObject<Menu.Root.Actions | null> = { current: null };
 
