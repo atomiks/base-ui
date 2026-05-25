@@ -1124,11 +1124,7 @@ export const DrawerViewport = React.forwardRef(function DrawerViewport(
           swipeTouchProps.onTouchMove?.(event);
         },
         onTouchEnd(event) {
-          if (virtualKeyboard?.onTouchEnd(event)) {
-            resetTouchTrackingState();
-            return;
-          }
-
+          virtualKeyboard?.onTouchEnd(event);
           resetTouchTrackingState();
           swipeTouchProps.onTouchEnd?.(event);
         },
