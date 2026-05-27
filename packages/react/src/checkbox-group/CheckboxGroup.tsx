@@ -99,7 +99,9 @@ export const CheckboxGroup = React.forwardRef(function CheckboxGroup(
     }
   }, []);
 
-  useRegisterFieldControl(controlRef, id, value, undefined, !!fieldName && !disabled, fieldName);
+  const resetValue = externalValue === undefined ? setValueUnwrapped : undefined;
+
+  useRegisterFieldControl(controlRef, id, value, !!fieldName && !disabled, fieldName, resetValue);
 
   const resolvedValue = value ?? EMPTY_ARRAY;
 

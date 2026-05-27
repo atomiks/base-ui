@@ -145,7 +145,9 @@ export const RadioGroup = React.forwardRef(function RadioGroup<Value>(
     return undefined;
   });
 
-  useRegisterFieldControl(controlRef, id, checkedValue ?? null, undefined, !disabled, nameProp);
+  const resetValue = externalValue === undefined ? setCheckedValueUnwrapped : undefined;
+
+  useRegisterFieldControl(controlRef, id, checkedValue ?? null, !disabled, nameProp, resetValue);
 
   useValueChanged(checkedValue, () => {
     clearErrors(name);

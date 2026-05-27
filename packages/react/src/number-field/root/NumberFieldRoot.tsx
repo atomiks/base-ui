@@ -13,6 +13,7 @@ import { isIOS } from '@base-ui/utils/detectBrowser';
 import { activeElement } from '../../floating-ui-react/utils';
 import { InputMode, NumberFieldRootContext } from './NumberFieldRootContext';
 import { useFieldRootContext } from '../../internals/field-root-context/FieldRootContext';
+import { useRegisterFieldControl } from '../../internals/field-register-control/useRegisterFieldControl';
 import { useFormContext } from '../../internals/form-context/FormContext';
 import type { FieldRootState } from '../../field/root/FieldRoot';
 import { useLabelableId } from '../../internals/labelable-provider/useLabelableId';
@@ -291,6 +292,27 @@ export const NumberFieldRoot = React.forwardRef(function NumberFieldRoot(
       );
     },
   );
+
+  const resetValue = useStableCallback((initialValue: unknown) => {
+    const uncontrolledValue = typeof initialValue === 'number' ? initialValue : null;
+    const nextValue = valueProp !== undefined ? value : uncontrolledValue;
+
+    allowInputSyncRef.current = true;
+    hasPendingCommitRef.current = false;
+    lastChangedValueRef.current = null;
+
+    if (valueProp === undefined) {
+      setValueUnwrapped(nextValue);
+    }
+
+    setInputValue(
+      (valueProp !== undefined ? getControlledInputValue : formatNumber)(nextValue, locale, format),
+    );
+
+    return nextValue;
+  });
+
+  useRegisterFieldControl(inputRef, id, value, !disabled, nameProp, resetValue);
 
   // We need to update the input value when the external `value` prop changes. This ends up acting
   // as a single source of truth to update the input value, bypassing the need to manually set it in

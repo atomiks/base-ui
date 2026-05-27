@@ -98,7 +98,15 @@ export const FieldControl = React.forwardRef(function FieldControl(
   const value = isControlled ? valueUnwrapped : undefined;
   const getValueFromInput = useStableCallback(() => validation.inputRef.current?.value);
 
-  useRegisterFieldControl(validation.inputRef, id, value, getValueFromInput, !disabled, nameProp);
+  useRegisterFieldControl(
+    validation.inputRef,
+    id,
+    value,
+    !disabled,
+    nameProp,
+    undefined,
+    getValueFromInput,
+  );
 
   const element = useRenderElement('input', componentProps, {
     ref: [forwardedRef, inputRef],

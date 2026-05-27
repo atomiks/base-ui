@@ -5,7 +5,17 @@ import { Field } from '@base-ui/react/field';
 import { Fieldset } from '@base-ui/react/fieldset';
 import { NumberField } from '@base-ui/react/number-field';
 import { Switch } from '@base-ui/react/switch';
-import { createRenderer, fireEvent, screen } from '@mui/internal-test-utils';
+import { Radio } from '@base-ui/react/radio';
+import { RadioGroup } from '@base-ui/react/radio-group';
+import { Checkbox } from '@base-ui/react/checkbox';
+import { CheckboxGroup } from '@base-ui/react/checkbox-group';
+import {
+  createRenderer,
+  fireEvent,
+  flushMicrotasks,
+  screen,
+  waitFor,
+} from '@mui/internal-test-utils';
 import { describeConformance } from '../../test/describeConformance';
 
 describe('<Form />', () => {
@@ -640,6 +650,184 @@ describe('<Form />', () => {
       expect(submitSpy.mock.calls.length).toBe(0);
       expect(screen.queryByTestId('error')).not.toBe(null);
     });
+  });
+
+  it('clears Base UI field state on native reset', async () => {
+    render(
+      <Form>
+        <Field.Root data-testid="field">
+          <Field.Control required defaultValue="Alice" data-testid="input" />
+          <Field.Error data-testid="error" />
+        </Field.Root>
+        <button type="submit">Submit</button>
+        <button type="reset">Reset</button>
+      </Form>,
+    );
+
+    const field = screen.getByTestId('field');
+    const input = screen.getByTestId<HTMLInputElement>('input');
+
+    fireEvent.change(input, { target: { value: '' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
+
+    expect(input).toHaveAttribute('aria-invalid', 'true');
+    expect(field).toHaveAttribute('data-invalid', '');
+    expect(field).toHaveAttribute('data-dirty', '');
+    expect(screen.getByTestId('error')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Reset' }));
+
+    await waitFor(() => {
+      expect(input).not.toHaveAttribute('aria-invalid');
+    });
+
+    expect(input).toHaveValue('Alice');
+    expect(field).not.toHaveAttribute('data-invalid');
+    expect(field).not.toHaveAttribute('data-dirty');
+    expect(screen.queryByTestId('error')).toBe(null);
+  });
+
+  it('resets registered switch state on native reset', async () => {
+    render(
+      <Form>
+        <Field.Root data-testid="field">
+          <Switch.Root defaultChecked required />
+          <Field.Error data-testid="error" />
+        </Field.Root>
+        <button type="submit">Submit</button>
+        <button type="reset">Reset</button>
+      </Form>,
+    );
+
+    const field = screen.getByTestId('field');
+    const switchControl = screen.getByRole('switch');
+
+    fireEvent.click(switchControl);
+    fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
+
+    expect(switchControl).toHaveAttribute('aria-checked', 'false');
+    expect(switchControl).toHaveAttribute('aria-invalid', 'true');
+    expect(field).toHaveAttribute('data-invalid', '');
+    expect(field).toHaveAttribute('data-dirty', '');
+    expect(screen.getByTestId('error')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Reset' }));
+
+    await waitFor(() => {
+      expect(switchControl).toHaveAttribute('aria-checked', 'true');
+    });
+
+    expect(switchControl).not.toHaveAttribute('aria-invalid');
+    expect(field).not.toHaveAttribute('data-invalid');
+    expect(field).not.toHaveAttribute('data-dirty');
+    expect(screen.queryByTestId('error')).toBe(null);
+  });
+
+  it('resets registered radio group state on native reset', async () => {
+    render(
+      <Form>
+        <Field.Root data-testid="field">
+          <RadioGroup defaultValue="red">
+            <Radio.Root value="red" data-testid="red" />
+            <Radio.Root value="green" data-testid="green" />
+          </RadioGroup>
+        </Field.Root>
+        <button type="reset">Reset</button>
+      </Form>,
+    );
+
+    const field = screen.getByTestId('field');
+    const red = screen.getByTestId('red');
+    const green = screen.getByTestId('green');
+
+    fireEvent.click(green);
+
+    await waitFor(() => {
+      expect(field).toHaveAttribute('data-dirty', '');
+    });
+
+    expect(red).toHaveAttribute('aria-checked', 'false');
+    expect(green).toHaveAttribute('aria-checked', 'true');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Reset' }));
+
+    await waitFor(() => {
+      expect(red).toHaveAttribute('aria-checked', 'true');
+    });
+
+    expect(green).toHaveAttribute('aria-checked', 'false');
+    expect(field).not.toHaveAttribute('data-dirty');
+  });
+
+  it('resets registered checkbox group state on native reset', async () => {
+    render(
+      <Form>
+        <Field.Root name="colors" data-testid="field">
+          <CheckboxGroup defaultValue={['red']}>
+            <Checkbox.Root value="red" data-testid="red" />
+            <Checkbox.Root value="green" data-testid="green" />
+          </CheckboxGroup>
+        </Field.Root>
+        <button type="reset">Reset</button>
+      </Form>,
+    );
+
+    const field = screen.getByTestId('field');
+    const red = screen.getByTestId('red');
+    const green = screen.getByTestId('green');
+
+    fireEvent.click(green);
+
+    await waitFor(() => {
+      expect(field).toHaveAttribute('data-dirty', '');
+    });
+
+    expect(red).toHaveAttribute('aria-checked', 'true');
+    expect(green).toHaveAttribute('aria-checked', 'true');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Reset' }));
+
+    await waitFor(() => {
+      expect(green).toHaveAttribute('aria-checked', 'false');
+    });
+
+    expect(red).toHaveAttribute('aria-checked', 'true');
+    expect(field).not.toHaveAttribute('data-dirty');
+  });
+
+  it('does not mark a controlled checkbox group dirty after resetting to an equal array', async () => {
+    function App() {
+      const [value, setValue] = React.useState(['red']);
+
+      return (
+        <React.Fragment>
+          <Form>
+            <Field.Root name="colors" data-testid="field">
+              <CheckboxGroup value={value} onValueChange={setValue}>
+                <Checkbox.Root value="red" data-testid="red" />
+                <Checkbox.Root value="green" data-testid="green" />
+              </CheckboxGroup>
+            </Field.Root>
+            <button type="reset">Reset</button>
+          </Form>
+          <button type="button" onClick={() => setValue(['red'])}>
+            Clone value
+          </button>
+        </React.Fragment>
+      );
+    }
+
+    render(<App />);
+
+    const field = screen.getByTestId('field');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Clone value' }));
+    expect(field).not.toHaveAttribute('data-dirty');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Reset' }));
+    await flushMicrotasks();
+
+    expect(field).not.toHaveAttribute('data-dirty');
   });
 
   it('does not submit when invalid prop remains true even if validate returns null', async () => {

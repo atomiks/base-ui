@@ -157,7 +157,22 @@ export const OTPFieldRoot = React.forwardRef(function OTPFieldRoot(
     });
   }
 
-  useRegisterFieldControl(firstInputRef, id, value, undefined, !disabled, nameProp);
+  const resetValue = useStableCallback((initialValue: unknown) => {
+    const uncontrolledValue = typeof initialValue === 'string' ? initialValue : '';
+    const nextValue = valueProp !== undefined ? value : uncontrolledValue;
+
+    pendingCompleteValueRef.current = null;
+    pendingFocusRef.current = null;
+
+    if (valueProp === undefined) {
+      setValueUnwrapped(nextValue);
+    }
+
+    setFocusedIndex(Math.min(nextValue.length, length - 1));
+    return nextValue;
+  });
+
+  useRegisterFieldControl(firstInputRef, id, value, !disabled, nameProp, resetValue);
 
   const focusInput = useStableCallback((index: number) => {
     const targetIndex = Math.min(Math.max(index, 0), Math.max(inputRefs.current.length - 1, 0));

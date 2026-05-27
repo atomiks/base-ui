@@ -3,6 +3,8 @@ import * as React from 'react';
 import { useIsoLayoutEffect } from '@base-ui/utils/useIsoLayoutEffect';
 import { useStableCallback } from '@base-ui/utils/useStableCallback';
 import { getCombinedFieldValidityData } from '../../field/utils/getCombinedFieldValidityData';
+import { areArraysEqual } from '../areArraysEqual';
+import { getDefaultFieldValidityData } from '../field-constants/constants';
 import { useFormContext } from '../form-context/FormContext';
 import type { FieldValidityData } from '../../field/root/FieldRoot';
 
@@ -11,6 +13,7 @@ export interface FieldControlRegistration {
   id: string | undefined;
   name?: string | undefined;
   getValue?: (() => unknown) | undefined;
+  resetValue?: ((initialValue: any) => unknown) | undefined;
   value: unknown;
 }
 
@@ -20,8 +23,11 @@ export function useFieldControlRegistration(params: UseFieldControlRegistrationP
     invalid,
     markedDirtyRef,
     name,
+    setDirty,
+    setFilled,
     setRegisteredFieldName,
     setRegisteredFieldId,
+    setTouched,
     setValidityData,
     validityData,
   } = params;
@@ -61,9 +67,35 @@ export function useFieldControlRegistration(params: UseFieldControlRegistrationP
     commit(getRegistrationValue(registration));
   });
 
-  function refreshRegistration() {
+  const reset = useStableCallback(() => {
     const registration = registrationRef.current;
-    if (!registration || !registration.id) {
+    if (!registration) {
+      return;
+    }
+
+    const initialValue = validityData.initialValue;
+    const value = registration.resetValue
+      ? (registration.resetValue(initialValue) ?? initialValue)
+      : getRegistrationValue(registration);
+
+    const dirty =
+      Array.isArray(value) && Array.isArray(initialValue)
+        ? !areArraysEqual(value, initialValue)
+        : value !== initialValue;
+
+    registration.controlRef.current?.setCustomValidity?.('');
+    markedDirtyRef.current = dirty;
+
+    setValidityData(getDefaultFieldValidityData(value, initialValue));
+    setDirty(dirty);
+    setTouched(false);
+    setFilled(
+      Array.isArray(value) ? value.length > 0 : value != null && value !== '' && value !== false,
+    );
+  });
+
+  const updateRegistration = useStableCallback((registration: FieldControlRegistration) => {
+    if (!registration.id) {
       return;
     }
 
@@ -73,8 +105,9 @@ export function useFieldControlRegistration(params: UseFieldControlRegistrationP
       controlRef: registration.controlRef ?? fallbackControlRef,
       validityData: getCombinedFieldValidityData(validityData, invalid),
       validate,
+      reset,
     });
-  }
+  });
 
   function deleteRegistration(id = registrationRef.current?.id) {
     if (id) {
@@ -103,14 +136,8 @@ export function useFieldControlRegistration(params: UseFieldControlRegistrationP
 
     setRegisteredFieldName(name ? undefined : registration.name);
 
-    formRef.current.fields.set(registration.id, {
-      getValue: getValueForForm,
-      name: name ?? registration.name,
-      controlRef: registration.controlRef ?? fallbackControlRef,
-      validityData: getCombinedFieldValidityData(validityData, invalid),
-      validate,
-    });
-  }, [formRef, getValueForForm, invalid, name, setRegisteredFieldName, validate, validityData]);
+    updateRegistration(registration);
+  }, [invalid, name, setRegisteredFieldName, updateRegistration, validityData]);
 
   useIsoLayoutEffect(() => {
     const fields = formRef.current.fields;
@@ -150,7 +177,7 @@ export function useFieldControlRegistration(params: UseFieldControlRegistrationP
       }
 
       syncInitialValue();
-      refreshRegistration();
+      updateRegistration(registration);
     },
   );
 
@@ -162,8 +189,11 @@ export interface UseFieldControlRegistrationParameters {
   invalid: boolean;
   markedDirtyRef: React.RefObject<boolean>;
   name: string | undefined;
+  setDirty: (dirty: boolean) => void;
+  setFilled: (filled: boolean) => void;
   setRegisteredFieldName: (name: string | undefined) => void;
   setRegisteredFieldId: (id: string | undefined) => void;
+  setTouched: (touched: boolean) => void;
   setValidityData: React.Dispatch<React.SetStateAction<FieldValidityData>>;
   validityData: FieldValidityData;
 }

@@ -130,6 +130,17 @@ export const Form = React.forwardRef(function Form<
             }
           }
         },
+        onReset(event) {
+          if (event.defaultPrevented) {
+            return;
+          }
+
+          submitAttemptedRef.current = false;
+          // Native reset updates control values after the reset event fires.
+          queueMicrotask(() => {
+            formRef.current.fields.forEach((field) => field.reset());
+          });
+        },
       },
       elementProps,
     ],

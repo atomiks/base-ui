@@ -8,9 +8,10 @@ export function useRegisterFieldControl(
   controlRef: FieldControlRegistration['controlRef'],
   id: FieldControlRegistration['id'],
   value: FieldControlRegistration['value'],
-  getFormValueOverride?: FieldControlRegistration['getValue'],
-  enabled = true,
+  enabled: boolean,
   name?: FieldControlRegistration['name'],
+  resetValue?: FieldControlRegistration['resetValue'],
+  getValue?: FieldControlRegistration['getValue'],
 ) {
   const { registerFieldControl } = useFieldRootContext();
   const sourceRef = React.useRef<symbol | null>(null);
@@ -28,9 +29,10 @@ export function useRegisterFieldControl(
 
     const registration: FieldControlRegistration = {
       controlRef,
-      getValue: getFormValueOverride,
+      getValue,
       id,
       name,
+      resetValue,
       value,
     };
 
@@ -39,5 +41,5 @@ export function useRegisterFieldControl(
     return () => {
       registerFieldControl(source, undefined);
     };
-  }, [controlRef, enabled, getFormValueOverride, id, name, registerFieldControl, value]);
+  }, [controlRef, enabled, getValue, id, name, registerFieldControl, resetValue, value]);
 }

@@ -95,7 +95,9 @@ export const SwitchRoot = React.forwardRef(function SwitchRoot(
     state: 'checked',
   });
 
-  useRegisterFieldControl(switchRef, id, checked, undefined, !disabled, nameProp);
+  const resetValue = checkedProp === undefined ? setCheckedState : undefined;
+
+  useRegisterFieldControl(switchRef, id, checked, !disabled, nameProp, resetValue);
 
   useIsoLayoutEffect(() => {
     if (inputRef.current) {

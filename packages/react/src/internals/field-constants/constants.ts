@@ -1,5 +1,5 @@
 import { FieldControlDataAttributes } from '../../field/control/FieldControlDataAttributes';
-import type { FieldRootState } from '../../field/root/FieldRoot';
+import type { FieldRootState, FieldValidityData } from '../../field/root/FieldRoot';
 
 export const DEFAULT_VALIDITY_STATE = {
   badInput: false,
@@ -30,6 +30,19 @@ export const DEFAULT_FIELD_ROOT_STATE: FieldRootState = {
   disabled: false,
   ...DEFAULT_FIELD_STATE_ATTRIBUTES,
 };
+
+export function getDefaultFieldValidityData(
+  value: unknown,
+  initialValue = value,
+): FieldValidityData {
+  return {
+    state: DEFAULT_VALIDITY_STATE,
+    error: '',
+    errors: [],
+    value,
+    initialValue,
+  };
+}
 
 export const fieldValidityMapping = {
   valid(value: boolean | null): Record<string, string> | null {

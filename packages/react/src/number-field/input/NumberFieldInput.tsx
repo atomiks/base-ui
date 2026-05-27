@@ -6,7 +6,6 @@ import { stopEvent } from '../../floating-ui-react/utils';
 import { useNumberFieldRootContext } from '../root/NumberFieldRootContext';
 import type { BaseUIComponentProps } from '../../internals/types';
 import { useFieldRootContext } from '../../internals/field-root-context/FieldRootContext';
-import { useRegisterFieldControl } from '../../internals/field-register-control/useRegisterFieldControl';
 import { fieldValidityMapping } from '../../internals/field-constants/constants';
 import { useFormContext } from '../../internals/form-context/FormContext';
 import { useLabelableContext } from '../../internals/labelable-provider/LabelableContext';
@@ -74,7 +73,6 @@ export const NumberFieldInput = React.forwardRef(function NumberFieldInput(
     max,
     min,
     name,
-    nameProp,
     readOnly,
     required,
     setValue,
@@ -96,8 +94,6 @@ export const NumberFieldInput = React.forwardRef(function NumberFieldInput(
 
   const hasTouchedInputRef = React.useRef(false);
   const blockRevalidationRef = React.useRef(false);
-
-  useRegisterFieldControl(inputRef, id, value, undefined, !disabled, nameProp);
 
   useValueChanged(value, () => {
     clearErrors(name);

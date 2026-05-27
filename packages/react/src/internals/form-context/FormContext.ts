@@ -19,6 +19,7 @@ export interface FormContext {
          * validity verdict. Async validators do not block submit.
          */
         validate: () => void;
+        reset: () => void;
         validityData: FieldValidityData;
         controlRef: React.RefObject<HTMLElement | null>;
         getValue: () => unknown;

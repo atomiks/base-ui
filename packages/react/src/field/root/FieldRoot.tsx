@@ -4,8 +4,8 @@ import { useIsoLayoutEffect } from '@base-ui/utils/useIsoLayoutEffect';
 import { useStableCallback } from '@base-ui/utils/useStableCallback';
 import { FieldRootContext } from '../../internals/field-root-context/FieldRootContext';
 import {
-  DEFAULT_VALIDITY_STATE,
   fieldValidityMapping,
+  getDefaultFieldValidityData,
 } from '../../internals/field-constants/constants';
 import { useFieldsetRootContext } from '../../fieldset/root/FieldsetRootContext';
 import type { Form } from '../../form';
@@ -100,13 +100,9 @@ const FieldRootInner = React.forwardRef(function FieldRootInner(
   const hasFormError = !!(Array.isArray(formError) ? formError.length : formError);
   const invalid = invalidProp === true || hasFormError;
 
-  const [validityData, setValidityData] = React.useState<FieldValidityData>({
-    state: DEFAULT_VALIDITY_STATE,
-    error: '',
-    errors: [],
-    value: null,
-    initialValue: null,
-  });
+  const [validityData, setValidityData] = React.useState<FieldValidityData>(
+    getDefaultFieldValidityData(null),
+  );
 
   const valid = disabled ? null : !invalid && validityData.state.valid;
 
@@ -140,8 +136,11 @@ const FieldRootInner = React.forwardRef(function FieldRootInner(
     invalid,
     markedDirtyRef,
     name,
+    setDirty,
+    setFilled,
     setRegisteredFieldName,
     setRegisteredFieldId,
+    setTouched,
     setValidityData,
     validityData,
   });

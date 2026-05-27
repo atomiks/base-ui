@@ -144,6 +144,8 @@ export const CheckboxRoot = React.forwardRef(function CheckboxRoot(
     state: 'checked',
   });
 
+  const resetValue = checkedProp === undefined ? setCheckedState : undefined;
+
   // can't use useLabelableId because of optional groupContext and/or parent
   useIsoLayoutEffect(() => {
     if (registerControlId === NOOP) {
@@ -169,7 +171,14 @@ export const CheckboxRoot = React.forwardRef(function CheckboxRoot(
     };
   }, [registerControlId, controlSourceRef]);
 
-  useRegisterFieldControl(controlRef, id, checked, undefined, !groupContext && !disabled, nameProp);
+  useRegisterFieldControl(
+    controlRef,
+    id,
+    checked,
+    !groupContext && !disabled,
+    nameProp,
+    resetValue,
+  );
 
   const inputRef = React.useRef<HTMLInputElement>(null);
   const mergedInputRef = useMergedRefs(inputRefProp, inputRef, validation.inputRef);

@@ -184,14 +184,16 @@ export function SelectRoot<Value, Multiple extends boolean | undefined = false>(
 
   const controlRef = useValueAsRef(store.state.triggerElement);
   const getStringifiedValueForForm = useStableCallback(() => fieldStringValue);
+  const resetValue = valueProp === undefined ? setValueUnwrapped : undefined;
 
   useRegisterFieldControl(
     controlRef,
     generatedId,
     value,
-    getStringifiedValueForForm,
     !disabled,
     nameProp,
+    resetValue,
+    getStringifiedValueForForm,
   );
 
   const initialValueRef = React.useRef(value);

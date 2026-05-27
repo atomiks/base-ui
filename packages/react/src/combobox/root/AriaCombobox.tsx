@@ -445,14 +445,48 @@ export function AriaCombobox<Value = any, Mode extends SelectionMode = 'none'>(
   const { openMethod, triggerProps } = useOpenInteractionType(open);
 
   const getStringifiedValueForForm = useStableCallback(() => fieldStringValue);
+  const resetValue = useStableCallback((initialValue: unknown) => {
+    setQueryChangedAfterOpen(false);
+    setCloseQuery(null);
+    pendingQueryHighlightRef.current = null;
+
+    if (selectionMode === 'none') {
+      if (inputValueProp !== undefined) {
+        return inputValue;
+      }
+
+      const nextInputValue = (initialValue == null ? '' : initialValue) as typeof inputValue;
+      setInputValueUnwrapped(nextInputValue);
+      return nextInputValue;
+    }
+
+    const nextSelectedValue = selectedValueProp !== undefined ? selectedValue : initialValue;
+
+    if (selectedValueProp === undefined) {
+      setSelectedValueUnwrapped(nextSelectedValue);
+    }
+
+    if (inputValueProp === undefined) {
+      let nextInputValue: typeof inputValue = '';
+      if (hasInputValue) {
+        nextInputValue = initialDefaultInputValue as typeof inputValue;
+      } else if (single && !inputInsidePopup) {
+        nextInputValue = stringifyAsLabel(nextSelectedValue, itemToStringLabel);
+      }
+      setInputValueUnwrapped(nextInputValue);
+    }
+
+    return nextSelectedValue;
+  });
 
   useRegisterFieldControl(
     inputInsidePopup ? triggerRef : inputRef,
     id,
     fieldRawValue,
-    getStringifiedValueForForm,
     !disabled,
     nameProp,
+    resetValue,
+    getStringifiedValueForForm,
   );
 
   const forceMount = useStableCallback(() => {
