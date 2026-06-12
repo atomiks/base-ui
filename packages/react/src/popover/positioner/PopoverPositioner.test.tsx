@@ -541,7 +541,9 @@ describe('<Popover.Positioner />', () => {
       let previousTop = initialTop;
       for (let i = 0; i < 20; i += 1) {
         // eslint-disable-next-line no-await-in-loop
-        await new Promise(requestAnimationFrame);
+        await act(async () => {
+          await waitSingleFrame();
+        });
         const { top } = positioner.getBoundingClientRect();
         expect(Math.abs(top - previousTop)).toBeLessThan(20);
         previousTop = top;

@@ -20,18 +20,20 @@ interface PrevPositioning {
 // properties (e.g. `bottom` -> `top`) caused by an anchor change can be detected.
 const prevPositioningMap = new WeakMap<HTMLElement, PrevPositioning>();
 
-const INSET_PROPERTIES = new Set(['top', 'right', 'bottom', 'left']);
-
 function hasRunningInsetTransition(floating: HTMLElement): boolean {
   const win = ownerWindow(floating);
-  return floating
-    .getAnimations()
-    .some(
-      (animation) =>
-        animation instanceof win.CSSTransition &&
-        animation.playState === 'running' &&
-        INSET_PROPERTIES.has((animation as CSSTransition).transitionProperty),
+  return floating.getAnimations().some((animation) => {
+    const transition = animation as CSSTransition;
+    const { transitionProperty } = transition;
+    return (
+      animation instanceof win.CSSTransition &&
+      animation.playState === 'running' &&
+      (transitionProperty === 'top' ||
+        transitionProperty === 'right' ||
+        transitionProperty === 'bottom' ||
+        transitionProperty === 'left')
     );
+  });
 }
 
 export const adaptiveOrigin: AdaptiveOriginMiddleware = {
@@ -110,11 +112,6 @@ export const adaptiveOrigin: AdaptiveOriginMiddleware = {
       anchor: reference,
     });
 
-    const swappedX = prev != null && prev.sideX !== sideX;
-    const swappedY = prev != null && prev.sideY !== sideY;
-    const anchorChanged = prev != null && prev.anchor !== reference;
-    const sideChanged = prev != null && prev.side !== currentSide;
-
     // When the rendered side changes or the inset properties used for positioning swap
     // (e.g. `bottom` -> `top`), commit an intermediate state so the outcome doesn't depend
     // on how updates batch within a frame:
@@ -124,7 +121,10 @@ export const adaptiveOrigin: AdaptiveOriginMiddleware = {
     // - Otherwise (a steady-state collision flip, for example), commit the target position
     //   with transitions disabled so the flip applies instantly instead of gliding across
     //   the anchor.
-    if (prev && (swappedX || swappedY || sideChanged)) {
+    if (prev && (prev.sideX !== sideX || prev.sideY !== sideY || prev.side !== currentSide)) {
+      const swappedX = prev.sideX !== sideX;
+      const swappedY = prev.sideY !== sideY;
+      const anchorChanged = prev.anchor !== reference;
       const animate = anchorChanged || hasRunningInsetTransition(floating);
       let fromX = x;
       let fromY = y;

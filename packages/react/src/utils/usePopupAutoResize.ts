@@ -3,7 +3,7 @@ import * as React from 'react';
 import { useAnimationFrame } from '@base-ui/utils/useAnimationFrame';
 import { useIsoLayoutEffect } from '@base-ui/utils/useIsoLayoutEffect';
 import { useStableCallback } from '@base-ui/utils/useStableCallback';
-import { NOOP, EMPTY_OBJECT } from '@base-ui/utils/empty';
+import { EMPTY_OBJECT } from '@base-ui/utils/empty';
 import { useAnimationsFinished } from '../internals/useAnimationsFinished';
 import { getCssDimensions } from './getCssDimensions';
 import { Dimensions } from '../floating-ui-react/types';
@@ -244,17 +244,13 @@ function overrideElementStyle(element: HTMLElement, property: string, value: str
 }
 
 function applyElementStyles(element: HTMLElement, styles: Record<string, string>) {
-  const restorers: Array<() => void> = [];
+  const restorers = Object.entries(styles).map(([key, value]) =>
+    overrideElementStyle(element, key, value),
+  );
 
-  for (const [key, value] of Object.entries(styles)) {
-    restorers.push(overrideElementStyle(element, key, value));
-  }
-
-  return restorers.length
-    ? () => {
-        restorers.forEach((restore) => restore());
-      }
-    : NOOP;
+  return () => {
+    restorers.forEach((restore) => restore());
+  };
 }
 
 function setPopupCssSize(popupElement: HTMLElement, size: Dimensions | 'auto') {
