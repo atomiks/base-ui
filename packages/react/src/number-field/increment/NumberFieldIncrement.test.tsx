@@ -399,6 +399,28 @@ describe('<NumberField.Increment />', () => {
   });
 
   describe('prop: snapOnStep', () => {
+    it('does not emit a snapped intermediate when committing dirty text before a step', async () => {
+      const onValueChange = vi.fn();
+      await render(
+        <NumberField.Root defaultValue={0} step={2} snapOnStep onValueChange={onValueChange}>
+          <NumberField.Increment />
+          <NumberField.Input />
+        </NumberField.Root>,
+      );
+      const input = screen.getByRole('textbox');
+      const button = screen.getByRole('button');
+      await act(async () => input.focus());
+
+      fireEvent.change(input, { target: { value: '7' } });
+      onValueChange.mockClear();
+      fireEvent.click(button);
+
+      // The dirty "7" must not be directionally snapped to 6 before the increment runs.
+      const values = onValueChange.mock.calls.map((call) => call[0]);
+      expect(values).not.toContain(6);
+      expect(input).toHaveValue('8');
+    });
+
     it('should increment by exact step without rounding when snapOnStep is false', async () => {
       await render(
         <NumberField.Root defaultValue={2.7} step={2} snapOnStep={false}>
