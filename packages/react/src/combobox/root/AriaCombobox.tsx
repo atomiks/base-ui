@@ -176,6 +176,12 @@ export function AriaCombobox<Value = any, Mode extends SelectionMode = 'none'>(
   const single = selectionMode === 'single';
   const hasInputValue = inputValueProp !== undefined || defaultInputValueProp !== undefined;
   const hasItems = items !== undefined;
+
+  // Resolving a primitive selected value to its `{ value, label }` item's label is only
+  // supported for non-virtualized lists (virtualized selection sync matches whole items),
+  // so virtualized lists resolve labels from the value's own shape to keep the displayed
+  // label consistent with what can actually be highlighted.
+  const labelItems = virtualized ? undefined : items;
   const hasFilteredItemsProp = filteredItemsProp !== undefined;
 
   let autoHighlightMode: false | 'input-change' | 'always';
@@ -213,7 +219,7 @@ export function AriaCombobox<Value = any, Mode extends SelectionMode = 'none'>(
         return defaultInputValueProp ?? '';
       }
       if (single) {
-        return resolveLabelString(selectedValue, items, itemToStringLabel, isItemEqualToValue);
+        return resolveLabelString(selectedValue, labelItems, itemToStringLabel, isItemEqualToValue);
       }
       return '';
     },
@@ -240,8 +246,10 @@ export function AriaCombobox<Value = any, Mode extends SelectionMode = 'none'>(
   // render (e.g. each keystroke) when the selection and items are unchanged.
   const selectedLabelString = React.useMemo(
     () =>
-      single ? resolveLabelString(selectedValue, items, itemToStringLabel, isItemEqualToValue) : '',
-    [single, selectedValue, items, itemToStringLabel, isItemEqualToValue],
+      single
+        ? resolveLabelString(selectedValue, labelItems, itemToStringLabel, isItemEqualToValue)
+        : '',
+    [single, selectedValue, labelItems, itemToStringLabel, isItemEqualToValue],
   );
 
   const shouldBypassFiltering =
@@ -651,7 +659,7 @@ export function AriaCombobox<Value = any, Mode extends SelectionMode = 'none'>(
 
       if (shouldFillInput) {
         setInputValue(
-          resolveLabelString(nextValue, items, itemToStringLabel, isItemEqualToValue),
+          resolveLabelString(nextValue, labelItems, itemToStringLabel, isItemEqualToValue),
           createChangeEventDetails(eventDetails.reason, eventDetails.event),
         );
       }
@@ -1335,27 +1343,38 @@ export function AriaCombobox<Value = any, Mode extends SelectionMode = 'none'>(
               const candidates = items ? flatFilteredItems : valuesRef.current;
               const matchingIndex = candidates.findIndex((candidate, index) => {
                 const renderedValue = valuesRef.current[index];
+                // The exact value passed to `<Combobox.Item value>`, falling back to the
+                // item itself (virtualized) or its inferred value (non-virtualized) for
+                // slots not registered by a mounted item. User stringifiers expect this
+                // shape, so resolve it before calling them — never the outer
+                // `{ value, label }` item.
+                let resolvedValue = renderedValue;
+                if (resolvedValue === undefined) {
+                  resolvedValue = virtualized ? candidate : inferItemValue(candidate);
+                }
 
                 // Try matching by value first (e.g., "US" for country code)
-                const candidateValue = stringifyAsValue(candidate, itemToStringValue);
+                const candidateValue = stringifyAsValue(resolvedValue, itemToStringValue);
                 if (candidateValue.toLowerCase() === nextValue.toLowerCase()) {
                   return true;
                 }
                 // Also try matching by label for browser autofill compatibility
                 // (browsers autofill with displayed text like "United States", not the underlying value)
-                const candidateLabel = stringifyAsLabel(candidate, itemToStringLabel);
+                const candidateLabel = stringifyAsLabel(resolvedValue, itemToStringLabel);
                 if (candidateLabel.toLowerCase() === nextValue.toLowerCase()) {
                   return true;
                 }
 
-                if (renderedValue !== undefined && renderedValue !== candidate) {
-                  const renderedValueString = stringifyAsValue(renderedValue, itemToStringValue);
-                  if (renderedValueString.toLowerCase() === nextValue.toLowerCase()) {
+                // When the rendered value differs from the `{ value, label }` item
+                // (primitive inference), also match against the item's own value/label so
+                // autofill by displayed label still works — using the callback-free
+                // stringifiers, which read `.value`/`.label` without handing the outer item
+                // to a user stringifier written for the rendered value.
+                if (resolvedValue !== candidate) {
+                  if (stringifyAsValue(candidate).toLowerCase() === nextValue.toLowerCase()) {
                     return true;
                   }
-
-                  const renderedLabel = stringifyAsLabel(renderedValue, itemToStringLabel);
-                  if (renderedLabel.toLowerCase() === nextValue.toLowerCase()) {
+                  if (stringifyAsLabel(candidate).toLowerCase() === nextValue.toLowerCase()) {
                     return true;
                   }
                 }
@@ -1568,8 +1587,10 @@ interface ComboboxRootProps<ItemValue> {
    * The items to be displayed in the list.
    * Can be either a flat array of items or an array of groups with items.
    * In non-virtualized lists, when items use the `{ value, label }` shape, a primitive
-   * `<Combobox.Item value>` resolves its text label from the matching item, and
-   * `<Combobox.Value>` and the input render the label instead of the raw value.
+   * `<Combobox.Item value>` resolves its text label from the matching item. In single
+   * selection mode `<Combobox.Value>` and the input render that label instead of the raw
+   * value; in multiple selection mode the input stays the query field, so only
+   * `<Combobox.Value>` renders the selected labels.
    * Virtualized lists do not support this primitive value inference.
    */
   items?: readonly any[] | readonly Group<any>[] | undefined;

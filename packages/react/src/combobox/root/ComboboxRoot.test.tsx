@@ -893,6 +893,52 @@ describe('<Combobox.Root />', () => {
           );
         });
 
+        it('calls itemToStringValue with the rendered value during browser autofill', async () => {
+          const items = [
+            { value: 'US', label: 'United States' },
+            { value: 'CA', label: 'Canada' },
+          ];
+          const onValueChange = vi.fn();
+          // Written for the rendered primitive value; throws if handed the outer
+          // `{ value, label }` item.
+          const itemToStringValue = (value: string) => value.toLowerCase();
+
+          await render(
+            <Combobox.Root
+              items={items}
+              name="country"
+              onValueChange={onValueChange}
+              itemToStringValue={itemToStringValue}
+            >
+              <Combobox.Input data-testid="input" />
+              <Combobox.Portal>
+                <Combobox.Positioner>
+                  <Combobox.Popup>
+                    <Combobox.List>
+                      {(item: (typeof items)[number]) => (
+                        <Combobox.Item key={item.value} value={item.value}>
+                          {item.label}
+                        </Combobox.Item>
+                      )}
+                    </Combobox.List>
+                  </Combobox.Popup>
+                </Combobox.Positioner>
+              </Combobox.Portal>
+            </Combobox.Root>,
+          );
+
+          fireEvent.change(
+            screen.getAllByDisplayValue('').find((el) => el.getAttribute('name') === 'country')!,
+            { target: { value: 'us' } },
+          );
+          await flushMicrotasks();
+
+          expect(onValueChange).toHaveBeenCalledWith(
+            'US',
+            expect.objectContaining({ reason: 'none' }),
+          );
+        });
+
         it('ignores browser autofill matches for null item values', async () => {
           const items = [
             { value: null, label: 'None' },
@@ -1039,6 +1085,23 @@ describe('<Combobox.Root />', () => {
           );
 
           expect(screen.getByRole('option', { name: 'Banana' }).id).not.toContain('--1');
+        });
+
+        it('does not infer a label from items for primitive values when virtualized', async () => {
+          await render(
+            <Combobox.Root items={labeledItems} virtualized defaultValue={2}>
+              <div data-testid="value">
+                <Combobox.Value />
+              </div>
+              <Combobox.Input data-testid="input" />
+            </Combobox.Root>,
+          );
+
+          // Virtualized lists don't support primitive value inference, so the input and
+          // `Combobox.Value` show the raw value rather than a label that cannot be
+          // highlighted in the list.
+          expect(screen.getByTestId('input')).toHaveValue('2');
+          expect(screen.getByTestId('value')).toHaveTextContent('2');
         });
 
         it('does not mutate the items array when virtualized rendered items unmount', async () => {
@@ -1235,6 +1298,43 @@ describe('<Combobox.Root />', () => {
           await waitFor(() => {
             expect(canada).toHaveAttribute('data-highlighted');
             expect(input).toHaveAttribute('aria-activedescendant', canada.id);
+          });
+        });
+
+        it('highlights items whose inner object value is itself a labeled item shape', async () => {
+          const items = [
+            { value: { value: 'ca', label: 'Canada' }, label: 'CA' },
+            { value: { value: 'us', label: 'United States' }, label: 'US' },
+          ];
+
+          const { user } = await render(
+            <Combobox.Root items={items} defaultValue={items[0].value}>
+              <Combobox.Input data-testid="input" />
+              <Combobox.Portal>
+                <Combobox.Positioner>
+                  <Combobox.Popup>
+                    <Combobox.List>
+                      {(item: (typeof items)[number]) => (
+                        <Combobox.Item key={item.label} value={item.value}>
+                          {item.label}
+                        </Combobox.Item>
+                      )}
+                    </Combobox.List>
+                  </Combobox.Popup>
+                </Combobox.Positioner>
+              </Combobox.Portal>
+            </Combobox.Root>,
+          );
+
+          const input = screen.getByRole('combobox');
+          await user.click(screen.getByTestId('input'));
+
+          // The selected value (`{ value, label }`-shaped) must not be misclassified as a
+          // whole item; the inner-value match still resolves the selected index.
+          const ca = await screen.findByRole('option', { name: 'CA' });
+          await waitFor(() => {
+            expect(ca).toHaveAttribute('data-highlighted');
+            expect(input).toHaveAttribute('aria-activedescendant', ca.id);
           });
         });
       });
@@ -1674,6 +1774,61 @@ describe('<Combobox.Root />', () => {
           expect(banana).toHaveAttribute('data-highlighted');
           expect(input).toHaveAttribute('aria-activedescendant', banana.id);
         });
+      });
+
+      it('starts keyboard navigation from the filtered labeled items and emits primitive values', async () => {
+        const items = [
+          { value: 'apple', label: 'Apple' },
+          { value: 'banana', label: 'Banana' },
+          { value: 'cherry', label: 'Cherry' },
+        ];
+        const onValueChange = vi.fn();
+
+        const { user } = await render(
+          <Combobox.Root
+            items={items}
+            multiple
+            defaultValue={['cherry']}
+            onValueChange={onValueChange}
+          >
+            <Combobox.Input data-testid="input" />
+            <Combobox.Portal>
+              <Combobox.Positioner>
+                <Combobox.Popup>
+                  <Combobox.List>
+                    {(item: (typeof items)[number]) => (
+                      <Combobox.Item key={item.value} value={item.value}>
+                        {item.label}
+                      </Combobox.Item>
+                    )}
+                  </Combobox.List>
+                </Combobox.Popup>
+              </Combobox.Positioner>
+            </Combobox.Portal>
+          </Combobox.Root>,
+        );
+
+        const input = screen.getByTestId('input');
+
+        await user.click(input);
+        await user.type(input, 'ba');
+        const banana = await screen.findByRole('option', { name: 'Banana' });
+
+        await user.keyboard('{ArrowDown}');
+
+        await waitFor(() => {
+          expect(banana).toHaveAttribute('data-highlighted');
+          expect(input).toHaveAttribute('aria-activedescendant', banana.id);
+        });
+
+        await user.keyboard('{Enter}');
+
+        // The emitted value keeps the primitive shape rendered by `value={item.value}`
+        // rather than the outer `{ value, label }` item.
+        expect(onValueChange).toHaveBeenLastCalledWith(
+          ['cherry', 'banana'],
+          expect.objectContaining({ reason: REASONS.itemPress }),
+        );
       });
 
       it('should create multiple hidden inputs for form submission', async () => {

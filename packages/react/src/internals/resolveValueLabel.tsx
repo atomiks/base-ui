@@ -106,13 +106,18 @@ export function findItemIndexByValue(
   value: any,
   isItemEqualToValue: ItemEqualityComparer,
 ): number {
-  // When the selected value is itself a `{ value, label }` item (whole-item mode), only
-  // compare against the full item so a comparator written for that shape is never handed
-  // the inferred inner value.
+  // When the selected value is itself a `{ value, label }` item (whole-item mode passed via
+  // `value={item}`), first compare against the full item so a comparator written for that
+  // shape is handed matching shapes. The selected value's shape alone is ambiguous though:
+  // an item's inner value (`value={item.value}`) can itself be `{ value, label }`-shaped, so
+  // fall through to inferred-value matching when no whole item matches.
   if (isLabeledItem(value)) {
-    return items.findIndex(
+    const wholeItemIndex = items.findIndex(
       (item) => item !== undefined && compareItemEquality(item, value, isItemEqualToValue),
     );
+    if (wholeItemIndex !== -1) {
+      return wholeItemIndex;
+    }
   }
 
   return items.findIndex((item) => {

@@ -1,5 +1,6 @@
 import { expect } from 'vitest';
-import { hasNullItemLabel } from './resolveValueLabel';
+import { findItemIndexByValue, hasNullItemLabel } from './resolveValueLabel';
+import { defaultItemEquality } from './itemEquality';
 
 describe('resolveValueLabel', () => {
   describe('hasNullItemLabel', () => {
@@ -96,6 +97,54 @@ describe('resolveValueLabel', () => {
 
     it('returns false when items is undefined', () => {
       expect(hasNullItemLabel(undefined)).toBe(false);
+    });
+  });
+
+  describe('findItemIndexByValue', () => {
+    it('matches a primitive value against a labeled item by its inferred value', () => {
+      const items = [
+        { value: 'a', label: 'A' },
+        { value: 'b', label: 'B' },
+      ];
+
+      expect(findItemIndexByValue(items, 'b', defaultItemEquality)).toBe(1);
+    });
+
+    it('matches a whole `{ value, label }` value against the full item', () => {
+      const items = [
+        { value: 'a', label: 'A' },
+        { value: 'b', label: 'B' },
+      ];
+
+      expect(findItemIndexByValue(items, items[1], defaultItemEquality)).toBe(1);
+    });
+
+    it('matches an inner object value shaped like a labeled item by the item value', () => {
+      const inner = { value: 'ca', label: 'Canada' };
+      const items = [
+        { value: { value: 'us', label: 'United States' }, label: 'US' },
+        { value: inner, label: 'CA' },
+      ];
+
+      // `inner` looks like a `{ value, label }` item but is an item *value*, so it must
+      // match by the inferred item value rather than being treated as a whole item.
+      expect(findItemIndexByValue(items, inner, defaultItemEquality)).toBe(1);
+    });
+
+    it('only hands whole items to a whole-item comparator', () => {
+      const items = [
+        { value: { id: 1 }, label: 'One' },
+        { value: { id: 2 }, label: 'Two' },
+      ];
+      const seen: any[] = [];
+      const comparator = (a: any, b: any) => {
+        seen.push(a);
+        // Reads `a.value.id`; would throw if handed an inferred inner value.
+        return a.value.id === b.value.id;
+      };
+
+      expect(findItemIndexByValue(items, items[1], comparator)).toBe(1);
+      expect(seen.every((item) => item && 'label' in item)).toBe(true);
     });
   });
 });

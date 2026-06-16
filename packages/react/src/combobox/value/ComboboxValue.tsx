@@ -19,9 +19,15 @@ export function ComboboxValue(props: ComboboxValue.Props): React.ReactElement {
   const itemToStringLabel = useStore(store, selectors.itemToStringLabel);
   const isItemEqualToValue = useStore(store, selectors.isItemEqualToValue);
   const selectedValue = useStore(store, selectors.selectedValue);
-  const items = useStore(store, selectors.items);
+  const itemsProp = useStore(store, selectors.items);
+  const virtualized = useStore(store, selectors.virtualized);
   const multiple = useStore(store, selectors.selectionMode) === 'multiple';
   const hasSelectedValue = useStore(store, selectors.hasSelectedValue);
+
+  // Resolving a primitive selected value to its `{ value, label }` item's label is only
+  // supported for non-virtualized lists, so virtualized lists resolve the label from the
+  // value's own shape (matching the input and selection-sync behavior).
+  const items = virtualized ? undefined : itemsProp;
 
   const shouldCheckNullItemLabel = !hasSelectedValue && placeholder != null && childrenProp == null;
   const hasNullLabel = useStore(store, selectors.hasNullItemLabel, shouldCheckNullItemLabel);
