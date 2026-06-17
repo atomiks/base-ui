@@ -288,11 +288,18 @@ export function AriaCombobox<Value = any, Mode extends SelectionMode = 'none'>(
         }
 
         const remainingLimit = limit > -1 ? limit - currentCount : Infinity;
-        const itemsToTake = candidateItems.slice(0, remainingLimit);
+        // Avoid allocating a new array when the limit doesn't actually truncate the group.
+        const itemsToTake =
+          remainingLimit >= candidateItems.length
+            ? candidateItems
+            : candidateItems.slice(0, remainingLimit);
 
         if (itemsToTake.length > 0) {
-          const newGroup = { ...group, items: itemsToTake };
-          resultingGroups.push(newGroup);
+          // Preserve the group's identity when filtering doesn't change its membership. This lets
+          // collection-level memoization skip re-rendering unchanged grouped item subtrees, since
+          // the same `group` reference (and its `items`) flows down to `Combobox.Collection`.
+          const groupMembershipUnchanged = areSameItems(itemsToTake, group.items);
+          resultingGroups.push(groupMembershipUnchanged ? group : { ...group, items: itemsToTake });
           currentCount += itemsToTake.length;
         }
       }
@@ -1358,6 +1365,27 @@ export function AriaCombobox<Value = any, Mode extends SelectionMode = 'none'>(
       </ComboboxFloatingContext.Provider>
     </ComboboxRootContext.Provider>
   );
+}
+
+function areSameItems(nextItems: readonly any[], previousItems: readonly any[]) {
+  // Fast paths: identical reference (e.g. no active query) or a different length both resolve
+  // without scanning. The element-wise scan only runs when the lengths match but the arrays
+  // differ by reference (a fresh filtered array whose membership may be unchanged).
+  if (nextItems === previousItems) {
+    return true;
+  }
+
+  if (nextItems.length !== previousItems.length) {
+    return false;
+  }
+
+  for (let i = 0; i < nextItems.length; i += 1) {
+    if (nextItems[i] !== previousItems[i]) {
+      return false;
+    }
+  }
+
+  return true;
 }
 
 type SelectionMode = 'single' | 'multiple' | 'none';
