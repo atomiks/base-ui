@@ -6,7 +6,6 @@ import { useIsoLayoutEffect } from '@base-ui/utils/useIsoLayoutEffect';
 import { warn } from '@base-ui/utils/warn';
 import { BaseUIComponentProps, Orientation } from '../../internals/types';
 import { CompositeList } from '../../internals/composite/list/CompositeList';
-import { useDirection } from '../../internals/direction-context/DirectionContext';
 import { AccordionRootContext } from './AccordionRootContext';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { type BaseUIChangeEventDetails } from '../../internals/createBaseUIEventDetails';
@@ -32,7 +31,7 @@ export const AccordionRoot = React.forwardRef(function AccordionRoot<Value = any
     disabled = false,
     hiddenUntilFound: hiddenUntilFoundProp,
     keepMounted: keepMountedProp,
-    loopFocus = true,
+    loopFocus,
     onValueChange,
     multiple = false,
     orientation = 'vertical',
@@ -41,8 +40,6 @@ export const AccordionRoot = React.forwardRef(function AccordionRoot<Value = any
     style,
     ...elementProps
   } = componentProps;
-
-  const direction = useDirection();
 
   if (process.env.NODE_ENV !== 'production') {
     // eslint-disable-next-line react-hooks/rules-of-hooks
@@ -66,8 +63,6 @@ export const AccordionRoot = React.forwardRef(function AccordionRoot<Value = any
   }, [valueProp, defaultValueProp]);
 
   const accordionItemRefs = React.useRef<(HTMLElement | null)[]>([]);
-  // Mirrors `accordionItemRefs` indexes so focus navigation targets only Accordion.Trigger.
-  const accordionTriggerRefs = React.useRef<(HTMLElement | null)[]>([]);
 
   const [value, setValue] = useControlled({
     controlled: valueProp,
@@ -119,41 +114,20 @@ export const AccordionRoot = React.forwardRef(function AccordionRoot<Value = any
 
   const contextValue: AccordionRootContext<Value> = React.useMemo(
     () => ({
-      accordionItemRefs,
-      accordionTriggerRefs,
-      direction,
       disabled,
       handleValueChange,
       hiddenUntilFound: hiddenUntilFoundProp ?? false,
       keepMounted: keepMountedProp ?? false,
-      loopFocus,
-      orientation,
       state,
       value,
     }),
-    [
-      direction,
-      disabled,
-      handleValueChange,
-      hiddenUntilFoundProp,
-      keepMountedProp,
-      loopFocus,
-      orientation,
-      state,
-      value,
-    ],
+    [disabled, handleValueChange, hiddenUntilFoundProp, keepMountedProp, state, value],
   );
 
   const element = useRenderElement('div', componentProps, {
     state,
     ref: forwardedRef,
-    props: [
-      {
-        dir: direction,
-        role: 'region',
-      },
-      elementProps,
-    ],
+    props: elementProps,
     stateAttributesMapping: rootStateAttributesMapping,
   });
 
@@ -179,6 +153,12 @@ export interface AccordionRootState<Value = any> {
   disabled: boolean;
   /**
    * The component orientation.
+   *
+   * Deprecated following the [APG guidance update](https://github.com/w3c/aria-practices/pull/3434)
+   * to remove roving focus.
+   *
+   * This state no longer affects keyboard focus behavior.
+   * @deprecated
    */
   orientation: Orientation;
 }
@@ -219,9 +199,11 @@ export interface AccordionRootProps<Value = any> extends BaseUIComponentProps<
    */
   keepMounted?: boolean | undefined;
   /**
-   * Whether to loop keyboard focus back to the first item
-   * when the end of the list is reached while using the arrow keys.
-   * @default true
+   * Deprecated following the [APG guidance update](https://github.com/w3c/aria-practices/pull/3434)
+   * to remove roving focus.
+   *
+   * This prop no longer affects keyboard focus behavior.
+   * @deprecated
    */
   loopFocus?: boolean | undefined;
   /**
@@ -237,9 +219,12 @@ export interface AccordionRootProps<Value = any> extends BaseUIComponentProps<
    */
   multiple?: boolean | undefined;
   /**
-   * The visual orientation of the accordion.
-   * Controls whether roving focus uses left/right or up/down arrow keys.
+   * Deprecated following the [APG guidance update](https://github.com/w3c/aria-practices/pull/3434)
+   * to remove roving focus.
+   *
+   * This prop no longer affects keyboard focus behavior.
    * @default 'vertical'
+   * @deprecated
    */
   orientation?: Orientation | undefined;
 }

@@ -2,7 +2,7 @@
 import * as React from 'react';
 import { useStableCallback } from '@base-ui/utils/useStableCallback';
 import { useIsoLayoutEffect } from '@base-ui/utils/useIsoLayoutEffect';
-import { isWebKit } from '@base-ui/utils/detectBrowser';
+import { platform } from '@base-ui/utils/platform';
 import { useTimeout } from '@base-ui/utils/useTimeout';
 import type { BaseUIComponentProps } from '../../internals/types';
 import { useScrollAreaRootContext } from '../root/ScrollAreaRootContext';
@@ -35,7 +35,7 @@ function removeCSSVariableInheritance() {
     scrollAreaOverflowVarsRegistered ||
     // When `inherits: false`, specifying `inherit` on child elements doesn't work
     // in Safari. To let CSS features work correctly, this optimization must be skipped.
-    isWebKit
+    platform.engine.webkit
   ) {
     return;
   }
@@ -259,10 +259,19 @@ export const ScrollAreaViewport = React.forwardRef(function ScrollAreaViewport(
     }
 
     if (cornerEl) {
+      // Bail when the size is unchanged (like `setThumbSize` above); otherwise a
+      // fresh object literal on every scroll frame rebuilds the root context and
+      // re-renders every scroll-area part.
       if (scrollbarXHidden || scrollbarYHidden) {
-        setCornerSize({ width: 0, height: 0 });
+        setCornerSize((prevSize) =>
+          prevSize.width === 0 && prevSize.height === 0 ? prevSize : { width: 0, height: 0 },
+        );
       } else if (!scrollbarXHidden && !scrollbarYHidden) {
-        setCornerSize({ width: nextCornerWidth, height: nextCornerHeight });
+        setCornerSize((prevSize) =>
+          prevSize.width === nextCornerWidth && prevSize.height === nextCornerHeight
+            ? prevSize
+            : { width: nextCornerWidth, height: nextCornerHeight },
+        );
       }
     }
 

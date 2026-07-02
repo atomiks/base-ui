@@ -49,6 +49,7 @@ export const ContextMenuTrigger = React.forwardRef(function ContextMenuTrigger(
   const suppressReopenRef = React.useRef(false);
   const openedWithTouchRef = React.useRef(false);
   const longPressTimeout = useTimeout();
+  const mouseUpAbortControllerRef = React.useRef<AbortController | null>(null);
 
   // Whether a repeat right click at this point should toggle the menu closed: within
   // the threshold box around the opening point, but never over the popup itself,
@@ -129,8 +130,12 @@ export const ContextMenuTrigger = React.forwardRef(function ContextMenuTrigger(
     handleLongPress(event.clientX, event.clientY, event.nativeEvent);
     const doc = ownerDocument(triggerRef.current);
 
-    addEventListener(
-      doc,
+    // Abort a listener from a previous trigger that never saw its mouseup, and scope this
+    // one to a fresh controller so it's removed on unmount if the mouseup never arrives.
+    mouseUpAbortControllerRef.current?.abort();
+    const mouseUpAbortController = new AbortController();
+    mouseUpAbortControllerRef.current = mouseUpAbortController;
+    doc.addEventListener(
       'mouseup',
       (mouseEvent) => {
         allowMouseUpTriggerRef.current = false;
@@ -163,7 +168,7 @@ export const ContextMenuTrigger = React.forwardRef(function ContextMenuTrigger(
           createChangeEventDetails(REASONS.cancelOpen, mouseEvent),
         );
       },
-      { once: true },
+      { once: true, signal: mouseUpAbortController.signal },
     );
   }
 
@@ -228,6 +233,14 @@ export const ContextMenuTrigger = React.forwardRef(function ContextMenuTrigger(
     const doc = ownerDocument(triggerRef.current);
     return addEventListener(doc, 'pointerdown', handlePointerDown, { capture: true });
   }, [open, isWithinToggleArea]);
+
+  React.useEffect(
+    () => () => {
+      // Abort a pending mouseup listener if the trigger unmounts before it fires.
+      mouseUpAbortControllerRef.current?.abort();
+    },
+    [],
+  );
 
   React.useEffect(() => {
     function handleDocumentContextMenu(event: MouseEvent) {

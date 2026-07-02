@@ -1,19 +1,20 @@
 import NextLink from 'next/link';
 
-import { GitHubIcon } from '../icons/GitHubIcon';
-import { NpmIcon } from '../icons/NpmIcon';
 import * as MobileNav from './MobileNav';
 import { sitemap } from '../app/sitemap';
 import { Logo } from './Logo';
 import { SkipNav } from './SkipNav';
-import { HeaderSearch } from './HeaderSearch';
+import { SearchTrigger } from './SearchTrigger';
+import { GitHubIcon } from '../icons/GitHubIcon';
+import { NpmIcon } from '../icons/NpmIcon';
 import './Header.css';
 
 export const titleMap: Record<string, string> = {
   'About Base\xa0UI': 'About',
 };
 
-export const HEADER_HEIGHT = 48;
+export const HEADER_HEIGHT_MOBILE = 48;
+export const HEADER_HEIGHT_DESKTOP = 64;
 
 const showPrivatePages = process.env.SHOW_PRIVATE_PAGES === 'true';
 
@@ -26,24 +27,11 @@ export function Header() {
           <Logo aria-label="Base UI" />
         </NextLink>
         <div className="HeaderDesktopActions">
-          <HeaderSearch containedScroll enableKeyboardShortcut />
-          <a
-            className="HeaderLink"
-            href="https://www.npmjs.com/package/@base-ui/react"
-            rel="noopener"
-            aria-label={`npm version ${process.env.LIB_VERSION}`}
-          >
-            <NpmIcon />
-            {process.env.LIB_VERSION}
-          </a>
-          <a className="HeaderLink" href="https://github.com/mui/base-ui" rel="noopener">
-            <GitHubIcon />
-            GitHub
-          </a>
+          <SearchTrigger containedScroll enableKeyboardShortcut />
         </div>
         <div className="HeaderMobileActions">
           <div className="HeaderMobileSearch">
-            <HeaderSearch />
+            <SearchTrigger iconOnly />
           </div>
           {sitemap && (
             <MobileNav.Root>
@@ -89,18 +77,15 @@ export function Header() {
                   <MobileNav.Section>
                     <MobileNav.Heading>Resources</MobileNav.Heading>
                     <MobileNav.List>
-                      <MobileNav.Item
-                        href="https://www.npmjs.com/package/@base-ui/react"
-                        rel="noopener"
-                      >
+                      <MobileNav.Item href="https://www.npmjs.com/package/@base-ui/react">
                         <NpmIcon />
                         <span className="HeaderResourceRow">
                           npm package
                           <span className="HeaderVersion">{process.env.LIB_VERSION}</span>
                         </span>
                       </MobileNav.Item>
-                      <MobileNav.Item href="https://github.com/mui/base-ui" rel="noopener">
-                        <GitHubIcon className="HeaderGitHubIcon" />
+                      <MobileNav.Item href="https://github.com/mui/base-ui">
+                        <GitHubIcon />
                         GitHub
                       </MobileNav.Item>
                     </MobileNav.List>

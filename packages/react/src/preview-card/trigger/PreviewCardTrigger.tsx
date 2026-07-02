@@ -113,14 +113,15 @@ export interface PreviewCardTrigger {
 
 export interface PreviewCardTriggerState {
   /**
-   * Whether the preview card is currently open.
+   * Whether the preview card is currently open and was opened by this trigger.
    */
   open: boolean;
 }
 
 export interface PreviewCardTriggerProps<Payload = unknown> extends BaseUIComponentProps<
   'a',
-  PreviewCardTriggerState
+  PreviewCardTriggerState,
+  React.ComponentPropsWithRef<'a'>
 > {
   /**
    * A handle to associate the trigger with a preview card.

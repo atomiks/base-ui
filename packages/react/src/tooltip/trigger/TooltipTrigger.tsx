@@ -318,7 +318,7 @@ export interface TooltipTrigger {
 
 export interface TooltipTriggerState {
   /**
-   * Whether the tooltip is currently open.
+   * Whether the tooltip is currently open and was opened by this trigger.
    */
   open: boolean;
 }
@@ -336,7 +336,7 @@ export interface TooltipTriggerProps<Payload = unknown> extends BaseUIComponentP
    */
   payload?: Payload | undefined;
   /**
-   * How long to wait before opening the tooltip. Specified in milliseconds.
+   * How long to wait before opening the tooltip on hover. Specified in milliseconds.
    * @default 600
    */
   delay?: number | undefined;

@@ -1,11 +1,10 @@
 import { vi, expect } from 'vitest';
-/* eslint-disable @typescript-eslint/no-shadow */
+
 /* eslint-disable react/jsx-fragments */
 import * as React from 'react';
 import { act, fireEvent, render, screen } from '@mui/internal-test-utils';
 
-import { isJSDOM } from '@base-ui/utils/detectBrowser';
-import { useTestInteractions } from '#test-utils';
+import { isJSDOM, useTestInteractions } from '#test-utils';
 import { FloatingDelayGroup, useDelayGroup, useFloating, useHover } from '../index';
 
 interface Props {
