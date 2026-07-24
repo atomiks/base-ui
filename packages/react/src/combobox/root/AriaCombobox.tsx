@@ -67,7 +67,7 @@ import {
 import { areArraysEqual } from '../../internals/areArraysEqual';
 import { INITIAL_LAST_HIGHLIGHT, NO_ACTIVE_VALUE } from './utils/constants';
 import { useDirection } from '../../internals/direction-context/DirectionContext';
-import { getItemCollection, type ComboboxItemCollection } from '../items/itemCollection';
+import type { ComboboxItemCollection, ItemCollection } from '../items/itemCollection';
 
 type InternalAriaComboboxProps<Value, Mode extends SelectionMode> = AriaComboboxProps<
   Value,
@@ -151,24 +151,17 @@ export function AriaCombobox<Value = any, Mode extends SelectionMode = 'none'>(
   const id = useLabelableId({ id: idProp });
   const collatorFilter = useCoreFilter({ locale });
 
-  // Normalized `useItems()` collections carry their own value and label projections. The
-  // rest of this component works on the raw source items, applying the projections wherever
-  // item values or labels are derived. Only the brand check lives here so the rest of the
-  // `useItems` machinery tree-shakes for non-users.
-  const collection = getItemCollection(itemsProp);
+  // Plain items are arrays; normalized `useItems()` collections are objects.
+  const collection =
+    itemsProp && !Array.isArray(itemsProp) ? (itemsProp as unknown as ItemCollection) : null;
   const items = (collection ? collection.data : itemsProp) as
     | readonly any[]
     | readonly Group<any>[]
     | undefined;
-  const itemToStringLabel = itemToStringLabelProp ?? collection?.resolveLabel;
+  const itemToStringLabel = itemToStringLabelProp ?? collection?.label;
   const stringifyItemLabel = React.useCallback(
-    (item: any) => {
-      if (item == null && collection?.hasValue(item)) {
-        return itemToStringLabel?.(item) ?? '';
-      }
-      return stringifyAsLabel(item, itemToStringLabel);
-    },
-    [collection, itemToStringLabel],
+    (item: any) => stringifyAsLabel(item, itemToStringLabel),
+    [itemToStringLabel],
   );
 
   const [queryChangedAfterOpen, setQueryChangedAfterOpen] = React.useState(false);
@@ -264,9 +257,7 @@ export function AriaCombobox<Value = any, Mode extends SelectionMode = 'none'>(
     state: 'open',
   });
 
-  // Collections declare their own groupness, resolved by `useItems()`; only plain arrays
-  // fall back to shape detection here.
-  const isGrouped = collection ? collection.grouped : isGroupedItems(items);
+  const isGrouped = isGroupedItems(items);
   const query = closeQuery ?? String(inputValue).trim();
 
   const selectedLabelString = single ? stringifyItemLabel(selectedValue) : '';
@@ -320,7 +311,7 @@ export function AriaCombobox<Value = any, Mode extends SelectionMode = 'none'>(
             if (itemsToTake.length >= remainingLimit) {
               break;
             }
-            const itemValue = collection ? collection.itemToValue(item) : item;
+            const itemValue = collection ? collection.value(item) : item;
             if (filter(itemValue, filterQuery, itemToStringLabel)) {
               itemsToTake.push(item);
             }
@@ -354,7 +345,7 @@ export function AriaCombobox<Value = any, Mode extends SelectionMode = 'none'>(
       if (limit > -1 && limitedItems.length >= limit) {
         break;
       }
-      const itemValue = collection ? collection.itemToValue(item) : item;
+      const itemValue = collection ? collection.value(item) : item;
       if (filter(itemValue, filterQuery, itemToStringLabel)) {
         limitedItems.push(item);
       }
@@ -390,7 +381,7 @@ export function AriaCombobox<Value = any, Mode extends SelectionMode = 'none'>(
     if (!collection) {
       return flatFilteredItems;
     }
-    return flatFilteredItems.map(collection.itemToValue);
+    return flatFilteredItems.map(collection.value);
   }, [collection, flatFilteredItems]);
 
   const store = useRefWithInit(() => {
@@ -415,9 +406,8 @@ export function AriaCombobox<Value = any, Mode extends SelectionMode = 'none'>(
       labelId: undefined,
       selectedValue,
       open,
-      items,
-      itemToValue: collection?.itemToValue,
-      hasItemValue: collection?.hasValue,
+      items: collection ? undefined : items,
+      itemToValue: collection?.value,
       selectionMode,
       listRef,
       labelsRef,
@@ -915,7 +905,7 @@ export function AriaCombobox<Value = any, Mode extends SelectionMode = 'none'>(
       // the index on the next open.
       let registry: readonly any[] = valuesRef.current;
       if (hasItems) {
-        registry = collection ? flatItems.map(collection.itemToValue) : flatItems;
+        registry = collection ? flatItems.map(collection.value) : flatItems;
       }
 
       setIndices({
@@ -1326,9 +1316,8 @@ export function AriaCombobox<Value = any, Mode extends SelectionMode = 'none'>(
       open,
       mounted,
       transitionStatus,
-      items,
-      itemToValue: collection?.itemToValue,
-      hasItemValue: collection?.hasValue,
+      items: collection ? undefined : items,
+      itemToValue: collection?.value,
       inline: inlineProp,
       popupProps,
       inputProps,
@@ -1394,7 +1383,7 @@ export function AriaCombobox<Value = any, Mode extends SelectionMode = 'none'>(
       flatFilteredItems,
       flatFilteredValues,
       isGrouped,
-      itemToValue: collection?.itemToValue,
+      itemToValue: collection?.value,
     }),
     [query, hasItems, filteredItems, flatFilteredItems, flatFilteredValues, isGrouped, collection],
   );
