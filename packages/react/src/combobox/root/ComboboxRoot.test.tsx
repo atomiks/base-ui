@@ -3344,6 +3344,31 @@ describe('<Combobox.Root />', () => {
       expect(screen.getByTestId('input')).toHaveValue('Banana');
     });
 
+    // An inline list stays visible no matter how the open state is wired, so the fill must not
+    // depend on the shape of the `open`/`onOpenChange` props.
+    it.each<[string, Partial<Combobox.Root.Props<string>>]>([
+      ['without an `open` prop', {}],
+      ['with `defaultOpen`', { defaultOpen: true }],
+      ['with `open` pinned true alongside `onOpenChange`', { open: true, onOpenChange: () => {} }],
+    ])('fills the inline input on selection %s', async (_, rootProps) => {
+      const { user } = await render(
+        <Combobox.Root inline {...rootProps} items={['Apple', 'Banana']}>
+          <Combobox.Input data-testid="input" />
+          <Combobox.List>
+            {(item) => (
+              <Combobox.Item key={item} value={item}>
+                {item}
+              </Combobox.Item>
+            )}
+          </Combobox.List>
+        </Combobox.Root>,
+      );
+
+      await user.click(screen.getByRole('option', { name: 'Banana' }));
+
+      expect(screen.getByTestId('input')).toHaveValue('Banana');
+    });
+
     it('bubbles Escape key when list is empty and popup hidden with CSS', async () => {
       const onOuterKeyDown = vi.fn();
 
