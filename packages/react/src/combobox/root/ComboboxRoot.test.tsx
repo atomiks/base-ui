@@ -8800,7 +8800,7 @@ describe('<Combobox.Root />', () => {
         const input = await screen.findByTestId('dialog-input');
         await user.type(input, 'ap');
         await user.click(screen.getByRole('option', { name: 'Apple' }));
-        expect(input).not.toHaveValue('Apple');
+        expect(input).toHaveValue('');
 
         await waitFor(() => {
           expect(screen.queryByRole('dialog', { name: 'Fruit chooser' })).toBe(null);
