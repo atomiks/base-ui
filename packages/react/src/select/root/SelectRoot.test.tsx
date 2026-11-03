@@ -5110,6 +5110,12 @@ describe('<Select.Root />', () => {
       await user.click(screen.getByRole('option', { name: 'c' }));
 
       await user.click(screen.getByTestId('remove-c'));
+      expect(trigger).toHaveTextContent('c');
+
+      // While closed, the select reads its items when the trigger is next focused.
+      await act(async () => {
+        trigger.focus();
+      });
 
       await waitFor(() => {
         expect(trigger).toHaveTextContent('b');
@@ -5424,8 +5430,14 @@ describe('<Select.Root />', () => {
 
       await user.click(screen.getByTestId('remove-b'));
       await user.click(screen.getByTestId('remove-c'));
+      expect(trigger).toHaveTextContent('c');
 
-      // Now no fallback remains; value should reset to null
+      // While closed, the select reads its items when the trigger is next focused. No fallback
+      // remains, so the value resets to null.
+      await act(async () => {
+        trigger.focus();
+      });
+
       await waitFor(() => {
         expect(trigger).toHaveTextContent('');
       });
