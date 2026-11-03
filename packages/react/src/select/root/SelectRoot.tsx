@@ -434,15 +434,7 @@ export function SelectRootInternal<Value, Multiple extends boolean | undefined =
     // the disabled state from the element via the attribute-only `isElementDisabled` so the
     // items a closed select renders outside the document aren't dropped by the
     // `elementsRef`/visibility filter that `disabledIndices` deliberately sidesteps.
-    // A virtualized filterable select's list comes from its `items`, which renders only some
-    // options, so an option without an element isn't disabled, just not rendered.
-    disabledIndices: (index) => {
-      const element = listRef.current[index];
-      if (element == null && closedItems.fromData) {
-        return false;
-      }
-      return isElementDisabled(element);
-    },
+    disabledIndices: (index) => isElementDisabled(listRef.current[index]),
     onMatch(index, event) {
       if (open) {
         if (index !== store.state.activeIndex) {

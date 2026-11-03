@@ -23,8 +23,6 @@ import { useSelectFilterImpl } from '../filter-root/SelectFilterContext';
 interface SelectItemPlainProps extends SelectItemProps {
   /** Set by the filter, which points the input's `aria-activedescendant` at the option. */
   id?: string | undefined;
-  /** Set by a virtualized filter: the option's position among the filtered items. */
-  index?: number | undefined;
 }
 
 const SelectItemView = React.memo(function SelectItemView(
@@ -37,7 +35,6 @@ const SelectItemView = React.memo(function SelectItemView(
     style,
     value: itemValue = null,
     label,
-    index: indexProp,
     disabled: disabledProp = false,
     nativeButton = false,
     ...elementProps
@@ -48,7 +45,6 @@ const SelectItemView = React.memo(function SelectItemView(
     guess: true,
     label,
     textRef,
-    index: indexProp,
   });
 
   const store = useSelectRootContext();
@@ -76,7 +72,6 @@ const SelectItemView = React.memo(function SelectItemView(
     multiple,
     isItemEqualToValue,
     textRef,
-    virtualized: indexProp != null,
   });
 
   const pointerTypeRef = React.useRef<'mouse' | 'touch' | 'pen'>('mouse');

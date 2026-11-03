@@ -15,12 +15,6 @@ interface ClosedItem {
 export class SelectClosedItems {
   fragment: DocumentFragment | null = null;
 
-  /**
-   * Whether the list comes from data instead, as a virtualized filterable select's does from the
-   * filtered `items`. The fragment then holds only the options in view, so it's never read.
-   */
-  fromData = false;
-
   private items = new WeakMap<Element, ClosedItem>();
 
   private changed = true;
@@ -44,7 +38,7 @@ export class SelectClosedItems {
     labelsRef: React.RefObject<Array<string | null>>,
     valuesRef: React.RefObject<any[]>,
   ) {
-    if (this.fromData || !this.changed || this.fragment == null) {
+    if (!this.changed || this.fragment == null) {
       return false;
     }
     this.changed = false;

@@ -17,16 +17,10 @@ export function useSelectItemRegistration(params: {
   isItemEqualToValue: (itemValue: any, selectedValue: any) => boolean;
   /** The element that aligns the popup with the trigger. Only for items in the popup. */
   textRef?: React.RefObject<HTMLElement | null> | undefined;
-  /** Whether a virtualized list gives the item its index, with values from the filtered `items`. */
-  virtualized?: boolean | undefined;
 }) {
-  const { store, index, itemValue, multiple, isItemEqualToValue, textRef, virtualized } = params;
+  const { store, index, itemValue, multiple, isItemEqualToValue, textRef } = params;
 
   useIsoLayoutEffect(() => {
-    // A virtualized list's values come from the filtered `items`, not the mounted items.
-    if (virtualized) {
-      return undefined;
-    }
     const values = store.context.valuesRef.current;
     values[index] = itemValue;
     // Filtering can move this item into the highlighted index.
@@ -37,7 +31,7 @@ export function useSelectItemRegistration(params: {
     return () => {
       delete values[index];
     };
-  }, [index, itemValue, store, virtualized]);
+  }, [index, itemValue, store]);
 
   useIsoLayoutEffect(() => {
     const selectedValue = store.state.selectedValue;
