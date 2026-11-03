@@ -16,7 +16,7 @@ export default function AnimatedPopoverMotionKeepMountedTrueDemo() {
             render={(props, state) => (
               <motion.div
                 {...(props as HTMLMotionProps<'div'>)}
-                initial={false}
+                initial={{ opacity: 0, scale: 0.8 }}
                 animate={{
                   opacity: state.open ? 1 : 0,
                   scale: state.open ? 1 : 0.8,
