@@ -12,6 +12,7 @@ import { useValueAsRef } from '@base-ui/utils/useValueAsRef';
 import { useRefWithInit } from '@base-ui/utils/useRefWithInit';
 import { activeElement, contains } from '@base-ui/utils/shadowDom';
 import { ownerDocument } from '@base-ui/utils/owner';
+import { useTimeout } from '@base-ui/utils/useTimeout';
 import { EMPTY_ARRAY, EMPTY_OBJECT } from '@base-ui/utils/empty';
 import { useClick } from '../../utils/popups/interactions/useClick';
 import { useDismiss } from '../../utils/popups/interactions/useDismiss';
@@ -532,6 +533,25 @@ export function SelectRootInternal<Value, Multiple extends boolean | undefined =
       setInteracting(true);
     }
   }, [open, setInteracting]);
+
+  // A popup removed while it has focus fires no blur. Once the focus manager has had its chance
+  // to return focus (a microtask after the unmount), end the interaction unless the trigger has it.
+  const mounted = store.useState('mounted');
+  const wasMountedRef = React.useRef(mounted);
+  const unmountFocusTimeout = useTimeout();
+  useIsoLayoutEffect(() => {
+    const wasMounted = wasMountedRef.current;
+    wasMountedRef.current = mounted;
+    if (mounted || !wasMounted) {
+      return;
+    }
+    unmountFocusTimeout.start(0, () => {
+      const triggerElement = store.state.triggerElement;
+      if (!contains(triggerElement, activeElement(ownerDocument(triggerElement)))) {
+        setInteracting(false);
+      }
+    });
+  }, [mounted, store, setInteracting, unmountFocusTimeout]);
 
   const triggerInteractionProps = React.useMemo(
     () => ({

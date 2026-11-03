@@ -5498,7 +5498,7 @@ describe('<Select.Root />', () => {
   describe('closed items', () => {
     // Closed items render outside the document, so a probe in an item reports whether they're
     // rendered.
-    function renderWithProbe() {
+    function renderWithProbe(popupProps: Select.Popup.Props = {}) {
       const mounted = { count: 0 };
 
       function Probe() {
@@ -5520,7 +5520,7 @@ describe('<Select.Root />', () => {
             </Select.Trigger>
             <Select.Portal>
               <Select.Positioner>
-                <Select.Popup>
+                <Select.Popup {...popupProps}>
                   <Select.Item value="apple">
                     <Select.ItemText>Apple</Select.ItemText>
                     <Probe />
@@ -5572,6 +5572,29 @@ describe('<Select.Root />', () => {
       expect(mounted.count).toBe(1);
       await user.keyboard('c');
       expect(screen.getByTestId('value').textContent).toBe('Cherry');
+    });
+
+    it('stops rendering the items when the popup closes with focus inside and nothing returns it', async () => {
+      const { mounted, view } = renderWithProbe({ finalFocus: false });
+      const { user } = await view;
+
+      await act(async () => screen.getByTestId('trigger').focus());
+      await user.keyboard('{ArrowDown}');
+      await waitFor(() => {
+        expect(screen.getByRole('option', { name: 'Apple' })).toHaveFocus();
+      });
+      expect(mounted.count).toBe(1);
+
+      // Removing the focused popup fires no blur.
+      await user.keyboard('{Escape}');
+      await waitFor(() => {
+        expect(screen.queryByRole('listbox')).toBe(null);
+      });
+      expect(screen.getByTestId('trigger')).not.toHaveFocus();
+
+      await waitFor(() => {
+        expect(mounted.count).toBe(0);
+      });
     });
   });
 
