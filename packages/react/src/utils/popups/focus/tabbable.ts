@@ -189,10 +189,26 @@ export function focusable(container: Element) {
 }
 
 export function tabbable(container: Element) {
-  const candidates = focusable(container);
-  return candidates.filter(
-    (element) => getTabIndex(element) >= 0 && isTabbableRadio(element, candidates),
-  );
+  const candidates: FocusableElement[] = [];
+  appendCandidates(container, candidates);
+
+  // The tab index is cheap to read and rules out most candidates in lists of composite items
+  // (`tabIndex={-1}`), so check it before the focusability walk, which reads computed styles up
+  // the ancestors. The filters are independent, so the result is the same. Named radios are
+  // matched against the other focusable radios, so those still get the full check.
+  let focusableRadios: FocusableElement[] | null = null;
+  return candidates.filter((element) => {
+    if (getTabIndex(element) < 0 || !isFocusableElement(element)) {
+      return false;
+    }
+    if (getNamedRadioInput(element) == null) {
+      return true;
+    }
+    focusableRadios ??= candidates.filter(
+      (candidate) => getNamedRadioInput(candidate) != null && isFocusableElement(candidate),
+    );
+    return isTabbableRadio(element, focusableRadios);
+  });
 }
 
 function getTabbableIn(container: HTMLElement, dir: 1 | -1): FocusableElement | undefined {
