@@ -73,12 +73,8 @@ const SelectPositionerView = React.memo(function SelectPositionerView(
 
   const [controlledAlignItemWithTrigger, setControlledAlignItemWithTrigger] =
     React.useState(alignItemWithTrigger);
-  const alignItemWithTriggerActive =
-    mounted && controlledAlignItemWithTrigger && openMethod !== 'touch';
-
-  if (!mounted && controlledAlignItemWithTrigger !== alignItemWithTrigger) {
-    setControlledAlignItemWithTrigger(alignItemWithTrigger);
-  }
+  // The view mounts afresh for every open, so the state starts from the prop each time.
+  const alignItemWithTriggerActive = controlledAlignItemWithTrigger && openMethod !== 'touch';
 
   React.useImperativeHandle(
     store.context.alignItemWithTriggerActiveRef,
@@ -131,7 +127,6 @@ const SelectPositionerView = React.memo(function SelectPositionerView(
     transitionStatus,
     props: elementProps,
     refs: [forwardedRef, setPositionerElement],
-    hidden: !mounted,
     inert: !open,
   });
 
@@ -232,7 +227,7 @@ const SelectPositionerView = React.memo(function SelectPositionerView(
       onMapChange={onMapChange}
     >
       <SelectPositionerContext.Provider value={contextValue}>
-        {mounted && modal && <InternalBackdrop inert={inertValue(!open)} cutout={triggerElement} />}
+        {modal && <InternalBackdrop inert={inertValue(!open)} cutout={triggerElement} />}
         {element}
       </SelectPositionerContext.Provider>
     </CompositeList>

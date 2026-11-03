@@ -65,7 +65,6 @@ const SelectPopupView = React.memo(function SelectPopupView(
   const id = store.useState('id');
   const open = store.useState('open');
   const openMethod = store.useState('openMethod');
-  const mounted = store.useState('mounted');
   const popupProps = store.useState('popupProps');
   const transitionStatus = store.useState('transitionStatus');
   const triggerElement = store.useState('triggerElement');
@@ -474,7 +473,6 @@ const SelectPopupView = React.memo(function SelectPopupView(
       <FloatingFocusManager
         store={store}
         modal={false}
-        disabled={!mounted}
         openInteractionType={openMethod}
         initialFocus={initialFocus}
         returnFocus={finalFocus}

@@ -15,7 +15,6 @@ const SelectBackdropView = React.memo(function SelectBackdropView(
   const store = useSelectRootContext();
 
   const open = store.useState('open');
-  const mounted = store.useState('mounted');
   const transitionStatus = store.useState('transitionStatus');
 
   const state: SelectBackdropState = {
@@ -29,7 +28,6 @@ const SelectBackdropView = React.memo(function SelectBackdropView(
     props: [
       {
         role: 'presentation',
-        hidden: !mounted,
         style: {
           userSelect: 'none',
           WebkitUserSelect: 'none',

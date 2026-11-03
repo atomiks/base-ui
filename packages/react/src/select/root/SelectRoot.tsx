@@ -856,7 +856,6 @@ export interface SelectRootProps<Value, Multiple extends boolean | undefined = f
    * A ref to imperative actions.
    * - `unmount`: Ends the closing phase of the select after an externally controlled closing animation finishes.
    * Call `preventUnmountOnClose()` in `onOpenChange` first, otherwise the select completes closing on its own.
-   * Whether it leaves the DOM is decided by `keepMounted` on the portal.
    * - `close`: Closes the select imperatively when called.
    */
   actionsRef?: React.RefObject<SelectRootActions | null> | undefined;
