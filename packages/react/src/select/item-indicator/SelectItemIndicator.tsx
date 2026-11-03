@@ -1,7 +1,7 @@
 'use client';
 import * as React from 'react';
 import type { BaseUIComponentProps } from '../../internals/types';
-import { useSelectItemContext } from '../item/SelectItemContext';
+import { SelectItemContext, useSelectItemContext } from '../item/SelectItemContext';
 import { useSelectItemAheadContext } from '../item/SelectItemAhead';
 import type { TransitionStatus } from '../../internals/useTransitionStatus';
 import { ItemIndicator } from '../../utils/ItemIndicator';
@@ -11,11 +11,6 @@ const SelectItemIndicatorView = React.memo(function SelectItemIndicatorView(
 ) {
   const { forwardedRef, ...componentProps } = viewProps;
   const { selected } = useSelectItemContext();
-
-  const shouldRender = componentProps.keepMounted || selected;
-  if (!shouldRender) {
-    return null;
-  }
 
   return <ItemIndicator {...componentProps} selected={selected} ref={forwardedRef} />;
 });
@@ -31,8 +26,13 @@ export const SelectItemIndicator = React.memo(
     componentProps: SelectItemIndicator.Props,
     forwardedRef: React.ForwardedRef<HTMLSpanElement>,
   ) {
-    // A closed item only takes part in typeahead, which the indicator has no part in.
-    if (useSelectItemAheadContext()) {
+    const ahead = useSelectItemAheadContext();
+    const item = React.useContext(SelectItemContext);
+
+    // A closed item only takes part in typeahead, which the indicator has no part in. An
+    // unselected item renders nothing either, unless kept mounted, so it skips the view. Outside
+    // an item, the view throws the missing-context error.
+    if (ahead || (item && !item.selected && !componentProps.keepMounted)) {
       return null;
     }
 
