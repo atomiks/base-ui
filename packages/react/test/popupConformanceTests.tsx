@@ -29,6 +29,7 @@ export function popupConformanceTests(config: PopupTestConfig) {
     alwaysMounted,
     combobox = false,
     exitAnimation = true,
+    supportsKeepMounted = true,
     openReason = triggerMouseAction === 'click' ? REASONS.triggerPress : REASONS.triggerHover,
   } = config;
 
@@ -794,7 +795,7 @@ export function popupConformanceTests(config: PopupTestConfig) {
         await waitFor(expectPopupClosed);
       });
 
-      it.skipIf(isJSDOM || !exitAnimation)(
+      it.skipIf(isJSDOM || !exitAnimation || !supportsKeepMounted)(
         'hides the kept-mounted popup once the exit animation finishes',
         async () => {
           const animationName = `anim-${randomStringValue()}`;
@@ -895,6 +896,12 @@ export interface PopupTestConfig {
    * @default true
    */
   exitAnimation?: boolean;
+  /**
+   * Whether the popup can stay mounted after it closes, through `keepMounted` on the portal or
+   * by always staying mounted.
+   * @default true
+   */
+  supportsKeepMounted?: boolean;
   /**
    * The `reason` passed to `onOpenChange` when the trigger opens the popup.
    * @default 'trigger-press' for click triggers, 'trigger-hover' for hover triggers

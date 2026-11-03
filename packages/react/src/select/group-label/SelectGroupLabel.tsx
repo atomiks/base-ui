@@ -1,21 +1,16 @@
 'use client';
 import * as React from 'react';
 import { useIsoLayoutEffect } from '@base-ui/utils/useIsoLayoutEffect';
+import { useSelectPositionerMounted } from '../positioner/SelectPositionerMountedContext';
 import type { BaseUIComponentProps } from '../../internals/types';
 import { useBaseUiId } from '../../internals/useBaseUiId';
 import { useSelectGroupContext } from '../group/SelectGroupContext';
 import { useRenderElement } from '../../internals/useRenderElement';
 
-/**
- * An accessible label that is automatically associated with its parent group.
- * Renders a `<div>` element.
- *
- * Documentation: [Base UI Select](https://base-ui.com/react/components/select)
- */
-export const SelectGroupLabel = React.forwardRef(function SelectGroupLabel(
-  componentProps: SelectGroupLabel.Props,
-  forwardedRef: React.ForwardedRef<HTMLDivElement>,
+const SelectGroupLabelView = React.memo(function SelectGroupLabelView(
+  viewProps: SelectGroupLabel.Props & { forwardedRef: React.ForwardedRef<HTMLDivElement> },
 ) {
+  const { forwardedRef, ...componentProps } = viewProps;
   const { render, className, style, id: idProp, ...elementProps } = componentProps;
 
   const { setLabelId } = useSelectGroupContext();
@@ -35,6 +30,24 @@ export const SelectGroupLabel = React.forwardRef(function SelectGroupLabel(
   });
 
   return element;
+});
+
+/**
+ * An accessible label that is automatically associated with its parent group.
+ * Renders a `<div>` element.
+ *
+ * Documentation: [Base UI Select](https://base-ui.com/react/components/select)
+ */
+export const SelectGroupLabel = React.forwardRef(function SelectGroupLabel(
+  componentProps: SelectGroupLabel.Props,
+  forwardedRef: React.ForwardedRef<HTMLDivElement>,
+) {
+  // Nothing in this part takes part in typeahead, so it renders nothing while closed.
+  const mounted = useSelectPositionerMounted() !== false;
+  if (!mounted) {
+    return null;
+  }
+  return <SelectGroupLabelView {...componentProps} forwardedRef={forwardedRef} />;
 });
 
 export interface SelectGroupLabelState {}

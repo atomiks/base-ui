@@ -1,5 +1,6 @@
 'use client';
 import * as React from 'react';
+import { useSelectPositionerMounted } from '../positioner/SelectPositionerMountedContext';
 import { FilterDropdownInput } from '../../filter-dropdown/input/FilterDropdownInput';
 import type {
   FilterDropdownInputProps,
@@ -11,14 +12,7 @@ import { useSelectFilterPart } from '../filter-root/SelectFilterContext';
 import { useSelectRootContext } from '../root/SelectRootContext';
 import { useSelectFilterKeyDown } from '../filter-root/useSelectFilterKeyDown';
 
-/**
- * A search field that filters the select items.
- * Requires the select to be wrapped in `Select.FilterProvider`.
- * Renders an `<input>` element.
- *
- * Documentation: [Base UI Select](https://base-ui.com/react/components/select)
- */
-export const SelectInput = React.forwardRef(function SelectInput(
+const SelectInputView = React.forwardRef(function SelectInputView(
   componentProps: SelectInput.Props,
   forwardedRef: React.ForwardedRef<HTMLInputElement>,
 ) {
@@ -52,6 +46,24 @@ export const SelectInput = React.forwardRef(function SelectInput(
       ref={forwardedRef}
     />
   );
+});
+
+/**
+ * A search field that filters the select items.
+ * Requires the select to be wrapped in `Select.FilterProvider`.
+ * Renders an `<input>` element.
+ *
+ * Documentation: [Base UI Select](https://base-ui.com/react/components/select)
+ */
+export const SelectInput = React.forwardRef(function SelectInput(
+  componentProps: SelectInput.Props,
+  forwardedRef: React.ForwardedRef<HTMLInputElement>,
+) {
+  // Nothing here takes part in typeahead, so it renders nothing while the select is closed.
+  if (useSelectPositionerMounted() === false) {
+    return null;
+  }
+  return <SelectInputView {...componentProps} ref={forwardedRef} />;
 });
 
 export interface SelectInputState extends FilterDropdownInputState {}

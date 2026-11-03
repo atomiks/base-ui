@@ -2,7 +2,7 @@
 import * as React from 'react';
 import { useFilterDropdownGroup } from '../../filter-dropdown/group/useFilterDropdownGroup';
 import { FilterDropdownGroupContext } from '../../filter-dropdown/group/FilterDropdownGroupContext';
-import { SelectGroupPlain } from '../group/SelectGroup';
+import { SelectGroupView } from '../group/SelectGroup';
 import type { SelectGroupProps } from '../group/SelectGroup';
 
 /**
@@ -19,10 +19,10 @@ export const SelectFilterGroup = React.forwardRef(function SelectFilterGroup(
 
   return (
     <FilterDropdownGroupContext.Provider value={context}>
-      <SelectGroupPlain
+      <SelectGroupView
         {...props}
         hidden={hidden || props.hidden || undefined}
-        ref={forwardedRef}
+        forwardedRef={forwardedRef}
       />
     </FilterDropdownGroupContext.Provider>
   );

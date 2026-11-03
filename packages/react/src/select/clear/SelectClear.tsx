@@ -1,11 +1,20 @@
 'use client';
 import * as React from 'react';
+import { useSelectPositionerMounted } from '../positioner/SelectPositionerMountedContext';
 import { FilterDropdownClear } from '../../filter-dropdown/clear/FilterDropdownClear';
 import type {
   FilterDropdownClearProps,
   FilterDropdownClearState,
 } from '../../filter-dropdown/clear/FilterDropdownClear';
 import { useSelectFilterPart } from '../filter-root/SelectFilterContext';
+
+const SelectClearView = React.forwardRef(function SelectClearView(
+  props: SelectClear.Props,
+  forwardedRef: React.ForwardedRef<HTMLButtonElement>,
+) {
+  useSelectFilterPart('Clear');
+  return <FilterDropdownClear {...props} ref={forwardedRef} />;
+});
 
 /**
  * A button that clears the input text.
@@ -15,11 +24,14 @@ import { useSelectFilterPart } from '../filter-root/SelectFilterContext';
  * Documentation: [Base UI Select](https://base-ui.com/react/components/select)
  */
 export const SelectClear = React.forwardRef(function SelectClear(
-  props: SelectClear.Props,
+  componentProps: SelectClear.Props,
   forwardedRef: React.ForwardedRef<HTMLButtonElement>,
 ) {
-  useSelectFilterPart('Clear');
-  return <FilterDropdownClear {...props} ref={forwardedRef} />;
+  // Nothing here takes part in typeahead, so it renders nothing while the select is closed.
+  if (useSelectPositionerMounted() === false) {
+    return null;
+  }
+  return <SelectClearView {...componentProps} ref={forwardedRef} />;
 });
 
 export interface SelectClearState extends FilterDropdownClearState {}

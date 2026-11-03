@@ -2,8 +2,8 @@
 import * as React from 'react';
 import { useFilterDropdownPopup } from '../../filter-dropdown/popup/useFilterDropdownPopup';
 import { useFilterDropdownRootContext } from '../../filter-dropdown/root/FilterDropdownRootContext';
-import { SelectPopupPlain } from '../popup/SelectPopup';
-import type { SelectPopupProps } from '../popup/SelectPopup';
+import { SelectPopupView } from '../popup/SelectPopup';
+import type { SelectPopupProps, SelectPopupViewProps } from '../popup/SelectPopup';
 import { useSelectRootContext } from '../root/SelectRootContext';
 import { useLabelableContext } from '../../internals/labelable-provider/LabelableContext';
 import { resolveAriaLabelledBy } from '../../utils/resolveAriaLabelledBy';
@@ -40,7 +40,9 @@ export const SelectFilterPopup = React.forwardRef(function SelectFilterPopup(
     return touchOpen ? false : (focusOwnerRef.current ?? false);
   }, [openMethod, virtualPressRef, focusOwnerRef]);
 
-  const popupProps = mergeProps<typeof SelectPopupPlain>(
+  const popupProps = mergeProps<
+    React.ForwardRefExoticComponent<SelectPopupViewProps & React.RefAttributes<HTMLDivElement>>
+  >(
     interactionProps,
     {
       id: id === undefined ? undefined : `${id}-popup`,
@@ -57,11 +59,11 @@ export const SelectFilterPopup = React.forwardRef(function SelectFilterPopup(
   );
 
   return (
-    <SelectPopupPlain
+    <SelectPopupView
       {...popupProps}
       role="dialog"
       initialFocus={initialFocus}
-      ref={forwardedRef}
+      forwardedRef={forwardedRef}
     />
   );
 });

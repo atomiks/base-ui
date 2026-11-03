@@ -157,7 +157,7 @@ function App() {
             render={(props, state) => (
               <motion.div
                 {...(props as HTMLMotionProps<'div'>)}
-                initial={false}
+                initial={{ opacity: 0, scale: 0.8 }}
                 animate={{
                   opacity: state.open ? 1 : 0,
                   scale: state.open ? 1 : 0.8,
@@ -174,14 +174,6 @@ function App() {
   );
 }
 ```
-
-### Animating Select component with Motion
-
-The Select component is removed from the DOM until its first interaction and stays in the DOM after that. To animate it with Motion, a mix of the two previous approaches is needed.
-
-import { DemoAnimatedSelectMotion } from './demos/animated-select-motion';
-
-<DemoAnimatedSelectMotion />
 
 ### Manual unmounting
 

@@ -1,9 +1,19 @@
 'use client';
 import * as React from 'react';
 import type { BaseUIComponentProps } from '../../internals/types';
-import { useSelectItemContext } from '../item/SelectItemContext';
+import { SelectItemContext, useSelectItemContext } from '../item/SelectItemContext';
+import { useSelectItemAheadContext } from '../item/SelectItemAhead';
 import type { TransitionStatus } from '../../internals/useTransitionStatus';
 import { ItemIndicator } from '../../utils/ItemIndicator';
+
+const SelectItemIndicatorView = React.memo(function SelectItemIndicatorView(
+  viewProps: SelectItemIndicator.Props & { forwardedRef: React.ForwardedRef<HTMLSpanElement> },
+) {
+  const { forwardedRef, ...componentProps } = viewProps;
+  const { selected } = useSelectItemContext();
+
+  return <ItemIndicator {...componentProps} selected={selected} ref={forwardedRef} />;
+});
 
 /**
  * Indicates whether the select item is selected.
@@ -11,19 +21,24 @@ import { ItemIndicator } from '../../utils/ItemIndicator';
  *
  * Documentation: [Base UI Select](https://base-ui.com/react/components/select)
  */
-export const SelectItemIndicator = React.forwardRef(function SelectItemIndicator(
-  componentProps: SelectItemIndicator.Props,
-  forwardedRef: React.ForwardedRef<HTMLSpanElement>,
-) {
-  const { selected } = useSelectItemContext();
+export const SelectItemIndicator = React.memo(
+  React.forwardRef(function SelectItemIndicator(
+    componentProps: SelectItemIndicator.Props,
+    forwardedRef: React.ForwardedRef<HTMLSpanElement>,
+  ) {
+    const ahead = useSelectItemAheadContext();
+    const item = React.useContext(SelectItemContext);
 
-  const shouldRender = componentProps.keepMounted || selected;
-  if (!shouldRender) {
-    return null;
-  }
+    // A closed item only takes part in typeahead, which the indicator has no part in. An
+    // unselected item renders nothing either, unless kept mounted, so it skips the view. Outside
+    // an item, the view throws the missing-context error.
+    if (ahead || (item && !item.selected && !componentProps.keepMounted)) {
+      return null;
+    }
 
-  return <ItemIndicator {...componentProps} selected={selected} ref={forwardedRef} />;
-});
+    return <SelectItemIndicatorView {...componentProps} forwardedRef={forwardedRef} />;
+  }),
+);
 
 export interface SelectItemIndicatorState {
   /**

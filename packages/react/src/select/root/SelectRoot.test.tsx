@@ -69,10 +69,8 @@ describe('<Select.Root />', () => {
       await waitFor(() => {
         expect(onOpenChangeComplete).toHaveBeenLastCalledWith(false);
       });
-      // A closed select keeps its list mounted and hidden, as after any other close.
-      expect(screen.getByRole('listbox', { hidden: true })).not.toHaveAttribute(
-        'data-ending-style',
-      );
+      // A closed select unmounts its list, as after any other close.
+      expect(screen.queryByRole('listbox', { hidden: true })).toBe(null);
     });
 
     it('finishes closing when a layout effect closes it right after a press opens it', async () => {
@@ -111,10 +109,8 @@ describe('<Select.Root />', () => {
       });
       // React 18 commits the end of the transition after the callback runs.
       await flushMicrotasks();
-      // The press mounts the list while closed so its items can register; it isn't left closing.
-      expect(screen.getByRole('listbox', { hidden: true })).not.toHaveAttribute(
-        'data-ending-style',
-      );
+      // The list unmounts rather than being left closing.
+      expect(screen.queryByRole('listbox', { hidden: true })).toBe(null);
     });
   });
 
@@ -457,7 +453,8 @@ describe('<Select.Root />', () => {
       render,
       triggerMouseAction: 'click',
       expectedPopupRole: 'listbox',
-      alwaysMounted: 'only-after-open',
+      // A closed select always unmounts its popup.
+      supportsKeepMounted: false,
     });
 
     // The suite owns the scroller geometry, which item-aligned positioning would override.
@@ -2322,7 +2319,7 @@ describe('<Select.Root />', () => {
           expect(onOpenChangeComplete.mock.calls.some(([value]) => value === false)).toBe(true);
         });
         await waitFor(() => {
-          expect(screen.getByTestId('positioner').style.opacity).toBe('0');
+          expect(screen.queryByTestId('positioner')).toBe(null);
         });
 
         pressWithTouch(trigger);
@@ -2514,11 +2511,9 @@ describe('<Select.Root />', () => {
         });
 
         await waitFor(() => {
-          expect(upArrow).not.toHaveAttribute('data-visible');
+          expect(screen.queryByText('▲')).toBe(null);
         });
-        await waitFor(() => {
-          expect(downArrow).not.toHaveAttribute('data-visible');
-        });
+        expect(screen.queryByText('▼')).toBe(null);
       },
     );
 
@@ -5496,6 +5491,109 @@ describe('<Select.Root />', () => {
       const options = await screen.findAllByRole('option');
       options.forEach((opt) => {
         expect(opt).not.toHaveAttribute('data-selected');
+      });
+    });
+  });
+
+  describe('closed items', () => {
+    // Closed items render outside the document, so a probe in an item reports whether they're
+    // rendered.
+    function renderWithProbe(popupProps: Select.Popup.Props = {}) {
+      const mounted = { count: 0 };
+
+      function Probe() {
+        React.useEffect(() => {
+          mounted.count += 1;
+          return () => {
+            mounted.count -= 1;
+          };
+        }, []);
+        return null;
+      }
+
+      const view = render(
+        <div>
+          <button data-testid="outside">Outside</button>
+          <Select.Root items={{ apple: 'Apple', cherry: 'Cherry' }}>
+            <Select.Trigger data-testid="trigger">
+              <Select.Value data-testid="value" />
+            </Select.Trigger>
+            <Select.Portal>
+              <Select.Positioner>
+                <Select.Popup {...popupProps}>
+                  <Select.Item value="apple">
+                    <Select.ItemText>Apple</Select.ItemText>
+                    <Probe />
+                  </Select.Item>
+                  <Select.Item value="cherry">
+                    <Select.ItemText>Cherry</Select.ItemText>
+                  </Select.Item>
+                </Select.Popup>
+              </Select.Positioner>
+            </Select.Portal>
+          </Select.Root>
+        </div>,
+      );
+
+      return { mounted, view };
+    }
+
+    it('renders the items only once the trigger is focused', async () => {
+      const { mounted, view } = renderWithProbe();
+      await view;
+      expect(mounted.count).toBe(0);
+
+      await act(async () => screen.getByTestId('trigger').focus());
+      expect(mounted.count).toBe(1);
+    });
+
+    it('stops rendering the items when focus leaves the trigger', async () => {
+      const { mounted, view } = renderWithProbe();
+      await view;
+      await act(async () => screen.getByTestId('trigger').focus());
+      expect(mounted.count).toBe(1);
+
+      await act(async () => screen.getByTestId('outside').focus());
+      expect(mounted.count).toBe(0);
+    });
+
+    it('keeps the items rendered when focus returns from the popup to the trigger', async () => {
+      const { mounted, view } = renderWithProbe();
+      const { user } = await view;
+
+      await user.click(screen.getByTestId('trigger'));
+      await screen.findByRole('listbox');
+      await user.keyboard('{Escape}');
+      await waitFor(() => {
+        expect(screen.queryByRole('listbox')).toBe(null);
+      });
+
+      expect(screen.getByTestId('trigger')).toHaveFocus();
+      expect(mounted.count).toBe(1);
+      await user.keyboard('c');
+      expect(screen.getByTestId('value').textContent).toBe('Cherry');
+    });
+
+    it('stops rendering the items when the popup closes with focus inside and nothing returns it', async () => {
+      const { mounted, view } = renderWithProbe({ finalFocus: false });
+      const { user } = await view;
+
+      await act(async () => screen.getByTestId('trigger').focus());
+      await user.keyboard('{ArrowDown}');
+      await waitFor(() => {
+        expect(screen.getByRole('option', { name: 'Apple' })).toHaveFocus();
+      });
+      expect(mounted.count).toBe(1);
+
+      // Removing the focused popup fires no blur.
+      await user.keyboard('{Escape}');
+      await waitFor(() => {
+        expect(screen.queryByRole('listbox')).toBe(null);
+      });
+      expect(screen.getByTestId('trigger')).not.toHaveFocus();
+
+      await waitFor(() => {
+        expect(mounted.count).toBe(0);
       });
     });
   });

@@ -1,6 +1,6 @@
 'use client';
 import * as React from 'react';
-import { useIsoLayoutEffect } from '@base-ui/utils/useIsoLayoutEffect';
+import { useSelectPositionerMounted } from '../positioner/SelectPositionerMountedContext';
 import { useSelectRootContext } from '../root/SelectRootContext';
 import { useCompositeListItem } from '../../internals/composite/list/useCompositeListItem';
 import type {
@@ -11,35 +11,35 @@ import type {
 } from '../../internals/types';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { SelectItemContext } from './SelectItemContext';
+import { SelectItemAhead } from './SelectItemAhead';
+import { useSelectItemRegistration } from './useSelectItemRegistration';
 import { useButton } from '../../internals/use-button';
 import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
 import { REASONS } from '../../internals/reasons';
-import {
-  compareItemEquality,
-  removeItem,
-  resolveSelectedIndex,
-} from '../../internals/itemEquality';
+import { removeItem } from '../../internals/itemEquality';
 import { isVirtualClick } from '../../utils/popups/event';
 import { useSelectFilterImpl } from '../filter-root/SelectFilterContext';
 
-interface SelectItemPlainProps extends SelectItemProps {
+export interface SelectItemViewProps extends SelectItemProps {
   /** Set by the filter, which points the input's `aria-activedescendant` at the option. */
   id?: string | undefined;
-  /** Set by a virtualized filter: the option's position among the filtered items. */
-  index?: number | undefined;
 }
 
-export const SelectItemPlain = React.forwardRef(function SelectItem(
-  componentProps: SelectItemPlainProps,
-  forwardedRef: React.ForwardedRef<HTMLElement>,
+/**
+ * The open item, for the filterable select's item to wrap. Takes its ref as `forwardedRef`.
+ *
+ * @internal
+ */
+export const SelectItemView = React.memo(function SelectItemView(
+  viewProps: SelectItemViewProps & { forwardedRef: React.ForwardedRef<HTMLElement> },
 ) {
+  const { forwardedRef, ...componentProps } = viewProps;
   const {
     render,
     className,
     style,
     value: itemValue = null,
     label,
-    index: indexProp,
     disabled: disabledProp = false,
     nativeButton = false,
     ...elementProps
@@ -50,7 +50,6 @@ export const SelectItemPlain = React.forwardRef(function SelectItem(
     guess: true,
     label,
     textRef,
-    index: indexProp,
   });
 
   const store = useSelectRootContext();
@@ -71,59 +70,14 @@ export const SelectItemPlain = React.forwardRef(function SelectItem(
 
   const itemRef = React.useRef<HTMLDivElement | null>(null);
 
-  useIsoLayoutEffect(() => {
-    // A virtualized list's values come from the filtered `items`, not the mounted items.
-    if (indexProp != null) {
-      return undefined;
-    }
-    const values = store.context.valuesRef.current;
-    values[index] = itemValue;
-    // Filtering can move this item into the highlighted index.
-    if (index === store.state.activeIndex) {
-      store.context.syncHighlight();
-    }
-
-    return () => {
-      delete values[index];
-    };
-  }, [index, indexProp, itemValue, store]);
-
-  useIsoLayoutEffect(() => {
-    const selectedValue = store.state.selectedValue;
-
-    const currentIndex = store.state.selectedIndex;
-    let nextIndex = currentIndex;
-    let claims: boolean;
-    if (multiple && Array.isArray(selectedValue)) {
-      // The claiming item also owns the text ref that aligns the popup.
-      nextIndex = resolveSelectedIndex(
-        index,
-        itemValue,
-        store.context.valuesRef.current,
-        selectedValue,
-        isItemEqualToValue,
-        currentIndex,
-      );
-      claims = nextIndex === index;
-      if (index === currentIndex && !claims) {
-        store.context.selectedItemTextRef.current = null;
-      }
-    } else {
-      claims =
-        selectedValue !== undefined &&
-        compareItemEquality(itemValue, selectedValue, isItemEqualToValue);
-      if (claims) {
-        nextIndex = index;
-      }
-    }
-    store.set('selectedIndex', nextIndex);
-
-    // Make sure SelectPopup can measure the selected item on first open.
-    // SelectItemText can still update this ref later when focus moves.
-    if (claims && textRef.current) {
-      store.context.selectedItemTextRef.current = textRef.current;
-    }
-  }, [index, multiple, isItemEqualToValue, store, itemValue]);
+  useSelectItemRegistration({
+    store,
+    index,
+    itemValue,
+    multiple,
+    isItemEqualToValue,
+    textRef,
+  });
 
   const pointerTypeRef = React.useRef<'mouse' | 'touch' | 'pen'>('mouse');
   const allowMouseSelectionRef = React.useRef(false);
@@ -283,11 +237,21 @@ export const SelectItemPlain = React.forwardRef(function SelectItem(
  */
 export const SelectItem = React.memo(
   React.forwardRef(function SelectItem(
-    props: SelectItem.Props,
+    componentProps: SelectItem.Props,
     forwardedRef: React.ForwardedRef<HTMLElement>,
   ) {
-    const Item = useSelectFilterImpl()?.Item ?? SelectItemPlain;
-    return <Item {...props} ref={forwardedRef} />;
+    const filterImpl = useSelectFilterImpl();
+    const mounted = useSelectPositionerMounted() !== false;
+
+    if (mounted) {
+      if (filterImpl) {
+        return <filterImpl.Item {...componentProps} ref={forwardedRef} />;
+      }
+      return <SelectItemView {...componentProps} forwardedRef={forwardedRef} />;
+    }
+
+    // While closed, the item only takes part in typeahead.
+    return <SelectItemAhead {...componentProps} />;
   }),
 );
 

@@ -1,5 +1,7 @@
 'use client';
 import * as React from 'react';
+import * as ReactDOM from 'react-dom';
+import { ownerDocument } from '@base-ui/utils/owner';
 import { inertValue } from '@base-ui/utils/inertValue';
 import { useIsoLayoutEffect } from '@base-ui/utils/useIsoLayoutEffect';
 import { useStableCallback } from '@base-ui/utils/useStableCallback';
@@ -13,6 +15,7 @@ import type {
   UseAnchorPositioningSharedParameters,
 } from '../../internals/useAnchorPositioning';
 import { SelectPositionerContext } from './SelectPositionerContext';
+import { SelectPositionerMountedContext } from './SelectPositionerMountedContext';
 import { InternalBackdrop } from '../../utils/popups/InternalBackdrop';
 import { DROPDOWN_COLLISION_AVOIDANCE } from '../../internals/constants';
 import { clearStyles } from '../popup/utils';
@@ -24,16 +27,10 @@ import { useAnchoredPopupScrollLock } from '../../utils/popups/useAnchoredPopupS
 
 const FIXED: React.CSSProperties = { position: 'fixed' };
 
-/**
- * Positions the select popup.
- * Renders a `<div>` element.
- *
- * Documentation: [Base UI Select](https://base-ui.com/react/components/select)
- */
-export const SelectPositioner = React.forwardRef(function SelectPositioner(
-  componentProps: SelectPositioner.Props,
-  forwardedRef: React.ForwardedRef<HTMLDivElement>,
+const SelectPositionerView = React.memo(function SelectPositionerView(
+  viewProps: SelectPositioner.Props & { forwardedRef: React.ForwardedRef<HTMLDivElement> },
 ) {
+  const { forwardedRef, ...componentProps } = viewProps;
   const {
     anchor,
     className,
@@ -76,12 +73,8 @@ export const SelectPositioner = React.forwardRef(function SelectPositioner(
 
   const [controlledAlignItemWithTrigger, setControlledAlignItemWithTrigger] =
     React.useState(alignItemWithTrigger);
-  const alignItemWithTriggerActive =
-    mounted && controlledAlignItemWithTrigger && openMethod !== 'touch';
-
-  if (!mounted && controlledAlignItemWithTrigger !== alignItemWithTrigger) {
-    setControlledAlignItemWithTrigger(alignItemWithTrigger);
-  }
+  // The view mounts afresh for every open, so the state starts from the prop each time.
+  const alignItemWithTriggerActive = controlledAlignItemWithTrigger && openMethod !== 'touch';
 
   React.useImperativeHandle(
     store.context.alignItemWithTriggerActiveRef,
@@ -134,7 +127,6 @@ export const SelectPositioner = React.forwardRef(function SelectPositioner(
     transitionStatus,
     props: elementProps,
     refs: [forwardedRef, setPositionerElement],
-    hidden: !mounted,
     inert: !open,
   });
 
@@ -235,10 +227,54 @@ export const SelectPositioner = React.forwardRef(function SelectPositioner(
       onMapChange={onMapChange}
     >
       <SelectPositionerContext.Provider value={contextValue}>
-        {mounted && modal && <InternalBackdrop inert={inertValue(!open)} cutout={triggerElement} />}
+        {modal && <InternalBackdrop inert={inertValue(!open)} cutout={triggerElement} />}
         {element}
       </SelectPositionerContext.Provider>
     </CompositeList>
+  );
+});
+
+/**
+ * Positions the select popup.
+ * Renders a `<div>` element.
+ *
+ * Documentation: [Base UI Select](https://base-ui.com/react/components/select)
+ */
+export const SelectPositioner = React.forwardRef(function SelectPositioner(
+  componentProps: SelectPositioner.Props,
+  forwardedRef: React.ForwardedRef<HTMLDivElement>,
+) {
+  const store = useSelectRootContext();
+  const mounted = store.useState('mounted');
+  const interacting = store.useState('interacting');
+  const [fragment, setFragment] = React.useState<DocumentFragment | null>(null);
+
+  // Created on mount, so the first interaction can render into it right away. After mount,
+  // because the server can't render portals.
+  useIsoLayoutEffect(() => {
+    const nextFragment = ownerDocument(store.state.triggerElement).createDocumentFragment();
+    const closedItems = store.context.closedItems;
+    closedItems.fragment = nextFragment;
+    setFragment(nextFragment);
+    return () => {
+      closedItems.fragment = null;
+    };
+  }, [store]);
+
+  let content: React.ReactNode = null;
+  if (mounted) {
+    content = <SelectPositionerView {...componentProps} forwardedRef={forwardedRef} />;
+  } else if (interacting && fragment) {
+    // While closed and interacting, the whole tree renders into a fragment outside the
+    // document. The root reads the items' labels and values from it for typeahead. When not
+    // interacting, nothing renders.
+    content = ReactDOM.createPortal(componentProps.children, fragment);
+  }
+
+  return (
+    <SelectPositionerMountedContext.Provider value={mounted}>
+      {content}
+    </SelectPositionerMountedContext.Provider>
   );
 });
 

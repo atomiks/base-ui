@@ -11,6 +11,7 @@ import type { InteractionType } from '@base-ui/utils/useEnhancedClickHandler';
 import { clamp } from '@base-ui/utils/clamp';
 import { platform as floatingPlatform } from '@floating-ui/react-dom';
 import type { ClientRectObject } from '@floating-ui/react-dom';
+import { useSelectPositionerMounted } from '../positioner/SelectPositionerMountedContext';
 import { FloatingFocusManager } from '../../utils/popups/focus/FloatingFocusManager';
 import type { FloatingFocusManagerProps } from '../../utils/popups/focus/FloatingFocusManager';
 import type { BaseUIComponentProps, HTMLProps } from '../../internals/types';
@@ -34,15 +35,20 @@ import { useDirection } from '../../internals/direction-context/DirectionContext
 import * as SelectPositionerCssVars from '../positioner/SelectPositionerCssVars';
 import { useSelectFilterImpl } from '../filter-root/SelectFilterContext';
 
-interface SelectPopupPlainProps extends SelectPopupProps {
+export interface SelectPopupViewProps extends SelectPopupProps {
   /** A filter root's own initial focus target; the plain default focuses the highlighted item. */
   initialFocus?: FloatingFocusManagerProps['initialFocus'] | undefined;
 }
 
-export const SelectPopupPlain = React.forwardRef(function SelectPopup(
-  componentProps: SelectPopupPlainProps,
-  forwardedRef: React.ForwardedRef<HTMLDivElement>,
+/**
+ * The open popup, for the filterable select's popup to wrap. Takes its ref as `forwardedRef`.
+ *
+ * @internal
+ */
+export const SelectPopupView = React.memo(function SelectPopupView(
+  viewProps: SelectPopupViewProps & { forwardedRef: React.ForwardedRef<HTMLDivElement> },
 ) {
+  const { forwardedRef, ...componentProps } = viewProps;
   const { render, className, style, finalFocus, initialFocus, ...elementProps } = componentProps;
 
   const store = useSelectRootContext();
@@ -64,7 +70,6 @@ export const SelectPopupPlain = React.forwardRef(function SelectPopup(
   const id = store.useState('id');
   const open = store.useState('open');
   const openMethod = store.useState('openMethod');
-  const mounted = store.useState('mounted');
   const popupProps = store.useState('popupProps');
   const transitionStatus = store.useState('transitionStatus');
   const triggerElement = store.useState('triggerElement');
@@ -473,7 +478,6 @@ export const SelectPopupPlain = React.forwardRef(function SelectPopup(
       <FloatingFocusManager
         store={store}
         modal={false}
-        disabled={!mounted}
         openInteractionType={openMethod}
         initialFocus={initialFocus}
         returnFocus={finalFocus}
@@ -492,11 +496,20 @@ export const SelectPopupPlain = React.forwardRef(function SelectPopup(
  * Documentation: [Base UI Select](https://base-ui.com/react/components/select)
  */
 export const SelectPopup = React.forwardRef(function SelectPopup(
-  props: SelectPopup.Props,
+  componentProps: SelectPopup.Props,
   forwardedRef: React.ForwardedRef<HTMLDivElement>,
 ) {
-  const Popup = useSelectFilterImpl()?.Popup ?? SelectPopupPlain;
-  return <Popup {...props} ref={forwardedRef} />;
+  const filterImpl = useSelectFilterImpl();
+  // While closed, render only the children, so the parts inside stay mounted without this
+  // part's elements, state or effects.
+  const mounted = useSelectPositionerMounted() !== false;
+  if (!mounted) {
+    return <React.Fragment>{componentProps.children}</React.Fragment>;
+  }
+  if (filterImpl) {
+    return <filterImpl.Popup {...componentProps} ref={forwardedRef} />;
+  }
+  return <SelectPopupView {...componentProps} forwardedRef={forwardedRef} />;
 });
 
 export interface SelectPopupProps extends BaseUIComponentProps<'div', SelectPopupState> {

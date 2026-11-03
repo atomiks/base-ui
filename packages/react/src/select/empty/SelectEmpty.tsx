@@ -1,11 +1,20 @@
 'use client';
 import * as React from 'react';
+import { useSelectPositionerMounted } from '../positioner/SelectPositionerMountedContext';
 import { FilterDropdownEmpty } from '../../filter-dropdown/empty/FilterDropdownEmpty';
 import type {
   FilterDropdownEmptyProps,
   FilterDropdownEmptyState,
 } from '../../filter-dropdown/empty/FilterDropdownEmpty';
 import { useSelectFilterPart } from '../filter-root/SelectFilterContext';
+
+const SelectEmptyView = React.forwardRef(function SelectEmptyView(
+  props: SelectEmpty.Props,
+  forwardedRef: React.ForwardedRef<HTMLDivElement>,
+) {
+  useSelectFilterPart('Empty');
+  return <FilterDropdownEmpty {...props} ref={forwardedRef} />;
+});
 
 /**
  * A message shown when the select has no matching items.
@@ -15,11 +24,14 @@ import { useSelectFilterPart } from '../filter-root/SelectFilterContext';
  * Documentation: [Base UI Select](https://base-ui.com/react/components/select)
  */
 export const SelectEmpty = React.forwardRef(function SelectEmpty(
-  props: SelectEmpty.Props,
+  componentProps: SelectEmpty.Props,
   forwardedRef: React.ForwardedRef<HTMLDivElement>,
 ) {
-  useSelectFilterPart('Empty');
-  return <FilterDropdownEmpty {...props} ref={forwardedRef} />;
+  // Nothing here takes part in typeahead, so it renders nothing while the select is closed.
+  if (useSelectPositionerMounted() === false) {
+    return null;
+  }
+  return <SelectEmptyView {...componentProps} ref={forwardedRef} />;
 });
 
 export interface SelectEmptyState extends FilterDropdownEmptyState {}
