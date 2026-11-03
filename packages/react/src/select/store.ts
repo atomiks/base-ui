@@ -4,6 +4,7 @@ import { hasNullItemLabel, stringifyAsValue } from '../internals/resolveValueLab
 import type { Group } from '../internals/resolveValueLabel';
 import { popupStoreSelectors } from '../utils/popups/store';
 import type { SelectRoot } from './root/SelectRoot';
+import type { SelectClosedItems } from './root/SelectClosedItems';
 import { ValuePopupStore, valuePopupSelectors } from '../utils/popups/value-popup/ValuePopupStore';
 import type {
   ValuePopupContext,
@@ -40,6 +41,11 @@ export type State = ValuePopupState & {
   navigateFromSelected: boolean;
   inputProps: HTMLProps;
   highlightedItem: HTMLElement | undefined;
+  /**
+   * Whether focus is on the trigger or in the popup. While closed, the items render (outside the
+   * document) only then, for typeahead.
+   */
+  interacting: boolean;
 };
 
 /**
@@ -67,6 +73,7 @@ export type SelectStoreContext = ValuePopupContext<SelectRoot.OpenChangeEventDet
    * lifetime.
    */
   readonly filterable: boolean;
+  readonly closedItems: SelectClosedItems;
 
   // Callbacks. Initialized when the store is constructed and assigned during the root's
   // first render, so they are not `readonly`.
@@ -132,6 +139,7 @@ export const selectors = {
   scrollDownArrowVisible: (state: State) => state.scrollDownArrowVisible,
 
   hasScrollArrows: (state: State) => state.hasScrollArrows,
+  interacting: (state: State) => state.interacting,
 };
 
 export class SelectStore extends ValuePopupStore<

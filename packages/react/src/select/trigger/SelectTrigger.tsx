@@ -99,7 +99,6 @@ export const SelectTrigger = React.forwardRef(function SelectTrigger(
 
   const setTriggerElement = store.useStateSetter('triggerElement');
 
-  const timeoutFocus = useTimeout();
   const timeoutMouseDown = useTimeout();
   const selectedDelayTimeout = useTimeout();
 
@@ -155,16 +154,6 @@ export const SelectTrigger = React.forwardRef(function SelectTrigger(
         // The popup element shouldn't obscure the focused trigger.
         if (open && store.context.alignItemWithTriggerActiveRef.current) {
           store.setOpen(false, createChangeEventDetails(REASONS.none, event.nativeEvent));
-        }
-
-        // Saves a re-render on initial click: `forceMounted === true` mounts
-        // the items before `open === true`. We could sync those cycles better
-        // without a timeout, but this is enough for now. Typing on a filterable select's
-        // closed trigger opens it instead of matching items, so its popup mounts on open only.
-        if (!filterable) {
-          timeoutFocus.start(0, () => {
-            store.set('forceMounted', true);
-          });
         }
       },
       onBlur(event) {

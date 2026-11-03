@@ -2,19 +2,14 @@
 import * as React from 'react';
 import type { BaseUIComponentProps } from '../../internals/types';
 import { useSelectItemContext } from '../item/SelectItemContext';
+import { useSelectItemAheadContext } from '../item/SelectItemAhead';
 import type { TransitionStatus } from '../../internals/useTransitionStatus';
 import { ItemIndicator } from '../../utils/ItemIndicator';
 
-/**
- * Indicates whether the select item is selected.
- * Renders a `<span>` element.
- *
- * Documentation: [Base UI Select](https://base-ui.com/react/components/select)
- */
-export const SelectItemIndicator = React.forwardRef(function SelectItemIndicator(
-  componentProps: SelectItemIndicator.Props,
-  forwardedRef: React.ForwardedRef<HTMLSpanElement>,
+const SelectItemIndicatorView = React.memo(function SelectItemIndicatorView(
+  viewProps: SelectItemIndicator.Props & { forwardedRef: React.ForwardedRef<HTMLSpanElement> },
 ) {
+  const { forwardedRef, ...componentProps } = viewProps;
   const { selected } = useSelectItemContext();
 
   const shouldRender = componentProps.keepMounted || selected;
@@ -24,6 +19,26 @@ export const SelectItemIndicator = React.forwardRef(function SelectItemIndicator
 
   return <ItemIndicator {...componentProps} selected={selected} ref={forwardedRef} />;
 });
+
+/**
+ * Indicates whether the select item is selected.
+ * Renders a `<span>` element.
+ *
+ * Documentation: [Base UI Select](https://base-ui.com/react/components/select)
+ */
+export const SelectItemIndicator = React.memo(
+  React.forwardRef(function SelectItemIndicator(
+    componentProps: SelectItemIndicator.Props,
+    forwardedRef: React.ForwardedRef<HTMLSpanElement>,
+  ) {
+    // A closed item only takes part in typeahead, which the indicator has no part in.
+    if (useSelectItemAheadContext()) {
+      return null;
+    }
+
+    return <SelectItemIndicatorView {...componentProps} forwardedRef={forwardedRef} />;
+  }),
+);
 
 export interface SelectItemIndicatorState {
   /**

@@ -48,7 +48,7 @@ describe('<Select.Positioner />', () => {
     ),
   });
 
-  describe.skipIf(isJSDOM)('kept-mounted positioner', () => {
+  describe.skipIf(isJSDOM)('closed positioner', () => {
     it('does not retain stale coordinates while closed', async () => {
       const { user } = await render(
         <Select.Root defaultOpen>
@@ -66,21 +66,12 @@ describe('<Select.Positioner />', () => {
 
       await user.keyboard('{Escape}');
 
-      // The portal can remount around the close, so re-query the kept-mounted node.
+      // Rendering the full-size popup at coordinates computed for a closed positioner can
+      // overflow the layout viewport on the next open, making mobile Chrome zoom the page out.
+      // A closed select unmounts its positioner, so no coordinates carry over.
       await waitFor(() => {
-        expect(screen.getByTestId('positioner').hidden).toBe(true);
+        expect(screen.queryByTestId('positioner')).toBe(null);
       });
-
-      // Rendering the full-size popup at coordinates computed for the hidden (zero-size)
-      // positioner can overflow the layout viewport on the next open, making mobile Chrome
-      // zoom the page out. The positioner must sit at the viewport origin until positioned.
-      const closedPositioner = screen.getByTestId('positioner');
-      await waitFor(() => {
-        expect(closedPositioner.style.position).toBe('fixed');
-      });
-      expect(closedPositioner.style.transform).toBe('');
-      expect(closedPositioner.style.top).toBe('0px');
-      expect(closedPositioner.style.left).toBe('0px');
     });
   });
 });

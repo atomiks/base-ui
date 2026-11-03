@@ -15,13 +15,12 @@ export const SelectPortal = React.forwardRef(function SelectPortal(
   portalProps: SelectPortal.Props,
   forwardedRef: React.ForwardedRef<HTMLDivElement>,
 ) {
-  const store = useSelectRootContext();
-  const mounted = store.useState('mounted');
-  const forceMount = store.useState('forceMounted');
+  const mounted = useSelectRootContext().useState('mounted');
 
-  const shouldRender = mounted || forceMount;
-  if (!shouldRender) {
-    return null;
+  // While closed, the children render in place. `Select.Positioner` keeps them out of the
+  // document by rendering them into a `DocumentFragment`.
+  if (!mounted) {
+    return <React.Fragment>{portalProps.children}</React.Fragment>;
   }
 
   return <FloatingPortal ref={forwardedRef} {...portalProps} />;

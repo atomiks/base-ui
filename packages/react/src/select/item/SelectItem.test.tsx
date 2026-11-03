@@ -132,7 +132,6 @@ describe('<Select.Item />', () => {
 
     const value = screen.getByTestId('value');
     const trigger = screen.getByTestId('trigger');
-    const positioner = screen.getByTestId('positioner');
 
     expect(value.textContent).toBe('');
 
@@ -140,13 +139,15 @@ describe('<Select.Item />', () => {
 
     await flushMicrotasks();
 
+    expect(screen.getByTestId('positioner')).toBeVisible();
+
     fireEvent.click(screen.getByText('one'));
 
     await flushMicrotasks();
 
     expect(value.textContent).toBe('one');
 
-    expect(positioner).not.toBeVisible();
+    expect(screen.getByTestId('positioner')).not.toBeVisible();
   });
 
   it.skipIf(!isJSDOM)('navigating with keyboard should focus item', async () => {

@@ -580,7 +580,8 @@ describe('<Select.Popup />', () => {
 
     async function expectItemAligned(testId: string) {
       const value = screen.getByTestId('value');
-      const itemText = screen.getByTestId(testId);
+      // The items mount when the popup opens.
+      const itemText = await screen.findByTestId(testId);
 
       await waitFor(() => {
         expect(screen.getByTestId('positioner')).toHaveAttribute('data-side', 'none');
@@ -1085,54 +1086,6 @@ describe('<Select.Popup />', () => {
       }
     },
   );
-
-  it('does not resize the positioner when the list scrolls before the popup is placed', async () => {
-    await render(
-      <Select.Root defaultValue="a">
-        <Select.Trigger data-testid="trigger">
-          <Select.Value />
-        </Select.Trigger>
-        <Select.Positioner data-testid="positioner">
-          <Select.Popup>
-            <Select.ScrollUpArrow keepMounted data-testid="up-arrow" />
-            <Select.List
-              data-testid="list"
-              ref={(node) => {
-                if (!node) {
-                  return;
-                }
-
-                Object.defineProperty(node, 'scrollTop', { value: 100, configurable: true });
-                Object.defineProperty(node, 'scrollHeight', { value: 400, configurable: true });
-                Object.defineProperty(node, 'clientHeight', { value: 200, configurable: true });
-              }}
-            >
-              <Select.Item value="a">a</Select.Item>
-              <Select.Item value="b">b</Select.Item>
-            </Select.List>
-          </Select.Popup>
-        </Select.Positioner>
-      </Select.Root>,
-    );
-
-    const positioner = screen.getByTestId('positioner');
-    const geometryBefore = {
-      height: positioner.style.height,
-      top: positioner.style.top,
-      bottom: positioner.style.bottom,
-    };
-
-    // A closed popup has never been measured, so a stray scroll must neither rewrite the
-    // positioner geometry nor light up the scroll arrows.
-    fireEvent.scroll(screen.getByTestId('list'));
-
-    expect({
-      height: positioner.style.height,
-      top: positioner.style.top,
-      bottom: positioner.style.bottom,
-    }).toEqual(geometryBefore);
-    expect(screen.getByTestId('up-arrow')).not.toHaveAttribute('data-visible');
-  });
 
   describe.skipIf(isJSDOM)('aligned popup scroll resizing', () => {
     const docEl = document.documentElement;
@@ -1762,7 +1715,6 @@ describe('<Select.Popup />', () => {
     render,
     initialFocus: false,
     triggerRole: 'combobox',
-    alwaysMounted: true,
     createComponent: ({ children, finalFocus }) => (
       <Select.Root>
         <Select.Trigger>Open</Select.Trigger>

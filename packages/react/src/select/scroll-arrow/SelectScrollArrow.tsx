@@ -2,6 +2,7 @@
 import * as React from 'react';
 import { useTimeout } from '@base-ui/utils/useTimeout';
 import { useIsoLayoutEffect } from '@base-ui/utils/useIsoLayoutEffect';
+import { useSelectPositionerMounted } from '../positioner/SelectPositionerMountedContext';
 import type { BaseUIComponentProps } from '../../internals/types';
 import { useSelectRootContext } from '../root/SelectRootContext';
 import { useSelectPositionerContext } from '../positioner/SelectPositionerContext';
@@ -17,13 +18,10 @@ import {
   SCROLL_EDGE_TOLERANCE_PX,
 } from '../../utils/scrollEdges';
 
-/**
- * @internal
- */
-export const SelectScrollArrow = React.forwardRef(function SelectScrollArrow(
-  componentProps: SelectScrollArrow.Props,
-  forwardedRef: React.ForwardedRef<HTMLDivElement>,
+const SelectScrollArrowView = React.memo(function SelectScrollArrowView(
+  viewProps: SelectScrollArrow.Props & { forwardedRef: React.ForwardedRef<HTMLDivElement> },
 ) {
+  const { forwardedRef, ...componentProps } = viewProps;
   const { render, className, style, direction, keepMounted, ...elementProps } = componentProps;
 
   const isUp = direction === 'up';
@@ -148,6 +146,21 @@ export const SelectScrollArrow = React.forwardRef(function SelectScrollArrow(
   }
 
   return element;
+});
+
+/**
+ * @internal
+ */
+export const SelectScrollArrow = React.forwardRef(function SelectScrollArrow(
+  componentProps: SelectScrollArrow.Props,
+  forwardedRef: React.ForwardedRef<HTMLDivElement>,
+) {
+  // Nothing in this part takes part in typeahead, so it renders nothing while closed.
+  const mounted = useSelectPositionerMounted() !== false;
+  if (!mounted) {
+    return null;
+  }
+  return <SelectScrollArrowView {...componentProps} forwardedRef={forwardedRef} />;
 });
 
 export interface SelectScrollArrowState {

@@ -1,5 +1,6 @@
 'use client';
 import * as React from 'react';
+import { useSelectPositionerMounted } from '../positioner/SelectPositionerMountedContext';
 import type { BaseUIComponentProps, HTMLProps } from '../../internals/types';
 import { useSelectRootContext } from '../root/SelectRootContext';
 import { useSelectPositionerContext } from '../positioner/SelectPositionerContext';
@@ -8,10 +9,10 @@ import { styleDisableScrollbar } from '../../utils/styles';
 import { LIST_FUNCTIONAL_STYLES } from '../popup/utils';
 import { useSelectFilterImpl } from '../filter-root/SelectFilterContext';
 
-export const SelectListPlain = React.forwardRef(function SelectList(
-  componentProps: SelectList.Props,
-  forwardedRef: React.ForwardedRef<HTMLDivElement>,
+const SelectListView = React.memo(function SelectListView(
+  viewProps: SelectList.Props & { forwardedRef: React.ForwardedRef<HTMLDivElement> },
 ) {
+  const { forwardedRef, ...componentProps } = viewProps;
   const { render, className, style, ...elementProps } = componentProps;
 
   const store = useSelectRootContext();
@@ -47,17 +48,38 @@ export const SelectListPlain = React.forwardRef(function SelectList(
 });
 
 /**
+ * The open part, taking a ref, for the filterable select's part to wrap.
+ *
+ * @internal
+ */
+export const SelectListPlain = React.forwardRef(function SelectListPlain(
+  componentProps: SelectList.Props,
+  forwardedRef: React.ForwardedRef<HTMLDivElement>,
+) {
+  return <SelectListView {...componentProps} forwardedRef={forwardedRef} />;
+});
+
+/**
  * A container for the select items.
  * Renders a `<div>` element.
  *
  * Documentation: [Base UI Select](https://base-ui.com/react/components/select)
  */
 export const SelectList = React.forwardRef(function SelectList(
-  props: SelectList.Props,
+  componentProps: SelectList.Props,
   forwardedRef: React.ForwardedRef<HTMLDivElement>,
 ) {
-  const List = useSelectFilterImpl()?.List ?? SelectListPlain;
-  return <List {...props} ref={forwardedRef} />;
+  const filterImpl = useSelectFilterImpl();
+  // While closed, render only the children, so the parts inside stay mounted without this
+  // part's elements, state or effects.
+  const mounted = useSelectPositionerMounted() !== false;
+  if (!mounted) {
+    return <React.Fragment>{componentProps.children}</React.Fragment>;
+  }
+  if (filterImpl) {
+    return <filterImpl.List {...componentProps} ref={forwardedRef} />;
+  }
+  return <SelectListView {...componentProps} forwardedRef={forwardedRef} />;
 });
 
 export interface SelectListProps extends BaseUIComponentProps<'div', SelectListState> {}

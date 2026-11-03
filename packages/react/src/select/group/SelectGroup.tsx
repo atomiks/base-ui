@@ -1,14 +1,15 @@
 'use client';
 import * as React from 'react';
+import { useSelectPositionerMounted } from '../positioner/SelectPositionerMountedContext';
 import type { BaseUIComponentProps } from '../../internals/types';
 import { SelectGroupContext } from './SelectGroupContext';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useSelectFilterImpl } from '../filter-root/SelectFilterContext';
 
-export const SelectGroupPlain = React.forwardRef(function SelectGroup(
-  componentProps: SelectGroup.Props,
-  forwardedRef: React.ForwardedRef<HTMLDivElement>,
+const SelectGroupView = React.memo(function SelectGroupView(
+  viewProps: SelectGroup.Props & { forwardedRef: React.ForwardedRef<HTMLDivElement> },
 ) {
+  const { forwardedRef, ...componentProps } = viewProps;
   const { render, className, style, ...elementProps } = componentProps;
 
   const [labelId, setLabelId] = React.useState<string | undefined>();
@@ -36,17 +37,38 @@ export const SelectGroupPlain = React.forwardRef(function SelectGroup(
 });
 
 /**
+ * The open group, taking a ref, for the filterable select's group to wrap.
+ *
+ * @internal
+ */
+export const SelectGroupPlain = React.forwardRef(function SelectGroupPlain(
+  componentProps: SelectGroup.Props,
+  forwardedRef: React.ForwardedRef<HTMLDivElement>,
+) {
+  return <SelectGroupView {...componentProps} forwardedRef={forwardedRef} />;
+});
+
+/**
  * Groups related select items with the corresponding label.
  * Renders a `<div>` element.
  *
  * Documentation: [Base UI Select](https://base-ui.com/react/components/select)
  */
 export const SelectGroup = React.forwardRef(function SelectGroup(
-  props: SelectGroup.Props,
+  componentProps: SelectGroup.Props,
   forwardedRef: React.ForwardedRef<HTMLDivElement>,
 ) {
-  const Group = useSelectFilterImpl()?.Group ?? SelectGroupPlain;
-  return <Group {...props} ref={forwardedRef} />;
+  const filterImpl = useSelectFilterImpl();
+  // While closed, render only the children, so the parts inside stay mounted without this
+  // part's elements, state or effects.
+  const mounted = useSelectPositionerMounted() !== false;
+  if (!mounted) {
+    return <React.Fragment>{componentProps.children}</React.Fragment>;
+  }
+  if (filterImpl) {
+    return <filterImpl.Group {...componentProps} ref={forwardedRef} />;
+  }
+  return <SelectGroupView {...componentProps} forwardedRef={forwardedRef} />;
 });
 
 export interface SelectGroupState {}

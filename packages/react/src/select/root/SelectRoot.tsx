@@ -9,6 +9,9 @@ import { useControlled } from '@base-ui/utils/useControlled';
 import { useIsoLayoutEffect } from '@base-ui/utils/useIsoLayoutEffect';
 import { useStableCallback } from '@base-ui/utils/useStableCallback';
 import { useValueAsRef } from '@base-ui/utils/useValueAsRef';
+import { useRefWithInit } from '@base-ui/utils/useRefWithInit';
+import { activeElement, contains } from '@base-ui/utils/shadowDom';
+import { ownerDocument } from '@base-ui/utils/owner';
 import { EMPTY_ARRAY, EMPTY_OBJECT } from '@base-ui/utils/empty';
 import { useClick } from '../../utils/popups/interactions/useClick';
 import { useDismiss } from '../../utils/popups/interactions/useDismiss';
@@ -28,6 +31,7 @@ import type {
   BaseUIHighlightEventDetails,
 } from '../../internals/createBaseUIEventDetails';
 import { getHighlightReason } from '../../utils/getHighlightReason';
+import { SelectClosedItems } from './SelectClosedItems';
 import { REASONS } from '../../internals/reasons';
 import { FOCUSABLE_POPUP_PROPS } from '../../utils/popups/popupStoreUtils';
 import { useFormContext } from '../../internals/form-context/FormContext';
@@ -42,7 +46,7 @@ import {
 import { useValueChanged } from '../../internals/useValueChanged';
 import { useOpenInteractionType } from '../../utils/popups/interactions/useOpenInteractionType';
 import { getMaxScrollOffset, normalizeScrollOffset } from '../../utils/scrollEdges';
-import { mergeProps } from '../../merge-props';
+import { mergeProps, mergePropsN } from '../../merge-props';
 import { NOOP } from '../../internals/noop';
 import { getHiddenInputType } from '../../internals/getHiddenInputType';
 import { useSingleAnchorPopupRoot } from '../../utils/popups/popupRoot';
@@ -141,6 +145,7 @@ export function SelectRootInternal<Value, Multiple extends boolean | undefined =
   });
   const alignItemWithTriggerActiveRef = React.useRef(false);
   const initialValueRef = React.useRef(value);
+  const closedItems = useRefWithInit(() => new SelectClosedItems()).current;
 
   // Calls `onOpenChange` for every open change that isn't ignored, then applies the select's own
   // handling of an accepted change before the store commits it.
@@ -207,6 +212,7 @@ export function SelectRootInternal<Value, Multiple extends boolean | undefined =
           navigateFromSelected: false,
           inputProps: EMPTY_OBJECT,
           highlightedItem: undefined,
+          interacting: false,
         },
         {
           ...createPopupStoreContext(),
@@ -228,6 +234,7 @@ export function SelectRootInternal<Value, Multiple extends boolean | undefined =
           alignItemWithTriggerActiveRef,
           initialValueRef,
           filterable,
+          closedItems,
         },
         selectors,
       ),
@@ -285,19 +292,30 @@ export function SelectRootInternal<Value, Multiple extends boolean | undefined =
 
   useIsoLayoutEffect(
     function syncSelectedIndex() {
+      // `mounted` turns true in the same commit that opens, before the popup renders its items,
+      // so the positioner element is what shows they're there.
+      const popupItemsMounted = open && store.state.positionerElement != null;
+
+      // Opening, with the popup's items not mounted yet: the closed list is what's there, and
+      // the value may have changed in the same update.
+      if (open && !popupItemsMounted) {
+        closedItems.read(listRef, labelsRef, valuesRef);
+      }
+
       const nextIndex = findSelectionIndex(valuesRef.current, value, isItemEqualToValue, multiple);
 
       if (nextIndex === null) {
         selectedItemTextRef.current = null;
       }
 
-      if (open) {
+      // Once mounted, the popup's items claim the selected index themselves.
+      if (popupItemsMounted) {
         return;
       }
 
       store.set('selectedIndex', nextIndex);
     },
-    [multiple, open, value, isItemEqualToValue, store],
+    [multiple, open, value, isItemEqualToValue, store, closedItems],
   );
 
   useValueChanged(value, () => {
@@ -413,7 +431,7 @@ export function SelectRootInternal<Value, Multiple extends boolean | undefined =
     // Skip disabled items while matching so typeahead advances to the next selectable item
     // (a click can never select a disabled item and native `<select>` skips them too). Resolve
     // the disabled state from the element via the attribute-only `isElementDisabled` so the
-    // hidden, force-mounted items used for closed-trigger typeahead aren't dropped by the
+    // items a closed select renders outside the document aren't dropped by the
     // `elementsRef`/visibility filter that `disabledIndices` deliberately sidesteps.
     disabledIndices: (index) => isElementDisabled(listRef.current[index]),
     onMatch(index, event) {
@@ -451,22 +469,99 @@ export function SelectRootInternal<Value, Multiple extends boolean | undefined =
     filterable ? (listNavigation.reference ?? EMPTY_OBJECT) : EMPTY_OBJECT,
   );
 
+  // While closed, the items render outside the document without registering with the list,
+  // and only while interacting. Read them into the list refs before anything uses them: once they
+  // mount, so the selected index is current before the first keystroke, and on keydown, ahead of
+  // typeahead, in case they changed since.
+  const readClosedItems = useStableCallback(() => {
+    if (store.state.mounted || !closedItems.read(listRef, labelsRef, valuesRef)) {
+      return;
+    }
+    store.set(
+      'selectedIndex',
+      findSelectionIndex(
+        valuesRef.current,
+        store.state.selectedValue,
+        isItemEqualToValue,
+        multiple,
+      ),
+    );
+  });
+
+  const interacting = store.useState('interacting');
+
+  // After the children, so the closed items have mounted.
+  useIsoLayoutEffect(() => {
+    if (interacting) {
+      readClosedItems();
+    }
+  }, [interacting, readClosedItems]);
+
+  // Interacting covers focus on the trigger and in the popup, so moving between them keeps it.
+  const isWithinSelect = useStableCallback(
+    (target: EventTarget | null) =>
+      contains(store.state.triggerElement, target as Element | null) ||
+      contains(store.state.positionerElement, target as Element | null),
+  );
+
+  // Only on a change: the popup blurs as it unmounts, which shouldn't re-render the root.
+  const setInteracting = useStableCallback((nextInteracting: boolean) => {
+    if (store.state.interacting !== nextInteracting) {
+      store.set('interacting', nextInteracting);
+    }
+  });
+
+  // Focus leaving the trigger or the popup for somewhere outside both ends the interaction.
+  // Focusing the trigger or opening the popup starts one.
+  const popupInteractionProps = React.useMemo(
+    () => ({
+      onBlur(event: React.FocusEvent) {
+        if (!isWithinSelect(event.relatedTarget)) {
+          setInteracting(false);
+        }
+      },
+    }),
+    [setInteracting, isWithinSelect],
+  );
+
+  // An open popup counts as interacting however it opened (`defaultOpen`, a controlled `open`),
+  // so focus returning to the trigger as it closes doesn't change anything.
+  useIsoLayoutEffect(() => {
+    if (open) {
+      setInteracting(true);
+    }
+  }, [open, setInteracting]);
+
+  const triggerInteractionProps = React.useMemo(
+    () => ({
+      ...popupInteractionProps,
+      onFocus() {
+        setInteracting(true);
+      },
+      onKeyDown: readClosedItems,
+    }),
+    [popupInteractionProps, setInteracting, readClosedItems],
+  );
+
   // `Select.Trigger` applies the id itself from the store, so it's deliberately not merged here.
   const mergedTriggerProps = React.useMemo(
     () =>
-      mergeProps(
+      mergePropsN([
         typeahead.reference,
         openTriggerProps,
         dismiss.reference,
         click.reference,
         interactionTypeProps,
-      ),
+        // Rightmost, so it runs before the other handlers.
+        triggerInteractionProps,
+      ]),
     [
       click.reference,
       typeahead.reference,
       openTriggerProps,
       dismiss.reference,
       interactionTypeProps,
+      triggerInteractionProps,
     ],
   );
 
@@ -477,8 +572,9 @@ export function SelectRootInternal<Value, Multiple extends boolean | undefined =
         typeahead.floating,
         listNavigation.floating,
         dismiss.floating,
+        popupInteractionProps,
       ),
-    [typeahead.floating, listNavigation.floating, dismiss.floating],
+    [typeahead.floating, listNavigation.floating, dismiss.floating, popupInteractionProps],
   );
 
   const itemProps =
@@ -603,8 +699,17 @@ export function SelectRootInternal<Value, Multiple extends boolean | undefined =
               }
             }
 
-            store.set('forceMounted', true);
-            queueMicrotask(handleChange);
+            // Autofill doesn't focus the trigger: render the closed items for the match, then
+            // drop them again unless the trigger has focus by then.
+            setInteracting(true);
+            queueMicrotask(() => {
+              readClosedItems();
+              handleChange();
+              const triggerElement = store.state.triggerElement;
+              if (!contains(triggerElement, activeElement(ownerDocument(triggerElement)))) {
+                setInteracting(false);
+              }
+            });
           },
         })}
         id={generatedId && hiddenInputName == null ? `${generatedId}-hidden-input` : undefined}

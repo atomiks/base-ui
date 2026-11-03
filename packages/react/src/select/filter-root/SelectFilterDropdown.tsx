@@ -293,6 +293,16 @@ export function SelectFilterDropdown(props: SelectFilterDropdownProps) {
 
   const highlightMatches = autoHighlight || typedOpen;
 
+  // A virtualized list keeps the select's values in step with the filtered `items`, so the items
+  // a closed select renders mustn't replace them.
+  useIsoLayoutEffect(() => {
+    const closedItems = store.context.closedItems;
+    closedItems.fromData = virtualized;
+    return () => {
+      closedItems.fromData = false;
+    };
+  }, [store, virtualized]);
+
   const { virtualizedCount, getVirtualIndex, registerVirtualItem, syncVirtualList } =
     useSelectFilterVirtualList(
       virtualized,
