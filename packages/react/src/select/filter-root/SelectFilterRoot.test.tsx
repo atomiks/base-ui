@@ -1140,6 +1140,16 @@ describe('<Select.FilterProvider><Select.Root/></Select.FilterProvider>', () => 
       });
     });
 
+    it('types ahead on the closed trigger through items it does not render', async () => {
+      const { user } = await render(<Virtualized />);
+      await act(() => screen.getByTestId('trigger').focus());
+
+      await user.keyboard('Item 50');
+
+      expect(screen.getByTestId('value')).toHaveTextContent('Item 50');
+      expect(screen.queryByRole('dialog')).toBe(null);
+    });
+
     it('opens at a selected item that is not mounted', async () => {
       const { user } = await render(<Virtualized root={{ defaultValue: 'v50' }} />);
       await user.click(screen.getByTestId('trigger'));
@@ -1540,68 +1550,46 @@ describe('<Select.FilterProvider><Select.Root/></Select.FilterProvider>', () => 
   });
 
   describe('typing on the closed trigger', () => {
-    it('opens the select with the typed character as the query', async () => {
+    it('selects the matching item and keeps the select closed', async () => {
       const { user } = await render(<Test />);
-      const trigger = screen.getByTestId('trigger');
-      await act(() => trigger.focus());
-      expect(screen.queryByRole('dialog')).toBe(null);
+      await act(() => screen.getByTestId('trigger').focus());
+      expect(screen.getByTestId('value')).toHaveTextContent('');
 
       await user.keyboard('j');
 
-      const input = await screen.findByRole('combobox', { name: 'Filter countries' });
-      await waitFor(() => {
-        expect(input).toHaveFocus();
-      });
-      expect(input).toHaveValue('j');
-      expect(screen.getAllByRole('option').map((option) => option.textContent)).toEqual(['Japan']);
+      expect(screen.getByTestId('value')).toHaveTextContent('Japan');
+      expect(screen.queryByRole('dialog')).toBe(null);
     });
 
-    it('highlights the first match', async () => {
-      const { user } = await render(<Test />);
+    it('steps through the items that start with a repeated letter', async () => {
+      const items = [
+        { value: 'ca', label: 'Canada' },
+        { value: 'cl', label: 'Chile' },
+        { value: 'cn', label: 'China' },
+      ];
+      const { user } = await render(<Test items={items} />);
       await act(() => screen.getByTestId('trigger').focus());
 
-      await user.keyboard('n');
-
-      const input = await screen.findByRole('combobox', { name: 'Filter countries' });
-      expect(screen.getAllByRole('option').map((option) => option.textContent)).toEqual([
-        'France',
-        'Germany',
-        'Japan',
-      ]);
-      await waitFor(() => {
-        expect(input).toHaveAttribute(
-          'aria-activedescendant',
-          screen.getByRole('option', { name: 'France' }).id,
-        );
-      });
+      await user.keyboard('c');
+      expect(screen.getByTestId('value')).toHaveTextContent('Canada');
+      await user.keyboard('c');
+      expect(screen.getByTestId('value')).toHaveTextContent('Chile');
+      await user.keyboard('c');
+      expect(screen.getByTestId('value')).toHaveTextContent('China');
+      expect(screen.queryByRole('dialog')).toBe(null);
     });
 
-    it('does not highlight matches once reopened by a press', async () => {
-      const { user } = await render(<Test />);
-      const trigger = screen.getByTestId('trigger');
-      await act(() => trigger.focus());
-      await user.keyboard('n');
-      const input = await screen.findByRole('combobox', { name: 'Filter countries' });
-      await waitFor(() => {
-        expect(input).toHaveAttribute('aria-activedescendant');
-      });
+    it('does nothing in a multiple select, like any select', async () => {
+      const { user } = await render(<Test root={{ multiple: true }} />);
+      await act(() => screen.getByTestId('trigger').focus());
 
-      await user.keyboard('[Escape]');
-      await waitFor(() => {
-        expect(screen.queryByRole('dialog')).toBe(null);
-      });
-      await user.click(trigger);
-      const reopenedInput = await screen.findByRole('combobox', { name: 'Filter countries' });
-      await waitFor(() => {
-        expect(reopenedInput).toHaveFocus();
-      });
-      await user.keyboard('n');
+      await user.keyboard('j');
 
-      expect(screen.getAllByRole('option')).toHaveLength(3);
-      expect(reopenedInput).not.toHaveAttribute('aria-activedescendant');
+      expect(screen.getByTestId('value')).toHaveTextContent('');
+      expect(screen.queryByRole('dialog')).toBe(null);
     });
 
-    it.skipIf(isJSDOM)('replaces the previous query when typed during the exit', async () => {
+    it.skipIf(isJSDOM)('selects without reopening while the popup animates out', async () => {
       globalThis.BASE_UI_ANIMATIONS_DISABLED = false;
       const style = document.createElement('style');
       style.textContent =
@@ -1615,7 +1603,6 @@ describe('<Select.FilterProvider><Select.Root/></Select.FilterProvider>', () => 
       await waitFor(() => {
         expect(input).toHaveFocus();
       });
-      await user.keyboard('fr');
 
       // Shift+Tab closes the select and focuses the trigger while the popup animates out.
       await user.keyboard('{Shift>}{Tab}{/Shift}');
@@ -1625,11 +1612,8 @@ describe('<Select.FilterProvider><Select.Root/></Select.FilterProvider>', () => 
       expect(screen.getByTestId('trigger')).toHaveFocus();
       await user.keyboard('j');
 
-      await waitFor(() => {
-        expect(screen.getByRole('dialog')).toHaveAttribute('data-open');
-      });
-      expect(input).toHaveValue('j');
-      expect(screen.getAllByRole('option').map((option) => option.textContent)).toEqual(['Japan']);
+      expect(screen.getByTestId('value')).toHaveTextContent('Japan');
+      expect(screen.getByRole('dialog')).toHaveAttribute('data-ending-style');
     });
   });
 

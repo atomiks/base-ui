@@ -422,9 +422,10 @@ export function SelectRootInternal<Value, Multiple extends boolean | undefined =
 
   const typeahead = useTypeahead(store, {
     // Typeahead on an open popup only moves the highlight, so it remains available while
-    // `readOnly`. The closed-trigger variant commits a value instead, so it doesn't. In a
-    // filterable select the input owns typing, so typeahead would race the filter query.
-    enabled: !disabled && !filterable && (open || (!readOnly && !multiple)),
+    // `readOnly`. The closed-trigger variant commits a value instead, so it doesn't. An open
+    // filterable select's input owns typing, so typeahead would race the filter query; closed, it
+    // types ahead on the trigger like any select.
+    enabled: !disabled && ((open && !filterable) || (!open && !readOnly && !multiple)),
     listRef: labelsRef,
     activeIndex,
     selectedIndex,
@@ -433,7 +434,15 @@ export function SelectRootInternal<Value, Multiple extends boolean | undefined =
     // the disabled state from the element via the attribute-only `isElementDisabled` so the
     // items a closed select renders outside the document aren't dropped by the
     // `elementsRef`/visibility filter that `disabledIndices` deliberately sidesteps.
-    disabledIndices: (index) => isElementDisabled(listRef.current[index]),
+    // A virtualized filterable select's list comes from its `items`, which renders only some
+    // options, so an option without an element isn't disabled, just not rendered.
+    disabledIndices: (index) => {
+      const element = listRef.current[index];
+      if (element == null && closedItems.fromData) {
+        return false;
+      }
+      return isElementDisabled(element);
+    },
     onMatch(index, event) {
       if (open) {
         if (index !== store.state.activeIndex) {

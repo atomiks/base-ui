@@ -126,15 +126,11 @@ export function SelectFilterDropdown(props: SelectFilterDropdownProps) {
   // Navigation starts from the selected option until the query changes during this open. It
   // stays off through the exit, so closing doesn't highlight the selected option.
   const [queryChanged, setQueryChanged] = React.useState(false);
-  // Like a select-only combobox, typing on the closed trigger highlights the first match.
-  const [typedOpen, setTypedOpen] = React.useState(false);
   const [previousOpen, setPreviousOpen] = React.useState(open);
   if (open !== previousOpen) {
     setPreviousOpen(open);
     if (open) {
       setQueryChanged(false);
-    } else {
-      setTypedOpen(false);
     }
   }
 
@@ -149,10 +145,6 @@ export function SelectFilterDropdown(props: SelectFilterDropdownProps) {
         return;
       }
       setValue(nextValue);
-      // Only the closed trigger changes the query from a keydown; the input reports input events.
-      if (!store.state.open && eventDetails.event.type === 'keydown') {
-        setTypedOpen(true);
-      }
       // A reopen during the exit settles the pending close reset, which is no query change.
       if (eventDetails.reason !== REASONS.popupClose) {
         setQueryChanged(true);
@@ -291,8 +283,6 @@ export function SelectFilterDropdown(props: SelectFilterDropdownProps) {
     });
   }, [query, store]);
 
-  const highlightMatches = autoHighlight || typedOpen;
-
   // A virtualized list keeps the select's values in step with the filtered `items`, so the items
   // a closed select renders mustn't replace them.
   useIsoLayoutEffect(() => {
@@ -303,11 +293,25 @@ export function SelectFilterDropdown(props: SelectFilterDropdownProps) {
     };
   }, [store, virtualized]);
 
+  // Typing on the closed trigger matches the labels, and a virtualized list renders only some
+  // options, so its labels come from the filtered `items` too, labelled as the filter labels them.
+  useIsoLayoutEffect(() => {
+    if (!virtualized || mounted) {
+      return;
+    }
+    store.context.labelsRef.current = flattenLeafItems(getFilteredItems().filteredItems).map(
+      (item: any) =>
+        typeof item.label === 'string'
+          ? item.label
+          : stringifyAsLabel(item.value, itemToStringLabel),
+    );
+  }, [store, virtualized, mounted, getFilteredItems, itemToStringLabel]);
+
   const { virtualizedCount, getVirtualIndex, registerVirtualItem, syncVirtualList } =
     useSelectFilterVirtualList(
       virtualized,
       virtualized ? getFilteredItems().filteredValues : NO_VALUES,
-      open && (highlightMatches === 'always' || (highlightMatches && query.trim() !== '')),
+      open && (autoHighlight === 'always' || (autoHighlight && query.trim() !== '')),
       syncActiveItem,
     );
 
@@ -341,7 +345,7 @@ export function SelectFilterDropdown(props: SelectFilterDropdownProps) {
             onValueChange={handleValueChange}
             // The rendered options of a virtualized list are already filtered.
             filter={virtualized ? null : filter}
-            autoHighlight={highlightMatches}
+            autoHighlight={autoHighlight}
             locale={locale}
             triggerId={triggerId}
             listRef={store.context.listRef}
