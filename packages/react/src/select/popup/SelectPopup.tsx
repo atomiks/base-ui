@@ -35,13 +35,18 @@ import { useDirection } from '../../internals/direction-context/DirectionContext
 import * as SelectPositionerCssVars from '../positioner/SelectPositionerCssVars';
 import { useSelectFilterImpl } from '../filter-root/SelectFilterContext';
 
-interface SelectPopupPlainProps extends SelectPopupProps {
+export interface SelectPopupViewProps extends SelectPopupProps {
   /** A filter root's own initial focus target; the plain default focuses the highlighted item. */
   initialFocus?: FloatingFocusManagerProps['initialFocus'] | undefined;
 }
 
-const SelectPopupView = React.memo(function SelectPopupView(
-  viewProps: SelectPopupPlainProps & { forwardedRef: React.ForwardedRef<HTMLDivElement> },
+/**
+ * The open popup, for the filterable select's popup to wrap. Takes its ref as `forwardedRef`.
+ *
+ * @internal
+ */
+export const SelectPopupView = React.memo(function SelectPopupView(
+  viewProps: SelectPopupViewProps & { forwardedRef: React.ForwardedRef<HTMLDivElement> },
 ) {
   const { forwardedRef, ...componentProps } = viewProps;
   const { render, className, style, finalFocus, initialFocus, ...elementProps } = componentProps;
@@ -482,18 +487,6 @@ const SelectPopupView = React.memo(function SelectPopupView(
       </FloatingFocusManager>
     </React.Fragment>
   );
-});
-
-/**
- * The open popup, taking a ref, for the filterable select's popup to wrap.
- *
- * @internal
- */
-export const SelectPopupPlain = React.forwardRef(function SelectPopupPlain(
-  componentProps: SelectPopupPlainProps,
-  forwardedRef: React.ForwardedRef<HTMLDivElement>,
-) {
-  return <SelectPopupView {...componentProps} forwardedRef={forwardedRef} />;
 });
 
 /**

@@ -4,8 +4,8 @@ import { useMergedRefs } from '@base-ui/utils/useMergedRefs';
 import { useFilterDropdownItem } from '../../filter-dropdown/item/useFilterDropdownItem';
 import { useBaseUiId } from '../../internals/useBaseUiId';
 import { mergeProps } from '../../merge-props';
-import { SelectItemPlain } from '../item/SelectItem';
-import type { SelectItemProps } from '../item/SelectItem';
+import { SelectItemView } from '../item/SelectItem';
+import type { SelectItemProps, SelectItemViewProps } from '../item/SelectItem';
 
 function preventDefault(event: React.MouseEvent) {
   event.preventDefault();
@@ -32,10 +32,9 @@ export const SelectFilterItem = React.forwardRef(function SelectFilterItem(
     return null;
   }
 
-  const itemProps = mergeProps<typeof SelectItemPlain>(
-    { id, tabIndex: -1, onMouseDown: preventDefault },
-    props,
-  );
+  const itemProps = mergeProps<
+    React.ForwardRefExoticComponent<SelectItemViewProps & React.RefAttributes<HTMLElement>>
+  >({ id, tabIndex: -1, onMouseDown: preventDefault }, props);
 
-  return <SelectItemPlain {...itemProps} ref={ref} />;
+  return <SelectItemView {...itemProps} forwardedRef={ref} />;
 });

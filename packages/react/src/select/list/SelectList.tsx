@@ -48,18 +48,6 @@ const SelectListView = React.memo(function SelectListView(
 });
 
 /**
- * The open part, taking a ref, for the filterable select's part to wrap.
- *
- * @internal
- */
-export const SelectListPlain = React.forwardRef(function SelectListPlain(
-  componentProps: SelectList.Props,
-  forwardedRef: React.ForwardedRef<HTMLDivElement>,
-) {
-  return <SelectListView {...componentProps} forwardedRef={forwardedRef} />;
-});
-
-/**
  * A container for the select items.
  * Renders a `<div>` element.
  *

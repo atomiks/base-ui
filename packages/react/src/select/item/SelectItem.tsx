@@ -20,13 +20,18 @@ import { removeItem } from '../../internals/itemEquality';
 import { isVirtualClick } from '../../utils/popups/event';
 import { useSelectFilterImpl } from '../filter-root/SelectFilterContext';
 
-interface SelectItemPlainProps extends SelectItemProps {
+export interface SelectItemViewProps extends SelectItemProps {
   /** Set by the filter, which points the input's `aria-activedescendant` at the option. */
   id?: string | undefined;
 }
 
-const SelectItemView = React.memo(function SelectItemView(
-  viewProps: SelectItemPlainProps & { forwardedRef: React.ForwardedRef<HTMLElement> },
+/**
+ * The open item, for the filterable select's item to wrap. Takes its ref as `forwardedRef`.
+ *
+ * @internal
+ */
+export const SelectItemView = React.memo(function SelectItemView(
+  viewProps: SelectItemViewProps & { forwardedRef: React.ForwardedRef<HTMLElement> },
 ) {
   const { forwardedRef, ...componentProps } = viewProps;
   const {
@@ -222,18 +227,6 @@ const SelectItemView = React.memo(function SelectItemView(
   );
 
   return <SelectItemContext.Provider value={contextValue}>{element}</SelectItemContext.Provider>;
-});
-
-/**
- * The open item, taking a ref, for the filterable select's item to wrap.
- *
- * @internal
- */
-export const SelectItemPlain = React.forwardRef(function SelectItemPlain(
-  componentProps: SelectItemPlainProps,
-  forwardedRef: React.ForwardedRef<HTMLElement>,
-) {
-  return <SelectItemView {...componentProps} forwardedRef={forwardedRef} />;
 });
 
 /**

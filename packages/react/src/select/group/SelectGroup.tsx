@@ -6,7 +6,12 @@ import { SelectGroupContext } from './SelectGroupContext';
 import { useRenderElement } from '../../internals/useRenderElement';
 import { useSelectFilterImpl } from '../filter-root/SelectFilterContext';
 
-const SelectGroupView = React.memo(function SelectGroupView(
+/**
+ * The open group, for the filterable select's group to wrap. Takes its ref as `forwardedRef`.
+ *
+ * @internal
+ */
+export const SelectGroupView = React.memo(function SelectGroupView(
   viewProps: SelectGroup.Props & { forwardedRef: React.ForwardedRef<HTMLDivElement> },
 ) {
   const { forwardedRef, ...componentProps } = viewProps;
@@ -34,18 +39,6 @@ const SelectGroupView = React.memo(function SelectGroupView(
   });
 
   return <SelectGroupContext.Provider value={contextValue}>{element}</SelectGroupContext.Provider>;
-});
-
-/**
- * The open group, taking a ref, for the filterable select's group to wrap.
- *
- * @internal
- */
-export const SelectGroupPlain = React.forwardRef(function SelectGroupPlain(
-  componentProps: SelectGroup.Props,
-  forwardedRef: React.ForwardedRef<HTMLDivElement>,
-) {
-  return <SelectGroupView {...componentProps} forwardedRef={forwardedRef} />;
 });
 
 /**
