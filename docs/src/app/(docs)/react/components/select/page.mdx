@@ -15,7 +15,7 @@ import { DemoSelectHero } from './demos/hero';
 - **Prefer Combobox for large lists**: Select renders every item, even when it's [filterable](#filtering). Prefer [Combobox](/react/components/combobox) instead of Select when the number of items is large enough to need virtualization, or when the items come from a server.
 - **Special positioning behavior**: The select popup by default overlaps its trigger so the selected item's text is aligned with the trigger's value text. This behavior [can be disabled or customized](/react/components/select#positioning).
 - **Form controls must have an accessible name**: Prefer `<Select.Label>`, or provide an `aria-label` on `<Select.Trigger>` when no visible label is rendered. See [Labeling a select](#labeling-a-select) and the [forms guide](/react/handbook/forms).
-- **Animating the popup**: See [Animating components kept in DOM when closed with Motion](/react/handbook/animation#animating-components-kept-in-dom-when-closed-with-motion) to make sure typing on the closed trigger still works.
+- **Animating the popup**: When animating it with a JavaScript library, see [Animating components kept in DOM](/react/handbook/animation#animating-components-kept-in-dom-when-closed-with-motion) to make sure typing on the closed trigger still works.
 
 ## Anatomy
 
