@@ -31,7 +31,6 @@ import type {
   BaseUIHighlightEventDetails,
 } from '../../internals/createBaseUIEventDetails';
 import { getHighlightReason } from '../../utils/getHighlightReason';
-import { resetMissingSelectedValue } from './resetMissingSelectedValue';
 import { SelectClosedItems } from './SelectClosedItems';
 import { REASONS } from '../../internals/reasons';
 import { FOCUSABLE_POPUP_PROPS } from '../../utils/popups/popupStoreUtils';
@@ -475,17 +474,10 @@ export function SelectRootInternal<Value, Multiple extends boolean | undefined =
   // and only while interacting. Read them into the list refs before anything uses them: once they
   // mount, so the selected index is current before the first keystroke, and on keydown, ahead of
   // typeahead, in case they changed since.
-  const hasReadClosedItemsRef = React.useRef(false);
   const readClosedItems = useStableCallback(() => {
     if (store.state.mounted || !closedItems.read(listRef, labelsRef, valuesRef)) {
       return;
     }
-    // Like the open list, the first read only records the items, since a value can be set before
-    // its items exist. A filterable select keeps a value whose item is gone, as it does while open.
-    if (hasReadClosedItemsRef.current && !filterable) {
-      resetMissingSelectedValue(store, valuesRef.current, store.state.selectedValue, multiple);
-    }
-    hasReadClosedItemsRef.current = true;
     store.set(
       'selectedIndex',
       findSelectionIndex(

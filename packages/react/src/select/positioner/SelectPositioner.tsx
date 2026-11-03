@@ -19,7 +19,9 @@ import { SelectPositionerMountedContext } from './SelectPositionerMountedContext
 import { InternalBackdrop } from '../../utils/popups/InternalBackdrop';
 import { DROPDOWN_COLLISION_AVOIDANCE } from '../../internals/constants';
 import { clearStyles } from '../popup/utils';
-import { resetMissingSelectedValue } from '../root/resetMissingSelectedValue';
+import { createChangeEventDetails } from '../../internals/createBaseUIEventDetails';
+import { REASONS } from '../../internals/reasons';
+import { findItemIndex } from '../../internals/itemEquality';
 import { usePositioner } from '../../utils/popups/positioning/usePositioner';
 import { useAnchoredPopupScrollLock } from '../../utils/popups/useAnchoredPopupScrollLock';
 
@@ -145,13 +147,52 @@ const SelectPositionerView = React.memo(function SelectPositionerView(
         return;
       }
 
-      if (prevSize !== 0) {
-        resetMissingSelectedValue(
-          store,
+      const { value, multiple } = selection;
+      const { isItemEqualToValue } = store.context;
+      const eventDetails = createChangeEventDetails(REASONS.none);
+
+      if (prevSize !== 0 && !multiple && value != null) {
+        const selectedValueIndex = findItemIndex(
           store.context.valuesRef.current,
-          selection.value,
-          selection.multiple,
+          value,
+          isItemEqualToValue,
         );
+        if (selectedValueIndex === -1) {
+          const initialSelectedValue = store.context.initialValueRef.current;
+          const hasInitial =
+            initialSelectedValue != null &&
+            findItemIndex(
+              store.context.valuesRef.current,
+              initialSelectedValue,
+              isItemEqualToValue,
+            ) !== -1;
+          const nextValue = hasInitial ? initialSelectedValue : null;
+          store.context.setValue(nextValue, eventDetails);
+
+          if (nextValue === null) {
+            store.set('selectedIndex', null);
+            store.context.selectedItemTextRef.current = null;
+          }
+        }
+      }
+
+      if (prevSize !== 0 && multiple && Array.isArray(value)) {
+        const nextValue = value.filter(
+          (selectedItemValue) =>
+            findItemIndex(
+              store.context.valuesRef.current,
+              selectedItemValue,
+              isItemEqualToValue,
+            ) !== -1,
+        );
+        if (nextValue.length !== value.length) {
+          store.context.setValue(nextValue, eventDetails);
+
+          if (nextValue.length === 0) {
+            store.set('selectedIndex', null);
+            store.context.selectedItemTextRef.current = null;
+          }
+        }
       }
 
       if (open && alignItemWithTriggerActive) {
